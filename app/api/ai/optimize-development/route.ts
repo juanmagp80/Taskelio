@@ -38,14 +38,6 @@ export async function GET(req: Request) {
     .eq('user_id', user_id)
     .gte('start_time', past90.toISOString());
 
-  if (events && events.length > 0) {
-      id: events[0].id,
-      start_time: events[0].start_time,
-      time_tracked: events[0].time_tracked,
-      actual_revenue: events[0].actual_revenue,
-      is_billable: events[0].is_billable
-    });
-  }
   if (eventsError) console.error('❌ Error eventos:', eventsError);
 
   // Tareas completadas
@@ -56,13 +48,6 @@ export async function GET(req: Request) {
     .eq('status', 'completed')
     .gte('completed_at', past90.toISOString());
 
-  if (tasks && tasks.length > 0) {
-      id: tasks[0].id,
-      title: tasks[0].title,
-      total_time_seconds: tasks[0].total_time_seconds,
-      category: tasks[0].category
-    });
-  }
   if (tasksError) console.error('❌ Error tareas:', tasksError);
 
   // Facturación (incluir todas las facturas recientes, no solo las pagadas)
@@ -72,13 +57,6 @@ export async function GET(req: Request) {
     .eq('user_id', user_id)
     .gte('issue_date', past90.toISOString());
 
-  if (invoices && invoices.length > 0) {
-      id: invoices[0].id,
-      total_amount: invoices[0].total_amount,
-      status: invoices[0].status,
-      issue_date: invoices[0].issue_date
-    });
-  }
   if (invoicesError) console.error('❌ Error facturas:', invoicesError);
 
   // Presupuestos aprobados

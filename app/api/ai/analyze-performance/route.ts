@@ -45,9 +45,6 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-      user: user ? { id: user.id, email: user.email || 'email no disponible' } : null
-    });
-
     // Devolver respuesta básica de éxito para testing
     return NextResponse.json({
       success: true,

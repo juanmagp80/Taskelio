@@ -8,9 +8,6 @@ export async function POST(request: NextRequest) {
         const supabase = await createServerSupabaseClient();
         
         const body = await request.json();
-            ...body,
-            password: body.password ? '[REDACTED]' : undefined
-        });
 
         const { email, newEmail, password } = body;
 

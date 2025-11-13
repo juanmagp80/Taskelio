@@ -17,14 +17,7 @@ interface EmailResult {
 class EmailService {
     async sendEmail(options: EmailOptions): Promise<EmailResult> {
         try {
-            to: options.to,
-                subject: options.subject,
-                    from: options.from,
-                        userId: options.userId,
-                            htmlLength: options.html.length
-        });
-
-        // Configurar el remitente y replyTo correctamente
+            // Configurar el remitente y replyTo correctamente
         const defaultFrom = `Taskelio <noreply@${process.env.NEXT_PUBLIC_RESEND_DOMAIN || 'taskelio.app'}>`;
         let fromEmail = options.from || defaultFrom;
 
@@ -71,12 +64,7 @@ class EmailService {
             }),
         });
 
-        status: response.status,
-            statusText: response.statusText,
-                ok: response.ok
-    });
-
-    const result = await response.json();
+        const result = await response.json();
 
     if(!response.ok) {
         console.error('❌ EmailService: Error en API send-email:', result);
@@ -90,35 +78,35 @@ class EmailService {
             return result;
 
         } catch (error) {
-    console.error('Error crítico en EmailService:', error);
-    return {
-        success: false,
-        message: 'Error crítico al enviar email',
-        error: error instanceof Error ? error.message : String(error)
-    };
-}
+            console.error('Error crítico en EmailService:', error);
+            return {
+                success: false,
+                message: 'Error crítico al enviar email',
+                error: error instanceof Error ? error.message : String(error)
+            };
+        }
     }
 
-convertTextToHtml(text: string): string {
-    return text
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>')
-        .replace(/^(.*)$/, '<p>$1</p>')
-        .replace(/<p><\/p>/g, '');
-}
+    convertTextToHtml(text: string): string {
+        return text
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>')
+            .replace(/^(.*)$/, '<p>$1</p>')
+            .replace(/<p><\/p>/g, '');
+    }
 
-// Método para verificar si está configurado (siempre true para client-side)
-isConfigured(): boolean {
-    return true;
-}
+    // Método para verificar si está configurado (siempre true para client-side)
+    isConfigured(): boolean {
+        return true;
+    }
 
-// Método para obtener el estado del servicio
-getStatus(): { configured: boolean; provider: string } {
-    return {
-        configured: true,
-        provider: 'api-route'
-    };
-}
+    // Método para obtener el estado del servicio
+    getStatus(): { configured: boolean; provider: string } {
+        return {
+            configured: true,
+            provider: 'api-route'
+        };
+    }
 }
 
 // Exportar una instancia singleton

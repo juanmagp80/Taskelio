@@ -51,15 +51,6 @@ export const useSupabaseErrorHandler = () => {
 
             const result = await operation();
 
-            // Log de debug
-                hasData: !!result.data,
-                hasError: !!result.error,
-                errorType: typeof result.error,
-                errorKeys: result.error ? Object.keys(result.error) : null,
-                isRealError: isSupabaseError(result.error),
-                errorContent: JSON.stringify(result.error)
-            });
-
             // Verificar si hay un error real
             if (isSupabaseError(result.error)) {
                 console.error(`❌ Error en ${context}:`, result.error);
@@ -100,14 +91,5 @@ export const useSupabaseErrorHandler = () => {
 
 // Función de utilidad para logs de debug más claros
 export const debugSupabaseResult = (result: any, context: string) => {
-        timestamp: new Date().toISOString(),
-        hasData: !!result?.data,
-        dataType: typeof result?.data,
-        hasError: !!result?.error,
-        errorType: typeof result?.error,
-        errorKeys: result?.error ? Object.keys(result.error) : null,
-        isRealError: isSupabaseError(result?.error),
-        errorStringified: JSON.stringify(result?.error),
-        fullResult: JSON.stringify(result, null, 2)
-    });
+    // Debug de resultado de Supabase
 };
