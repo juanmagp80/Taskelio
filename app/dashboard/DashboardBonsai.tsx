@@ -381,14 +381,7 @@ export default function DashboardBonsai({
                 const invoiceMonth = invoiceDate.getMonth(); // 0-11
                 const invoiceYear = invoiceDate.getFullYear();
 
-                amount: invoice.amount,
-                    issue_date: invoice.issue_date,
-                        created_at: invoice.created_at,
-                            month: invoiceMonth + 1,
-                                year: invoiceYear
-            });
-
-            // Buscar si esta factura pertenece a alguno de los últimos 6 meses
+                // Buscar si esta factura pertenece a alguno de los últimos 6 meses
             const chartMonth = monthlyData.find(m => m.monthIndex === invoiceMonth && m.year === invoiceYear);
             if (chartMonth) {
                 chartMonth.amount += parseFloat(invoice.amount) || 0;

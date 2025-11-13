@@ -113,10 +113,6 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
         }
 
         // TODO: Aquí integraríamos con servicio de email real (SendGrid, Resend, etc.)
-            to: payload.client.email,
-            subject: emailData.subject,
-            content: emailContent
-        });
 
         return {
             success: true,

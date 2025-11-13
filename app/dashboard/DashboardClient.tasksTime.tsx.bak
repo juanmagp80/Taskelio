@@ -45,11 +45,6 @@ export default function TasksTimeBreakdown() {
                     .eq('user_id', user.id)
                     .not('total_time_seconds', 'is', null);
                 
-                    proyectos: projectsData?.length || 0,
-                    tareasConTiempo: tasksData?.length || 0,
-                    tareas: tasksData
-                });
-                
                 // Procesar datos
                 const projectsMap = new Map<string, Project>();
                 

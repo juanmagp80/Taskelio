@@ -40,11 +40,6 @@ export default function UpdateUserForm({ email }: { email: string }) {
 
         setIsLoading(true);
         try {
-                email,
-                newEmail: newEmail || undefined,
-                hasPassword: !!password
-            });
-
             const response = await fetch('/api/auth/update-user', {
                 method: 'POST',
                 headers: {

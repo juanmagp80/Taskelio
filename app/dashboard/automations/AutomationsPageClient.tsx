@@ -538,13 +538,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             
             const { data: clientsData, error: clientsError } = await clientsQuery;
 
-                clientsData, 
-                clientsError,
-                dataLength: clientsData?.length,
-                dataType: typeof clientsData,
-                isArray: Array.isArray(clientsData)
-            });
-
             if (clientsError) {
                 console.error('❌ Error cargando clientes:', clientsError);
                 setExecutionLogs([

@@ -86,11 +86,6 @@ function getPeriodRange(period: string) {
 async function collectUserData(supabase: any, userId: string, period: string) {
   try {
     const dateRange = getPeriodRange(period);
-    
-      period,
-      start: dateRange.start,
-      end: dateRange.end
-    });
 
     // Eventos de calendario
     const { data: calendarEvents, error: eventsError } = await supabase

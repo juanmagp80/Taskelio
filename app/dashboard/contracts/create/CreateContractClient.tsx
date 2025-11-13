@@ -678,18 +678,6 @@ Fecha: _______________                          Fecha: _______________
                 throw new Error('El contenido del contrato no puede estar vacío');
             }
 
-                user_id: user.id,
-                client_id: selectedClient.id,
-                template_id: selectedTemplate.id,
-                title: formData.title,
-                description: formData.description,
-                contract_value: parseFloat(formData.contract_value) || 0,
-                currency: formData.currency,
-                start_date: formData.start_date,
-                end_date: formData.end_date,
-                payment_terms: formData.payment_terms
-            });
-
             const { data, error } = await supabase
                 .from('contracts')
                 .insert({

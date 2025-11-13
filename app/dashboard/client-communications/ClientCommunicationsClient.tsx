@@ -297,12 +297,8 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
         try {
             setSendingEmail(true);
-            clientId: selectedClientForToken,
-                message: emailMessage || 'Te comparto el acceso a nuestro portal de comunicación seguro.',
-                    freelancerName: userEmail?.split('@')[0] || 'Tu Freelancer'
-        });
 
-        const response = await fetch('/api/client-communications/send-token-email', {
+            const response = await fetch('/api/client-communications/send-token-email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -314,13 +310,7 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
             }),
         });
 
-        status: response.status,
-            statusText: response.statusText,
-                ok: response.ok,
-                    url: response.url
-    });
-
-    if (!response.ok) {
+        if (!response.ok) {
         // Si es 404, la ruta no existe
         if (response.status === 404) {
             throw new Error(`API no encontrada (404): ${response.url}\nVerifica que el servidor esté ejecutándose correctamente.`);

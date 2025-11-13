@@ -10,12 +10,7 @@ export default async function DashboardPage() {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        hasUrl: !!supabaseUrl,
-            hasKey: !!supabaseKey,
-                urlValid: supabaseUrl?.startsWith('https://'),
-        });
-
-    // Si Supabase no está configurado, usar modo demo
+        // Si Supabase no está configurado, usar modo demo
     if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your_supabase_project_url_here')) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 text-slate-900 relative overflow-hidden">
@@ -96,15 +91,8 @@ export default async function DashboardPage() {
         error: sessionError
     } = await supabase.auth.getSession();
 
-    hasSession: !!session,
-        hasUser: !!session?.user,
-            hasEmail: !!session?.user?.email,
-                sessionError: sessionError,
-                    userId: session?.user?.id
-});
-
-// 🔧 DEBUG: Para desarrollo, si no hay sesión, usar usuario de prueba
-let userEmail = session?.user?.email;
+    // 🔧 DEBUG: Para desarrollo, si no hay sesión, usar usuario de prueba
+    let userEmail = session?.user?.email;
 if (!userEmail) {
     userEmail = 'juanmagpdev@gmail.com';
 }

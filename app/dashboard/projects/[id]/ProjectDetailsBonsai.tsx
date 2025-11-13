@@ -237,14 +237,6 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
                 return;
             }
 
-                id: task.id,
-                title: task.title,
-                is_running: task.is_running,
-                total_time_seconds: task.total_time_seconds,
-                last_start: task.last_start,
-                totalTimeFormatted: formatTime(task.total_time_seconds || 0)
-            })));
-
             setTasks(tasksData || []);
         } catch (error) {
             console.error('Error:', error);

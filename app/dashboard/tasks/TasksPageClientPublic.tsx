@@ -119,11 +119,6 @@ const TasksPageClient: React.FC = () => {
                 setError('Error cargando tareas: ' + error.message);
                 setTasks([]);
             } else {
-                if (data && data.length > 0) {
-                        title: t.title,
-                        status: t.status
-                    })));
-                }
                 setTasks((data || []) as Task[]);
                 setError(null);
             }
