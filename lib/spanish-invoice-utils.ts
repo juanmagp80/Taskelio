@@ -9,7 +9,7 @@ export interface SpanishCompanyData {
     city: string;
     province: string;
     country: string;
-    
+
     // Datos adicionales requeridos
     registrationNumber?: string; // Número del Registro Mercantil
     socialCapital?: number; // Capital social
@@ -23,7 +23,7 @@ export interface SpanishInvoiceData {
     invoiceNumber: string;
     date: string;
     dueDate?: string;
-    
+
     // Datos del cliente
     clientName: string;
     clientNIF: string;
@@ -32,7 +32,7 @@ export interface SpanishInvoiceData {
     clientCity?: string;
     clientPostalCode?: string;
     clientProvince?: string;
-    
+
     // Conceptos/Items de la factura
     items: {
         description: string;
@@ -42,16 +42,16 @@ export interface SpanishInvoiceData {
         vatAmount: number;
         total: number;
     }[];
-    
+
     // Totales
     subtotal: number;
     totalVAT: number;
     total: number;
-    
+
     // Información adicional
     notes?: string;
     paymentTerms?: string;
-    
+
     // Para el código QR (compatibilidad)
     qrData?: string;
 }
@@ -65,30 +65,30 @@ export function generateInvoiceNumber(year: number, sequence: number, series: st
 // Validar NIF español
 export function validateSpanishNIF(nif: string): boolean {
     if (!nif) return false;
-    
+
     const nifPattern = /^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/i;
     if (!nifPattern.test(nif)) return false;
-    
+
     const letters = 'TRWAGMYFPDXBNJZSQVHLCKE';
     const number = parseInt(nif.substring(0, 8));
     const letter = nif.substring(8, 9).toUpperCase();
     const calculatedLetter = letters.charAt(number % 23);
-    
+
     return letter === calculatedLetter;
 }
 
 // Validar CIF español
 export function validateSpanishCIF(cif: string): boolean {
     if (!cif) return false;
-    
+
     const cifPattern = /^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$/i;
     if (!cifPattern.test(cif)) return false;
-    
+
     // Implementación completa de validación de CIF
     const organizationType = cif.charAt(0).toUpperCase();
     const number = cif.substring(1, 8);
     const control = cif.substring(8, 9).toUpperCase();
-    
+
     let sum = 0;
     for (let i = 0; i < 7; i++) {
         const digit = parseInt(number.charAt(i));
@@ -101,10 +101,10 @@ export function validateSpanishCIF(cif: string): boolean {
             sum += digit;
         }
     }
-    
+
     const controlDigit = (10 - (sum % 10)) % 10;
     const controlLetter = 'JABCDEFGHI'.charAt(controlDigit);
-    
+
     // Según el tipo de organización, el control puede ser número o letra
     if (['N', 'P', 'Q', 'S', 'R', 'W'].includes(organizationType)) {
         return control === controlLetter;
@@ -116,7 +116,7 @@ export function validateSpanishCIF(cif: string): boolean {
 // Validar campos obligatorios de factura española
 export function validateSpanishInvoice(invoice: SpanishInvoiceData, company: SpanishCompanyData): string[] {
     const errors: string[] = [];
-    
+
     // Validaciones del emisor
     if (!company.companyName) errors.push('Nombre de la empresa es obligatorio');
     if (!company.nif) errors.push('NIF de la empresa es obligatorio');
@@ -124,27 +124,27 @@ export function validateSpanishInvoice(invoice: SpanishInvoiceData, company: Spa
         errors.push('NIF/CIF de la empresa no es válido');
     }
     if (!company.address) errors.push('Dirección de la empresa es obligatoria');
-    
+
     // Validaciones básicas de la factura
     if (!invoice.invoiceNumber) errors.push('Número de factura es obligatorio');
     if (!invoice.date) errors.push('Fecha de emisión es obligatoria');
     if (!invoice.clientName) errors.push('Nombre del cliente es obligatorio');
     if (!invoice.clientNIF) errors.push('NIF/CIF del cliente es obligatorio');
-    
+
     // Validar NIF/CIF del cliente
     if (invoice.clientNIF && !validateSpanishNIF(invoice.clientNIF) && !validateSpanishCIF(invoice.clientNIF)) {
         errors.push('NIF/CIF del cliente no es válido');
     }
-    
+
     // Validaciones de importes
     if (invoice.subtotal < 0) errors.push('El subtotal no puede ser negativo');
     if (invoice.total <= 0) errors.push('El importe total debe ser mayor que 0');
-    
+
     // Validar que hay al menos un concepto
     if (!invoice.items || invoice.items.length === 0) {
         errors.push('Debe haber al menos un concepto en la factura');
     }
-    
+
     // Validar conceptos
     if (invoice.items) {
         invoice.items.forEach((item, index) => {

@@ -1,7 +1,7 @@
 'use client';
 
-import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
@@ -1059,19 +1059,19 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
             }
 
             const fileName = `Reporte_Taskelio_${selectedTimeRange.label.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}`;
-            
+
             if (format === 'pdf') {
                 // Importar jsPDF dinámicamente
                 const jsPDFModule = await import('jspdf');
                 const jsPDF = jsPDFModule.default || jsPDFModule;
                 const doc = new jsPDF();
-                
+
                 // Configuración
                 const pageWidth = doc.internal.pageSize.getWidth();
                 const pageHeight = doc.internal.pageSize.getHeight();
                 const margin = 20;
                 let yPosition = margin;
-                
+
                 // Función helper para añadir texto con wrap
                 const addText = (text: string, size: number, isBold = false, color: [number, number, number] = [0, 0, 0]) => {
                     doc.setFontSize(size);
@@ -1080,13 +1080,13 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                     doc.text(text, margin, yPosition);
                     yPosition += size * 0.5;
                 };
-                
+
                 const addLine = () => {
                     doc.setDrawColor(200, 200, 200);
                     doc.line(margin, yPosition, pageWidth - margin, yPosition);
                     yPosition += 10;
                 };
-                
+
                 // Header
                 doc.setFillColor(99, 102, 241); // Indigo
                 doc.rect(0, 0, pageWidth, 40, 'F');
@@ -1094,26 +1094,26 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                 doc.setFontSize(24);
                 doc.setFont('helvetica', 'bold');
                 doc.text('REPORTE TASKELIO', margin, 25);
-                
+
                 yPosition = 50;
-                
+
                 // Información del reporte
                 addText(`Período: ${selectedTimeRange.label}`, 12, false, [100, 100, 100]);
-                addText(`Generado: ${new Date().toLocaleDateString('es-ES', { 
-                    day: 'numeric', 
-                    month: 'long', 
+                addText(`Generado: ${new Date().toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
                 })}`, 10, false, [100, 100, 100]);
-                
+
                 yPosition += 10;
                 addLine();
-                
+
                 // Métricas principales
                 addText('MÉTRICAS PRINCIPALES', 16, true, [0, 0, 0]);
                 yPosition += 5;
-                
+
                 const metricsData = [
                     { label: 'Ingresos Totales', value: `€${metrics.totalRevenue.toLocaleString('es-ES')}` },
                     { label: 'Horas Trabajadas', value: `${metrics.totalHours.toFixed(1)}h` },
@@ -1122,45 +1122,45 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                     { label: 'Clientes Activos', value: metrics.activeClients.toString() },
                     { label: 'Facturas Pendientes', value: metrics.pendingInvoices.toString() }
                 ];
-                
+
                 metricsData.forEach((metric, index) => {
                     if (yPosition > pageHeight - 40) {
                         doc.addPage();
                         yPosition = margin;
                     }
-                    
+
                     doc.setFontSize(11);
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(60, 60, 60);
                     doc.text(metric.label, margin, yPosition);
-                    
+
                     doc.setFont('helvetica', 'normal');
                     doc.setTextColor(99, 102, 241);
                     doc.text(metric.value, pageWidth - margin - 50, yPosition, { align: 'right' });
-                    
+
                     yPosition += 8;
                 });
-                
+
                 yPosition += 5;
                 addLine();
-                
+
                 // Recomendaciones
                 if (recommendations.length > 0) {
                     addText('RECOMENDACIONES PRINCIPALES', 16, true, [0, 0, 0]);
                     yPosition += 5;
-                    
+
                     recommendations.slice(0, 3).forEach((rec, index) => {
                         if (yPosition > pageHeight - 60) {
                             doc.addPage();
                             yPosition = margin;
                         }
-                        
+
                         doc.setFontSize(12);
                         doc.setFont('helvetica', 'bold');
                         doc.setTextColor(0, 0, 0);
                         doc.text(`${index + 1}. ${rec.title}`, margin, yPosition);
                         yPosition += 6;
-                        
+
                         doc.setFontSize(10);
                         doc.setFont('helvetica', 'normal');
                         doc.setTextColor(80, 80, 80);
@@ -1169,7 +1169,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                         yPosition += lines.length * 5 + 10;
                     });
                 }
-                
+
                 // Footer en todas las páginas
                 const totalPages = doc.getNumberOfPages();
                 for (let i = 1; i <= totalPages; i++) {
@@ -1189,11 +1189,11 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                         { align: 'center' }
                     );
                 }
-                
+
                 // Guardar PDF
                 doc.save(`${fileName}.pdf`);
-                
-                showToast.success('Reporte PDF exportado exitosamente', 
+
+                showToast.success('Reporte PDF exportado exitosamente',
                     `Archivo: ${fileName}.pdf\nPeríodo: ${selectedTimeRange.label}`
                 );
             } else {
@@ -1213,7 +1213,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                         rec.description
                     ])
                 ];
-                
+
                 const csvContent = csvData.map(row => row.join(',')).join('\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = window.URL.createObjectURL(blob);
@@ -1225,8 +1225,8 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                 a.click();
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
-                
-                showToast.success('Reporte CSV exportado exitosamente', 
+
+                showToast.success('Reporte CSV exportado exitosamente',
                     `Archivo: ${fileName}.csv`
                 );
             }
@@ -1320,7 +1320,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
 
             <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-56">
                 <Header userEmail={userEmail} onLogout={handleLogout} />
-                
+
                 <main className="flex-1 overflow-auto">
                     <div ref={reportRef} className="p-6">
                         {/* Header */}
@@ -1435,8 +1435,8 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                                 key={report.id}
                                                 onClick={() => setSelectedReport(report.id)}
                                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${isActive
-                                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-lg shadow-indigo-500/25'
-                                                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                                                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-lg shadow-indigo-500/25'
+                                                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
                                                     }`}
                                             >
                                                 <IconComponent className="w-4 h-4" />
@@ -1648,8 +1648,8 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                                     <div
                                                         key={alert.id}
                                                         className={`flex items-start gap-3 p-4 border rounded-xl transition-all duration-300 ${alertColors[alert.type]} ${alert.actionable && alert.route
-                                                                ? 'hover:shadow-lg cursor-pointer hover:scale-[1.02] transform hover:border-opacity-80'
-                                                                : 'hover:shadow-sm'
+                                                            ? 'hover:shadow-lg cursor-pointer hover:scale-[1.02] transform hover:border-opacity-80'
+                                                            : 'hover:shadow-sm'
                                                             }`}
                                                         onClick={() => handleAlertClick(alert)}
                                                     >

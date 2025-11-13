@@ -4,16 +4,12 @@ import Sidebar from '@/components/Sidebar';
 import TrialBanner from '@/components/TrialBanner';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
 import {
-    Calendar,
     Clock,
-    DollarSign,
-    Filter,
     Pause,
     Play,
     Search,
     Timer,
-    TrendingUp,
-    User
+    TrendingUp
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -75,13 +71,13 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     // Estados para los selectores de proyecto y tarea
     const [projects, setProjects] = useState<Project[]>([]);
     const [selectedProjectId, setSelectedProjectId] = useState<string>('');
     const [availableTasks, setAvailableTasks] = useState<ActiveTask[]>([]);
     const [selectedTaskId, setSelectedTaskId] = useState<string>('');
-    
+
     const supabase = createSupabaseClient();
     const router = useRouter();
 
@@ -106,7 +102,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
 
             const startOfDay = new Date(selectedDate);
             startOfDay.setHours(0, 0, 0, 0);
-            
+
             const endOfDay = new Date(selectedDate);
             endOfDay.setHours(23, 59, 59, 999);
 
@@ -201,7 +197,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
     const handleProjectChange = (projectId: string) => {
         setSelectedProjectId(projectId);
         setSelectedTaskId(''); // Resetear tarea seleccionada
-        
+
         if (projectId) {
             // Filtrar tareas del proyecto seleccionado
             const filteredTasks = activeTasks.filter(task => task.project_id === projectId);
@@ -280,7 +276,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
             const lastStartString = taskData.last_start.endsWith('Z') ? taskData.last_start : taskData.last_start + 'Z';
             const startTime = new Date(lastStartString);
             const endTime = new Date();
-            
+
             const sessionDuration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
             const newTotalTime = (taskData.total_time_seconds || 0) + sessionDuration;
 
@@ -326,7 +322,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
     // Función para formatear tiempo
     const formatTime = (seconds: number) => {
         if (!seconds) return '0m';
-        
+
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
@@ -343,21 +339,21 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
     // Componente para mostrar cronómetro en tiempo real
     const LiveSessionTimer = ({ startTime, className = "text-sm text-orange-600" }: { startTime: string; className?: string }) => {
         const [elapsed, setElapsed] = useState(0);
-        
+
         useEffect(() => {
             // Corregir la zona horaria añadiendo 'Z' si no la tiene
             const startTimeString = startTime.endsWith('Z') ? startTime : startTime + 'Z';
-            
+
             const calculateElapsed = () => {
                 const start = new Date(startTimeString);
                 const now = new Date();
                 const diff = Math.floor((now.getTime() - start.getTime()) / 1000);
                 setElapsed(diff);
             };
-            
+
             // Calcular inmediatamente
             calculateElapsed();
-            
+
             // Actualizar cada segundo
             const interval = setInterval(calculateElapsed, 1000);
 
@@ -478,7 +474,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                     {/* Control de Cronómetros con Selectores */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                         <h3 className="text-lg font-medium text-gray-900 mb-6">Control de Cronómetros</h3>
-                        
+
                         {/* Selectores de Proyecto y Tarea */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-200">
                             <div>
@@ -498,7 +494,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                                     ))}
                                 </select>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Seleccionar Tarea
@@ -525,22 +521,20 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                         {selectedTaskId && (() => {
                             const selectedTask = activeTasks.find(t => t.id === selectedTaskId);
                             if (!selectedTask) return null;
-                            
+
                             return (
-                                <div className={`border rounded-lg p-6 mb-6 ${
-                                    selectedTask.is_running ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'
-                                }`}>
+                                <div className={`border rounded-lg p-6 mb-6 ${selectedTask.is_running ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'
+                                    }`}>
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
                                             <h4 className="text-lg font-semibold text-gray-900">{selectedTask.title}</h4>
                                             <p className="text-sm text-gray-600 mt-1">
-                                                {selectedTask.project?.name} 
+                                                {selectedTask.project?.name}
                                                 {selectedTask.project?.client?.name && ` - ${selectedTask.project.client.name}`}
                                             </p>
                                             <div className="flex items-center gap-4 mt-3">
-                                                <span className={`text-sm font-medium ${
-                                                    selectedTask.is_running ? 'text-green-700' : 'text-blue-700'
-                                                }`}>
+                                                <span className={`text-sm font-medium ${selectedTask.is_running ? 'text-green-700' : 'text-blue-700'
+                                                    }`}>
                                                     Tiempo Total: {formatTime(selectedTask.total_time_seconds || 0)}
                                                 </span>
                                                 {selectedTask.is_running && selectedTask.last_start && (
@@ -583,48 +577,46 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                             <h4 className="text-sm font-medium text-gray-700 mb-3">Todas las tareas con tiempo</h4>
                             <div className="space-y-2">
                                 {activeTasks.filter(task => task.total_time_seconds > 0 || task.is_running).map((task) => (
-                                <div key={task.id} className={`border rounded-lg p-4 ${
-                                    task.is_running ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
-                                }`}>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h4 className="font-medium text-gray-900">{task.title}</h4>
-                                            <p className="text-sm text-gray-600">
-                                                {task.project?.name} {task.project?.client?.name && `- ${task.project.client.name}`}
-                                            </p>
-                                            <div className="flex items-center gap-4 mt-2">
-                                                <span className={`text-sm font-medium ${
-                                                    task.is_running ? 'text-green-600' : 'text-blue-600'
-                                                }`}>
-                                                    Total: {formatTime(task.total_time_seconds || 0)}
-                                                </span>
-                                                {task.is_running && task.last_start && (
-                                                    <LiveSessionTimer startTime={task.last_start} />
-                                                )}
-                                                {task.is_running && (
-                                                    <span className="text-green-500 animate-pulse">● En ejecución</span>
-                                                )}
+                                    <div key={task.id} className={`border rounded-lg p-4 ${task.is_running ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+                                        }`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <h4 className="font-medium text-gray-900">{task.title}</h4>
+                                                <p className="text-sm text-gray-600">
+                                                    {task.project?.name} {task.project?.client?.name && `- ${task.project.client.name}`}
+                                                </p>
+                                                <div className="flex items-center gap-4 mt-2">
+                                                    <span className={`text-sm font-medium ${task.is_running ? 'text-green-600' : 'text-blue-600'
+                                                        }`}>
+                                                        Total: {formatTime(task.total_time_seconds || 0)}
+                                                    </span>
+                                                    {task.is_running && task.last_start && (
+                                                        <LiveSessionTimer startTime={task.last_start} />
+                                                    )}
+                                                    {task.is_running && (
+                                                        <span className="text-green-500 animate-pulse">● En ejecución</span>
+                                                    )}
+                                                </div>
                                             </div>
+                                            {task.is_running ? (
+                                                <button
+                                                    onClick={() => stopTask(task.id)}
+                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+                                                    title="Parar cronómetro"
+                                                >
+                                                    <Pause className="w-4 h-4" />
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => startTask(task.id)}
+                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
+                                                    title="Iniciar cronómetro"
+                                                >
+                                                    <Play className="w-4 h-4" />
+                                                </button>
+                                            )}
                                         </div>
-                                        {task.is_running ? (
-                                            <button
-                                                onClick={() => stopTask(task.id)}
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
-                                                title="Parar cronómetro"
-                                            >
-                                                <Pause className="w-4 h-4" />
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => startTask(task.id)}
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
-                                                title="Iniciar cronómetro"
-                                            >
-                                                <Play className="w-4 h-4" />
-                                            </button>
-                                        )}
                                     </div>
-                                </div>
                                 ))}
                                 {activeTasks.filter(task => task.total_time_seconds > 0 || task.is_running).length === 0 && (
                                     <div className="text-center py-8">
@@ -652,7 +644,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
-                                
+
                                 <div className="flex-1">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Buscar
@@ -678,14 +670,14 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                         <div className="p-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-6">
-                                Registro de Tiempo - {new Date(selectedDate).toLocaleDateString('es-ES', { 
-                                    weekday: 'long', 
-                                    year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric' 
+                                Registro de Tiempo - {new Date(selectedDate).toLocaleDateString('es-ES', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
                                 })}
                             </h3>
-                            
+
                             {loading ? (
                                 <div className="text-center py-12">
                                     <div className="w-8 h-8 border-3 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
@@ -696,7 +688,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                                     <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                                     <h4 className="text-sm font-medium text-gray-900 mb-2">No hay registros</h4>
                                     <p className="text-sm text-gray-600">
-                                        {searchTerm 
+                                        {searchTerm
                                             ? `No se encontraron registros que coincidan con "${searchTerm}"`
                                             : 'No hay registros de tiempo para esta fecha'
                                         }
@@ -719,14 +711,14 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                                                     </p>
                                                     <div className="flex items-center gap-4 text-xs text-gray-500">
                                                         <span>
-                                                            {new Date(entry.start_time).toLocaleTimeString('es-ES', { 
-                                                                hour: '2-digit', 
-                                                                minute: '2-digit' 
+                                                            {new Date(entry.start_time).toLocaleTimeString('es-ES', {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
                                                             })}
                                                             {entry.end_time && (
-                                                                ` - ${new Date(entry.end_time).toLocaleTimeString('es-ES', { 
-                                                                    hour: '2-digit', 
-                                                                    minute: '2-digit' 
+                                                                ` - ${new Date(entry.end_time).toLocaleTimeString('es-ES', {
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
                                                                 })}`
                                                             )}
                                                         </span>

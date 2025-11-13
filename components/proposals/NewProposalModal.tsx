@@ -40,25 +40,25 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
     const [loadingClients, setLoadingClients] = useState(false);
     const [showNewClientForm, setShowNewClientForm] = useState(false);
     const [selectedClientId, setSelectedClientId] = useState<string>('');
-    
+
     // Datos básicos de la propuesta
     const [proposalData, setProposalData] = useState({
         // Información del cliente
         prospect_name: '',
         prospect_email: '',
-        
+
         // Información de la propuesta
         title: '',
         description: '',
-        
+
         // Servicios
         services: [] as ServiceItem[],
-        
+
         // Precios
         pricing: {
             packages: [] as PricingPackage[]
         },
-        
+
         // Términos
         terms: {
             payment_terms: '50% al inicio, 50% al entregar',
@@ -67,7 +67,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
             warranty: '',
             additional_work: 'Trabajos adicionales se cotizarán por separado'
         },
-        
+
         // Timeline
         timeline: {
             phases: [] as Array<{
@@ -76,14 +76,14 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                 deliverable: string;
             }>
         },
-        
+
         // Otros
         total_amount: 0,
         currency: 'EUR',
         valid_until: '',
         notes: ''
     });
-    
+
     // Estados para servicios y fases
     const [newService, setNewService] = useState({ name: '', description: '' });
     const [newPhase, setNewPhase] = useState({ name: '', duration: '', deliverable: '' });
@@ -106,7 +106,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
         try {
             const supabase = createSupabaseClient();
             const { data: { user }, error: userError } = await supabase.auth.getUser();
-            
+
             if (userError || !user) {
                 throw new Error('Usuario no autenticado');
             }
@@ -266,20 +266,20 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
         }
 
         setLoading(true);
-        
+
         try {
             const supabase = createSupabaseClient();
             const { data: { user }, error: userError } = await supabase.auth.getUser();
-            
+
             if (userError || !user) {
                 throw new Error('Usuario no autenticado');
             }
 
             // Si es un nuevo cliente (showNewClientForm = true), crearlo primero
             let clientId = selectedClientId;
-            
+
             if (showNewClientForm && proposalData.prospect_name.trim()) {
-                
+
                 const { data: newClient, error: clientError } = await supabase
                     .from('clients')
                     .insert([{
@@ -297,12 +297,12 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                     console.error('Error creating client:', clientError);
                     throw new Error('Error creando el cliente');
                 }
-                
+
                 clientId = newClient.id;
             }
 
             // Preparar fecha de validez si no se especificó
-            const validUntil = proposalData.valid_until || 
+            const validUntil = proposalData.valid_until ||
                 new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
             const { data, error } = await supabase
@@ -333,8 +333,8 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                 throw new Error('Error creando la propuesta');
             }
 
-            showToast.success(showNewClientForm 
-                ? '✅ Cliente y propuesta creados exitosamente' 
+            showToast.success(showNewClientForm
+                ? '✅ Cliente y propuesta creados exitosamente'
                 : '✅ Propuesta creada exitosamente'
             );
             resetForm();
@@ -377,9 +377,9 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                             <p className="text-sm text-gray-500">
                                 Paso {step} de 4 - {
                                     step === 1 ? 'Información básica' :
-                                    step === 2 ? 'Servicios y precios' :
-                                    step === 3 ? 'Términos y timeline' :
-                                    'Revisión final'
+                                        step === 2 ? 'Servicios y precios' :
+                                            step === 3 ? 'Términos y timeline' :
+                                                'Revisión final'
                                 }
                             </p>
                         </div>
@@ -395,7 +395,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                 {/* Progress Bar */}
                 <div className="px-6 py-4 border-b">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${(step / 4) * 100}%` }}
                         ></div>
@@ -413,7 +413,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                     <User className="inline h-4 w-4 mr-1" />
                                     Seleccionar Cliente *
                                 </label>
-                                
+
                                 {!showNewClientForm ? (
                                     <div className="space-y-3">
                                         <select
@@ -431,7 +431,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                                 </option>
                                             ))}
                                         </select>
-                                        
+
                                         <button
                                             type="button"
                                             onClick={() => setShowNewClientForm(true)}
@@ -456,7 +456,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                                 <X className="h-4 w-4" />
                                             </button>
                                         </div>
-                                        
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -484,7 +484,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                                 />
                                             </div>
                                         </div>
-                                        
+
                                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                             <p className="text-sm text-blue-700">
                                                 💡 Este cliente se creará automáticamente al guardar la propuesta
@@ -559,7 +559,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                             {/* Servicios */}
                             <div>
                                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Servicios Incluidos</h4>
-                                
+
                                 {/* Lista de servicios */}
                                 {proposalData.services.length > 0 && (
                                     <div className="space-y-2 mb-4">
@@ -581,7 +581,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                         ))}
                                     </div>
                                 )}
-                                
+
                                 {/* Agregar servicio */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <input
@@ -611,7 +611,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                             {/* Paquetes de Precios */}
                             <div>
                                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Paquetes de Precios</h4>
-                                
+
                                 {/* Lista de paquetes */}
                                 {proposalData.pricing.packages.length > 0 && (
                                     <div className="space-y-4 mb-6">
@@ -648,7 +648,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                         ))}
                                     </div>
                                 )}
-                                
+
                                 {/* Agregar paquete */}
                                 <div className="border border-gray-200 rounded-lg p-4 space-y-4">
                                     <h5 className="font-medium text-gray-900">Nuevo Paquete</h5>
@@ -675,7 +675,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                             onChange={(e) => setCurrentPackage(prev => ({ ...prev, description: e.target.value }))}
                                         />
                                     </div>
-                                    
+
                                     {/* Características */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -709,7 +709,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                             + Agregar Característica
                                         </Button>
                                     </div>
-                                    
+
                                     <Button
                                         onClick={addPackage}
                                         variant="outline"
@@ -805,7 +805,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                             {/* Timeline */}
                             <div>
                                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Timeline del Proyecto</h4>
-                                
+
                                 {/* Lista de fases */}
                                 {proposalData.timeline.phases.length > 0 && (
                                     <div className="space-y-2 mb-4">
@@ -828,7 +828,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                                         ))}
                                     </div>
                                 )}
-                                
+
                                 {/* Agregar fase */}
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                     <input
@@ -868,7 +868,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                     {step === 4 && (
                         <div className="space-y-6">
                             <h4 className="text-lg font-semibold text-gray-900">Revisión Final</h4>
-                            
+
                             {/* Resumen */}
                             <div className="bg-gray-50 rounded-lg p-6">
                                 <h5 className="font-medium text-gray-900 mb-4">Resumen de la Propuesta</h5>

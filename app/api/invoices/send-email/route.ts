@@ -388,7 +388,7 @@ async function generateInvoicePDF(invoice: any, profile: any, companyData: any):
     // Tabla de conceptos
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    
+
     // Cabecera de tabla
     doc.setFillColor(240, 240, 240);
     doc.rect(marginLeft, currentY - 5, 170, 7, 'F');

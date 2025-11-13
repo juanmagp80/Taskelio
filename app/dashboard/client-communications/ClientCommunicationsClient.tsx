@@ -110,11 +110,11 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
         const subscription = supabase
             .channel('client_messages')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'client_messages' 
+            .on('postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'client_messages'
                 },
                 (payload: any) => {
                     // Recargar mensajes cuando hay cambios
@@ -147,7 +147,7 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
         if (!supabase) return;
 
         try {
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 return;
@@ -297,151 +297,151 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
         try {
             setSendingEmail(true);
+            clientId: selectedClientForToken,
+                message: emailMessage || 'Te comparto el acceso a nuestro portal de comunicación seguro.',
+                    freelancerName: userEmail?.split('@')[0] || 'Tu Freelancer'
+        });
+
+        const response = await fetch('/api/client-communications/send-token-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
                 clientId: selectedClientForToken,
                 message: emailMessage || 'Te comparto el acceso a nuestro portal de comunicación seguro.',
                 freelancerName: userEmail?.split('@')[0] || 'Tu Freelancer'
-            });
+            }),
+        });
 
-            const response = await fetch('/api/client-communications/send-token-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    clientId: selectedClientForToken,
-                    message: emailMessage || 'Te comparto el acceso a nuestro portal de comunicación seguro.',
-                    freelancerName: userEmail?.split('@')[0] || 'Tu Freelancer'
-                }),
-            });
-
-                status: response.status,
-                statusText: response.statusText,
+        status: response.status,
+            statusText: response.statusText,
                 ok: response.ok,
-                url: response.url
-            });
+                    url: response.url
+    });
 
-            if (!response.ok) {
-                // Si es 404, la ruta no existe
-                if (response.status === 404) {
-                    throw new Error(`API no encontrada (404): ${response.url}\nVerifica que el servidor esté ejecutándose correctamente.`);
-                }
-                
-                // Intentar parsear la respuesta de error
-                try {
-                    const errorResult = await response.json();
-                    throw new Error(`Error ${response.status}: ${errorResult.error || response.statusText}`);
-                } catch (parseError) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-            }
-
-            const result = await response.json();
-
-            if (result.success) {
-                toast.success('Email enviado exitosamente', {
-                    description: `Enviado a ${result.clientEmail}`,
-                    duration: 4000
-                });
-                setShowTokenForm(false);
-                setSelectedClientForToken('');
-                setEmailMessage('');
-                await loadTokens();
-            } else {
-                console.error('Error en la respuesta:', result);
-                toast.error('Error enviando email', {
-                    description: result.error || 'Error desconocido'
-                });
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            toast.error('Error enviando email', {
-                description: String(error)
-            });
-        } finally {
-            setSendingEmail(false);
+    if (!response.ok) {
+        // Si es 404, la ruta no existe
+        if (response.status === 404) {
+            throw new Error(`API no encontrada (404): ${response.url}\nVerifica que el servidor esté ejecutándose correctamente.`);
         }
-    };
 
-    const copyTokenUrl = (token: string) => {
-        const url = `${window.location.origin}/client-portal/${token}`;
-        navigator.clipboard.writeText(url);
-        toast.success('URL copiada al portapapeles');
-    };
-
-    const sendReply = async () => {
-        if (!replyMessage.trim() || !selectedClient || !supabase) return;
-
+        // Intentar parsear la respuesta de error
         try {
-            setSending(true);
+            const errorResult = await response.json();
+            throw new Error(`Error ${response.status}: ${errorResult.error || response.statusText}`);
+        } catch (parseError) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+    }
 
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+    const result = await response.json();
 
-            const { error } = await supabase
-                .from('client_messages')
-                .insert({
-                    client_id: selectedClient,
-                    message: replyMessage.trim(),
-                    sender_type: 'freelancer'
-                });
+    if (result.success) {
+        toast.success('Email enviado exitosamente', {
+            description: `Enviado a ${result.clientEmail}`,
+            duration: 4000
+        });
+        setShowTokenForm(false);
+        setSelectedClientForToken('');
+        setEmailMessage('');
+        await loadTokens();
+    } else {
+        console.error('Error en la respuesta:', result);
+        toast.error('Error enviando email', {
+            description: result.error || 'Error desconocido'
+        });
+    }
+} catch (error) {
+    console.error('Error:', error);
+    toast.error('Error enviando email', {
+        description: String(error)
+    });
+} finally {
+    setSendingEmail(false);
+}
+    };
 
-            if (error) {
-                console.error('Error sending reply:', error);
-                toast.error('Error enviando respuesta');
-            } else {
-                toast.success('Respuesta enviada');
-                setReplyMessage('');
-                await loadMessages();
-            }
-        } catch (error) {
-            console.error('Error:', error);
+const copyTokenUrl = (token: string) => {
+    const url = `${window.location.origin}/client-portal/${token}`;
+    navigator.clipboard.writeText(url);
+    toast.success('URL copiada al portapapeles');
+};
+
+const sendReply = async () => {
+    if (!replyMessage.trim() || !selectedClient || !supabase) return;
+
+    try {
+        setSending(true);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('client_messages')
+            .insert({
+                client_id: selectedClient,
+                message: replyMessage.trim(),
+                sender_type: 'freelancer'
+            });
+
+        if (error) {
+            console.error('Error sending reply:', error);
             toast.error('Error enviando respuesta');
-        } finally {
-            setSending(false);
-        }
-    };
-
-    const getClientMessages = (clientId: string) => {
-        return messages.filter((m: Message) => m.client_id === clientId)
-            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    };
-
-    const getUnreadCount = (clientId: string) => {
-        return messages.filter((m: Message) =>
-            m.client_id === clientId &&
-            m.sender_type === 'client' &&
-            !m.is_read
-        ).length;
-    };
-
-    const formatTime = (timestamp: string) => {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-
-        if (diffHours < 24) {
-            return date.toLocaleTimeString('es-ES', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
         } else {
-            return date.toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            toast.success('Respuesta enviada');
+            setReplyMessage('');
+            await loadMessages();
         }
-    };
+    } catch (error) {
+        console.error('Error:', error);
+        toast.error('Error enviando respuesta');
+    } finally {
+        setSending(false);
+    }
+};
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 text-slate-900">
-            <div className="flex h-screen">
-                <Sidebar userEmail={userEmail} onLogout={handleLogout} />
+const getClientMessages = (clientId: string) => {
+    return messages.filter((m: Message) => m.client_id === clientId)
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+};
 
-                <div className="flex flex-col flex-1 ml-56">
-                    <Header userEmail={userEmail} onLogout={handleLogout} />
-                    <div className="flex-1 overflow-auto">
+const getUnreadCount = (clientId: string) => {
+    return messages.filter((m: Message) =>
+        m.client_id === clientId &&
+        m.sender_type === 'client' &&
+        !m.is_read
+    ).length;
+};
+
+const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffHours < 24) {
+        return date.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else {
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+};
+
+return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 text-slate-900">
+        <div className="flex h-screen">
+            <Sidebar userEmail={userEmail} onLogout={handleLogout} />
+
+            <div className="flex flex-col flex-1 ml-56">
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                <div className="flex-1 overflow-auto">
                     <div className="p-4">
                         {/* Trial Banner */}
                         <div className="mb-4">
@@ -585,8 +585,8 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                                                                 key={client.id}
                                                                 onClick={() => setSelectedClient(client.id)}
                                                                 className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedClient === client.id
-                                                                        ? 'bg-blue-50 border-blue-200 border'
-                                                                        : 'hover:bg-slate-50 border border-transparent'
+                                                                    ? 'bg-blue-50 border-blue-200 border'
+                                                                    : 'hover:bg-slate-50 border border-transparent'
                                                                     }`}
                                                             >
                                                                 <div className="flex items-center justify-between mb-1">
@@ -651,7 +651,7 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                                                 {getClientMessages(selectedClient).map((message) => {
                                                     const isFreelancer = message.sender_type === 'freelancer';
                                                     const isClient = message.sender_type === 'client';
-                                                    
+
                                                     return (
                                                         <div
                                                             key={message.id}
@@ -660,39 +660,35 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                                                             {/* Contenedor del mensaje */}
                                                             <div className={`flex items-start gap-3 max-w-xs lg:max-w-md ${isFreelancer ? 'flex-row-reverse' : 'flex-row'}`}>
                                                                 {/* Avatar */}
-                                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-md ${
-                                                                    isFreelancer 
-                                                                        ? 'bg-gradient-to-br from-blue-600 to-indigo-600' 
+                                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isFreelancer
+                                                                        ? 'bg-gradient-to-br from-blue-600 to-indigo-600'
                                                                         : 'bg-gradient-to-br from-emerald-500 to-green-600'
-                                                                }`}>
+                                                                    }`}>
                                                                     <User className="w-4 h-4 text-white" />
                                                                 </div>
 
                                                                 {/* Contenido del mensaje */}
                                                                 <div className="flex flex-col min-w-0">
                                                                     {/* Nombre del remitente */}
-                                                    <div className={`text-xs font-medium mb-1 ${
-                                                        isFreelancer 
-                                                            ? 'text-right text-blue-600' 
-                                                            : 'text-left text-emerald-600'
-                                                    }`}>
-                                                        {isFreelancer ? 'Tú' : `${clients.find(c => c.id === selectedClient)?.name || 'Cliente'}`}
-                                                    </div>                                                                    {/* Burbuja del mensaje */}
-                                                                    <div className={`px-4 py-3 rounded-2xl shadow-sm ${
-                                                                        isFreelancer
+                                                                    <div className={`text-xs font-medium mb-1 ${isFreelancer
+                                                                            ? 'text-right text-blue-600'
+                                                                            : 'text-left text-emerald-600'
+                                                                        }`}>
+                                                                        {isFreelancer ? 'Tú' : `${clients.find(c => c.id === selectedClient)?.name || 'Cliente'}`}
+                                                                    </div>                                                                    {/* Burbuja del mensaje */}
+                                                                    <div className={`px-4 py-3 rounded-2xl shadow-sm ${isFreelancer
                                                                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
                                                                             : 'bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 text-slate-900'
-                                                                    }`}>
+                                                                        }`}>
                                                                         <p className="text-sm whitespace-pre-wrap leading-relaxed">
                                                                             {message.message}
                                                                         </p>
 
                                                                         {/* Timestamp */}
-                                                                        <div className={`flex items-center gap-1 mt-2 text-xs ${
-                                                                            isFreelancer
+                                                                        <div className={`flex items-center gap-1 mt-2 text-xs ${isFreelancer
                                                                                 ? 'text-white/70'
                                                                                 : 'text-emerald-600/70'
-                                                                        }`}>
+                                                                            }`}>
                                                                             <Clock className="w-3 h-3" />
                                                                             {formatTime(message.created_at)}
                                                                             {isFreelancer && (
@@ -753,89 +749,89 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                             </div>
                         </div>
                     </div>
-                    </div>
                 </div>
             </div>
-
-            {/* Modal para generar token */}
-            {showTokenForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <Card className="w-full max-w-md">
-                        <CardHeader>
-                            <CardTitle>Generar Token de Acceso</CardTitle>
-                            <CardDescription>
-                                Crea un enlace único para que el cliente pueda contactarte
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Seleccionar Cliente
-                                </label>
-                                <select
-                                    value={selectedClientForToken}
-                                    onChange={(e) => setSelectedClientForToken(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="">-- Seleccionar --</option>
-                                    {clients.length === 0 ? (
-                                        <option disabled>No hay clientes disponibles</option>
-                                    ) : (
-                                        clients.map((client) => (
-                                            <option key={client.id} value={client.id}>
-                                                {client.name} {client.company && `(${client.company})`}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                                <p className="text-xs text-slate-500 mt-1">
-                                    Clientes disponibles: {clients.length}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Mensaje Personalizado (opcional)
-                                </label>
-                                <Input
-                                    value={emailMessage}
-                                    onChange={(e) => setEmailMessage(e.target.value)}
-                                    placeholder="Escribe un mensaje personalizado para el email..."
-                                    className="border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                                <p className="text-xs text-slate-500 mt-1">
-                                    Este mensaje se incluirá en el email junto con el enlace de acceso
-                                </p>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <Button
-                                    onClick={() => setShowTokenForm(false)}
-                                    variant="outline"
-                                    className="flex-1"
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button
-                                    onClick={generateToken}
-                                    disabled={!selectedClientForToken || generatingToken}
-                                    variant="outline"
-                                    className="flex-1"
-                                >
-                                    {generatingToken ? 'Generando...' : 'Solo Generar'}
-                                </Button>
-                                <Button
-                                    onClick={sendTokenByEmail}
-                                    disabled={!selectedClientForToken || sendingEmail}
-                                    className="flex-1"
-                                >
-                                    {sendingEmail ? 'Enviando...' : '📧 Generar y Enviar'}
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
         </div>
-    );
+
+        {/* Modal para generar token */}
+        {showTokenForm && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>Generar Token de Acceso</CardTitle>
+                        <CardDescription>
+                            Crea un enlace único para que el cliente pueda contactarte
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Seleccionar Cliente
+                            </label>
+                            <select
+                                value={selectedClientForToken}
+                                onChange={(e) => setSelectedClientForToken(e.target.value)}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">-- Seleccionar --</option>
+                                {clients.length === 0 ? (
+                                    <option disabled>No hay clientes disponibles</option>
+                                ) : (
+                                    clients.map((client) => (
+                                        <option key={client.id} value={client.id}>
+                                            {client.name} {client.company && `(${client.company})`}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Clientes disponibles: {clients.length}
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Mensaje Personalizado (opcional)
+                            </label>
+                            <Input
+                                value={emailMessage}
+                                onChange={(e) => setEmailMessage(e.target.value)}
+                                placeholder="Escribe un mensaje personalizado para el email..."
+                                className="border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                            <p className="text-xs text-slate-500 mt-1">
+                                Este mensaje se incluirá en el email junto con el enlace de acceso
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={() => setShowTokenForm(false)}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={generateToken}
+                                disabled={!selectedClientForToken || generatingToken}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                {generatingToken ? 'Generando...' : 'Solo Generar'}
+                            </Button>
+                            <Button
+                                onClick={sendTokenByEmail}
+                                disabled={!selectedClientForToken || sendingEmail}
+                                className="flex-1"
+                            >
+                                {sendingEmail ? 'Enviando...' : '📧 Generar y Enviar'}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
+    </div>
+);
 }

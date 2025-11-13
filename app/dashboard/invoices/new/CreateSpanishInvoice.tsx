@@ -1,30 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import CustomDatePicker from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Sidebar from '@/components/Sidebar';
-import { SpanishInvoiceData, SpanishCompanyData, validateSpanishNIF, validateSpanishCIF } from '@/lib/spanish-invoice-utils';
+import { SpanishCompanyData, SpanishInvoiceData, validateSpanishCIF, validateSpanishNIF } from '@/lib/spanish-invoice-utils';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { 
-    FileText, 
-    Building2, 
-    User, 
-    Euro, 
-    Calendar, 
-    Hash, 
-    Plus, 
-    Trash2, 
-    Save,
+import {
     ArrowLeft,
-    Download,
-    Mail
+    Building2,
+    Euro,
+    FileText,
+    Hash,
+    Mail,
+    Plus,
+    Save,
+    Trash2,
+    User
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Client {
     id: string;
@@ -79,7 +77,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
         notes: '',
         paymentTerms: '30 días'
     });
-    
+
     const supabase = createSupabaseClient();
     const router = useRouter();
 
@@ -93,12 +91,12 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     const loadCompanyData = async () => {
         try {
             setLoadingCompany(true);
-            
+
             if (!supabase) {
                 setLoadingCompany(false);
                 return;
             }
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 setLoadingCompany(false);
@@ -146,12 +144,12 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     const loadClients = async () => {
         try {
             setLoadingClients(true);
-            
+
             if (!supabase) {
                 setLoadingClients(false);
                 return;
             }
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 setLoadingClients(false);
@@ -174,7 +172,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             }
 
             setClients(data || []);
-            
+
             if (data && data.length > 0) {
             }
         } catch (error) {
@@ -198,14 +196,14 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     const generateInvoiceNumber = async () => {
         try {
             if (!supabase) return;
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
             // Generar número basado en el año y contador
             const year = new Date().getFullYear();
             const invoiceNumber = `${year}-${String(Date.now()).slice(-6)}`;
-            
+
             setInvoiceData(prev => ({
                 ...prev,
                 invoiceNumber
@@ -217,7 +215,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
 
     const handleClientSelect = (clientId: string) => {
         setSelectedClientId(clientId);
-        
+
         if (clientId === '') {
             // Limpiar datos del cliente si no se selecciona ninguno
             setInvoiceData(prev => ({
@@ -235,8 +233,8 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
         const selectedClient = clients.find(client => client.id === clientId);
         if (selectedClient) {
             const clientNIF = selectedClient.nif || selectedClient.tax_id || '';
-            
-            
+
+
             setInvoiceData(prev => ({
                 ...prev,
                 clientName: selectedClient.name,
@@ -320,7 +318,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     };
 
     const validateForm = () => {
-        
+
         if (!companyData) {
             toast.error('Debe configurar los datos de la empresa primero');
             router.push('/dashboard/settings/company');
@@ -343,17 +341,17 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
         }
 
         // Validar items - debe haber al menos un item con descripción
-        
-        const itemsWithDescription = invoiceData.items.filter(item => 
+
+        const itemsWithDescription = invoiceData.items.filter(item =>
             item.description.trim().length > 0
         );
-        
-        
+
+
         if (itemsWithDescription.length === 0) {
             toast.error('Debe agregar al menos un concepto con descripción a la factura');
             return false;
         }
-        
+
         // Verificar que todos los items con descripción tengan datos válidos
         for (const item of itemsWithDescription) {
             if (item.quantity <= 0) {
@@ -375,11 +373,11 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     };
 
     const saveInvoice = async () => {
-        
+
         if (!validateForm()) {
             return;
         }
-        
+
 
         if (!supabase) {
             toast.error('Error de conexión con la base de datos');
@@ -396,7 +394,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
 
             // Obtener o crear cliente basado en NIF
             let clientId: string;
-            
+
             // Buscar si ya existe un cliente con este NIF
             const { data: existingClients, error: clientSearchError } = await supabase
                 .from('clients')
@@ -404,13 +402,13 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 .eq('nif', invoiceData.clientNIF)
                 .eq('user_id', user.id)
                 .limit(1);
-                
+
             if (clientSearchError) {
                 console.error('❌ Error buscando cliente:', clientSearchError);
                 toast.error('Error al buscar el cliente en la base de datos');
                 return;
             }
-                
+
             if (existingClients && existingClients.length > 0) {
                 clientId = existingClients[0].id;
             } else {
@@ -431,13 +429,13 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                     }])
                     .select('id')
                     .single();
-                    
+
                 if (clientCreateError) {
                     console.error('❌ Error creando cliente:', clientCreateError);
                     toast.error('Error al crear el cliente: ' + clientCreateError.message);
                     return;
                 }
-                
+
                 clientId = newClient.id;
             }
 
@@ -445,7 +443,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             const finalInvoiceNumber = invoiceData.invoiceNumber || await generateInvoiceNumber() || `FAC-${Date.now()}`;
 
             // Filtrar solo items con descripción válida
-            const validItems = invoiceData.items.filter(item => 
+            const validItems = invoiceData.items.filter(item =>
                 item.description.trim().length > 0
             );
 
@@ -597,7 +595,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     return (
         <div className="flex min-h-screen bg-gray-50 invoice-page-container">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
-            
+
             <main className="flex-1 overflow-auto">
                 <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
                     <div className="max-w-6xl mx-auto">
@@ -621,332 +619,332 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                             </div>
                         </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Datos de la Empresa */}
-                    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
-                                <Building2 className="w-5 h-5 text-blue-600" />
-                                Datos de la Empresa
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <h3 className="font-semibold text-gray-800">{companyData.companyName}</h3>
-                                <p className="text-sm text-gray-600">NIF: {companyData.nif}</p>
-                                <p className="text-sm text-gray-600">{companyData.address}</p>
-                                <p className="text-sm text-gray-600">{companyData.postalCode} {companyData.city}, {companyData.province}</p>
-                                {companyData.phone && <p className="text-sm text-gray-600">Tel: {companyData.phone}</p>}
-                                {companyData.email && <p className="text-sm text-gray-600">Email: {companyData.email}</p>}
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Datos de la Empresa */}
+                            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
+                                        <Building2 className="w-5 h-5 text-blue-600" />
+                                        Datos de la Empresa
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="p-4 bg-gray-50 rounded-xl">
+                                        <h3 className="font-semibold text-gray-800">{companyData.companyName}</h3>
+                                        <p className="text-sm text-gray-600">NIF: {companyData.nif}</p>
+                                        <p className="text-sm text-gray-600">{companyData.address}</p>
+                                        <p className="text-sm text-gray-600">{companyData.postalCode} {companyData.city}, {companyData.province}</p>
+                                        {companyData.phone && <p className="text-sm text-gray-600">Tel: {companyData.phone}</p>}
+                                        {companyData.email && <p className="text-sm text-gray-600">Email: {companyData.email}</p>}
+                                    </div>
+                                </CardContent>
+                            </Card>
 
-                    {/* Datos de la Factura */}
-                    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
-                                <Hash className="w-5 h-5 text-blue-600" />
-                                Datos de la Factura
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="invoiceNumber">Número de Factura</Label>
-                                    <Input
-                                        id="invoiceNumber"
-                                        value={invoiceData.invoiceNumber}
-                                        onChange={(e) => updateInvoiceField('invoiceNumber', e.target.value)}
-                                        placeholder="2024-001"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="date">Fecha</Label>
-                                    <CustomDatePicker
-                                        selected={invoiceData.date ? new Date(invoiceData.date) : null}
-                                        onChange={(date) => updateInvoiceField('date', date ? date.toISOString().split('T')[0] : '')}
-                                        placeholderText="Seleccionar fecha"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="dueDate">Fecha de Vencimiento</Label>
-                                <CustomDatePicker
-                                    selected={invoiceData.dueDate ? new Date(invoiceData.dueDate) : null}
-                                    onChange={(date) => updateInvoiceField('dueDate', date ? date.toISOString().split('T')[0] : '')}
-                                    placeholderText="Seleccionar fecha de vencimiento"
-                                    minDate={invoiceData.date ? new Date(invoiceData.date) : new Date()}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Datos del Cliente */}
-                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mt-8">
-                    <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
-                            <User className="w-5 h-5 text-blue-600" />
-                            Datos del Cliente
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {/* Selector de Cliente */}
-                        <div className="mb-6">
-                            <Label htmlFor="clientSelect">Seleccionar Cliente Existente</Label>
-                            <select
-                                id="clientSelect"
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                value={selectedClientId}
-                                onChange={(e) => handleClientSelect(e.target.value)}
-                                disabled={loadingClients}
-                            >
-                                <option value="">-- Seleccionar cliente o crear uno nuevo --</option>
-                                {clients.map((client) => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.company ? `${client.company} (${client.name})` : client.name}
-                                        {client.nif ? ` - ${client.nif}` : ''}
-                                    </option>
-                                ))}
-                            </select>
-                            {loadingClients && (
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Cargando clientes...
-                                </p>
-                            )}
-                            {!loadingClients && clients.length === 0 && (
-                                <p className="text-sm text-amber-600 mt-1">
-                                    No tienes clientes registrados. Complete los datos manualmente o añada clientes desde el panel de clientes.
-                                </p>
-                            )}
+                            {/* Datos de la Factura */}
+                            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
+                                        <Hash className="w-5 h-5 text-blue-600" />
+                                        Datos de la Factura
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label htmlFor="invoiceNumber">Número de Factura</Label>
+                                            <Input
+                                                id="invoiceNumber"
+                                                value={invoiceData.invoiceNumber}
+                                                onChange={(e) => updateInvoiceField('invoiceNumber', e.target.value)}
+                                                placeholder="2024-001"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="date">Fecha</Label>
+                                            <CustomDatePicker
+                                                selected={invoiceData.date ? new Date(invoiceData.date) : null}
+                                                onChange={(date) => updateInvoiceField('date', date ? date.toISOString().split('T')[0] : '')}
+                                                placeholderText="Seleccionar fecha"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="dueDate">Fecha de Vencimiento</Label>
+                                        <CustomDatePicker
+                                            selected={invoiceData.dueDate ? new Date(invoiceData.dueDate) : null}
+                                            onChange={(date) => updateInvoiceField('dueDate', date ? date.toISOString().split('T')[0] : '')}
+                                            placeholderText="Seleccionar fecha de vencimiento"
+                                            minDate={invoiceData.date ? new Date(invoiceData.date) : new Date()}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="clientName">Nombre/Razón Social *</Label>
-                                <Input
-                                    id="clientName"
-                                    value={invoiceData.clientName}
-                                    onChange={(e) => updateInvoiceField('clientName', e.target.value)}
-                                    placeholder="Nombre del cliente"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="clientNIF">NIF/CIF *</Label>
-                                <Input
-                                    id="clientNIF"
-                                    value={invoiceData.clientNIF}
-                                    onChange={(e) => updateInvoiceField('clientNIF', e.target.value)}
-                                    placeholder="12345678A o B12345678"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="clientAddress">Dirección</Label>
-                                <Input
-                                    id="clientAddress"
-                                    value={invoiceData.clientAddress}
-                                    onChange={(e) => updateInvoiceField('clientAddress', e.target.value)}
-                                    placeholder="Dirección del cliente"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="clientCity">Ciudad</Label>
-                                <Input
-                                    id="clientCity"
-                                    value={invoiceData.clientCity}
-                                    onChange={(e) => updateInvoiceField('clientCity', e.target.value)}
-                                    placeholder="Ciudad"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="clientPostalCode">Código Postal</Label>
-                                <Input
-                                    id="clientPostalCode"
-                                    value={invoiceData.clientPostalCode}
-                                    onChange={(e) => updateInvoiceField('clientPostalCode', e.target.value)}
-                                    placeholder="28001"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="clientProvince">Provincia</Label>
-                                <Input
-                                    id="clientProvince"
-                                    value={invoiceData.clientProvince}
-                                    onChange={(e) => updateInvoiceField('clientProvince', e.target.value)}
-                                    placeholder="Provincia"
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        {/* Datos del Cliente */}
+                        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mt-8">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                    Datos del Cliente
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {/* Selector de Cliente */}
+                                <div className="mb-6">
+                                    <Label htmlFor="clientSelect">Seleccionar Cliente Existente</Label>
+                                    <select
+                                        id="clientSelect"
+                                        className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        value={selectedClientId}
+                                        onChange={(e) => handleClientSelect(e.target.value)}
+                                        disabled={loadingClients}
+                                    >
+                                        <option value="">-- Seleccionar cliente o crear uno nuevo --</option>
+                                        {clients.map((client) => (
+                                            <option key={client.id} value={client.id}>
+                                                {client.company ? `${client.company} (${client.name})` : client.name}
+                                                {client.nif ? ` - ${client.nif}` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {loadingClients && (
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            Cargando clientes...
+                                        </p>
+                                    )}
+                                    {!loadingClients && clients.length === 0 && (
+                                        <p className="text-sm text-amber-600 mt-1">
+                                            No tienes clientes registrados. Complete los datos manualmente o añada clientes desde el panel de clientes.
+                                        </p>
+                                    )}
+                                </div>
 
-                {/* Conceptos de la Factura */}
-                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mt-8">
-                    <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
-                            <Euro className="w-5 h-5 text-blue-600" />
-                            Conceptos de la Factura
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {invoiceData.items.map((item, index) => (
-                                <div key={index} className="p-4 border border-gray-200 rounded-xl bg-gray-50">
-                                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-                                        <div className="md:col-span-2">
-                                            <Label>Descripción *</Label>
-                                            <Input
-                                                value={item.description}
-                                                onChange={(e) => updateItemField(index, 'description', e.target.value)}
-                                                placeholder="Descripción del servicio/producto"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Cantidad</Label>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={item.quantity}
-                                                onChange={(e) => updateItemField(index, 'quantity', parseFloat(e.target.value) || 0)}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Precio Unit. (€)</Label>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={item.unitPrice === 0 ? '' : item.unitPrice}
-                                                onChange={(e) => updateItemField(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>IVA (%)</Label>
-                                            <select
-                                                className="w-full p-2 border border-gray-300 rounded-lg"
-                                                value={item.vatRate}
-                                                onChange={(e) => updateItemField(index, 'vatRate', parseFloat(e.target.value))}
-                                            >
-                                                <option value={0}>0% - Exento</option>
-                                                <option value={4}>4% - Superreducido</option>
-                                                <option value={10}>10% - Reducido</option>
-                                                <option value={21}>21% - General</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-right">
-                                                <div className="text-sm text-gray-600">Total</div>
-                                                <div className="font-bold text-lg">{item.total.toFixed(2)}€</div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="clientName">Nombre/Razón Social *</Label>
+                                        <Input
+                                            id="clientName"
+                                            value={invoiceData.clientName}
+                                            onChange={(e) => updateInvoiceField('clientName', e.target.value)}
+                                            placeholder="Nombre del cliente"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientNIF">NIF/CIF *</Label>
+                                        <Input
+                                            id="clientNIF"
+                                            value={invoiceData.clientNIF}
+                                            onChange={(e) => updateInvoiceField('clientNIF', e.target.value)}
+                                            placeholder="12345678A o B12345678"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientAddress">Dirección</Label>
+                                        <Input
+                                            id="clientAddress"
+                                            value={invoiceData.clientAddress}
+                                            onChange={(e) => updateInvoiceField('clientAddress', e.target.value)}
+                                            placeholder="Dirección del cliente"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientCity">Ciudad</Label>
+                                        <Input
+                                            id="clientCity"
+                                            value={invoiceData.clientCity}
+                                            onChange={(e) => updateInvoiceField('clientCity', e.target.value)}
+                                            placeholder="Ciudad"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientPostalCode">Código Postal</Label>
+                                        <Input
+                                            id="clientPostalCode"
+                                            value={invoiceData.clientPostalCode}
+                                            onChange={(e) => updateInvoiceField('clientPostalCode', e.target.value)}
+                                            placeholder="28001"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientProvince">Provincia</Label>
+                                        <Input
+                                            id="clientProvince"
+                                            value={invoiceData.clientProvince}
+                                            onChange={(e) => updateInvoiceField('clientProvince', e.target.value)}
+                                            placeholder="Provincia"
+                                        />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Conceptos de la Factura */}
+                        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mt-8">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
+                                    <Euro className="w-5 h-5 text-blue-600" />
+                                    Conceptos de la Factura
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {invoiceData.items.map((item, index) => (
+                                        <div key={index} className="p-4 border border-gray-200 rounded-xl bg-gray-50">
+                                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                                                <div className="md:col-span-2">
+                                                    <Label>Descripción *</Label>
+                                                    <Input
+                                                        value={item.description}
+                                                        onChange={(e) => updateItemField(index, 'description', e.target.value)}
+                                                        placeholder="Descripción del servicio/producto"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Cantidad</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={item.quantity}
+                                                        onChange={(e) => updateItemField(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Precio Unit. (€)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={item.unitPrice === 0 ? '' : item.unitPrice}
+                                                        onChange={(e) => updateItemField(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>IVA (%)</Label>
+                                                    <select
+                                                        className="w-full p-2 border border-gray-300 rounded-lg"
+                                                        value={item.vatRate}
+                                                        onChange={(e) => updateItemField(index, 'vatRate', parseFloat(e.target.value))}
+                                                    >
+                                                        <option value={0}>0% - Exento</option>
+                                                        <option value={4}>4% - Superreducido</option>
+                                                        <option value={10}>10% - Reducido</option>
+                                                        <option value={21}>21% - General</option>
+                                                    </select>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-right">
+                                                        <div className="text-sm text-gray-600">Total</div>
+                                                        <div className="font-bold text-lg">{item.total.toFixed(2)}€</div>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() => removeItem(index)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="p-2 text-red-600 hover:text-red-700"
+                                                        disabled={invoiceData.items.length === 1}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <Button
-                                                onClick={() => removeItem(index)}
-                                                variant="outline"
-                                                size="sm"
-                                                className="p-2 text-red-600 hover:text-red-700"
-                                                disabled={invoiceData.items.length === 1}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                                        </div>
+                                    ))}
+
+                                    <Button
+                                        onClick={addItem}
+                                        variant="outline"
+                                        className="w-full border-dashed border-2 border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-600 py-4"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Añadir Concepto
+                                    </Button>
+                                </div>
+
+                                {/* Totales */}
+                                <div className="mt-8 bg-gray-50 p-6 rounded-xl">
+                                    <div className="space-y-2 text-right">
+                                        <div className="flex justify-between text-lg">
+                                            <span>Subtotal:</span>
+                                            <span className="font-semibold">{invoiceData.subtotal.toFixed(2)}€</span>
+                                        </div>
+                                        <div className="flex justify-between text-lg">
+                                            <span>IVA Total:</span>
+                                            <span className="font-semibold">{invoiceData.totalVAT.toFixed(2)}€</span>
+                                        </div>
+                                        <div className="flex justify-between text-2xl font-bold border-t border-gray-300 pt-2">
+                                            <span>TOTAL:</span>
+                                            <span className="text-blue-600">{invoiceData.total.toFixed(2)}€</span>
                                         </div>
                                     </div>
                                 </div>
-                            ))}
+                            </CardContent>
+                        </Card>
 
+                        {/* Observaciones */}
+                        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mt-8">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-xl text-gray-800">Observaciones</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <textarea
+                                    className="w-full p-4 border border-gray-300 rounded-xl resize-none"
+                                    rows={4}
+                                    value={invoiceData.notes}
+                                    onChange={(e) => updateInvoiceField('notes', e.target.value)}
+                                    placeholder="Observaciones adicionales sobre la factura..."
+                                />
+                            </CardContent>
+                        </Card>
+
+                        {/* Botones de Acción */}
+                        <div className="flex justify-end gap-4 mt-8 pb-8">
                             <Button
-                                onClick={addItem}
+                                onClick={() => router.back()}
                                 variant="outline"
-                                className="w-full border-dashed border-2 border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-600 py-4"
+                                disabled={loading || sendingEmail}
+                                className="px-6 py-3 rounded-xl"
                             >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Añadir Concepto
+                                Cancelar
+                            </Button>
+                            {savedInvoiceId && invoiceData.clientEmail && (
+                                <Button
+                                    onClick={sendInvoiceEmail}
+                                    disabled={sendingEmail}
+                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                                >
+                                    {sendingEmail ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Enviando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Mail className="w-4 h-4" />
+                                            Enviar por Email
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                            <Button
+                                onClick={saveInvoice}
+                                disabled={loading || sendingEmail}
+                                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                            >
+                                {loading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Creando Factura...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4" />
+                                        Crear Factura
+                                    </>
+                                )}
                             </Button>
                         </div>
-
-                        {/* Totales */}
-                        <div className="mt-8 bg-gray-50 p-6 rounded-xl">
-                            <div className="space-y-2 text-right">
-                                <div className="flex justify-between text-lg">
-                                    <span>Subtotal:</span>
-                                    <span className="font-semibold">{invoiceData.subtotal.toFixed(2)}€</span>
-                                </div>
-                                <div className="flex justify-between text-lg">
-                                    <span>IVA Total:</span>
-                                    <span className="font-semibold">{invoiceData.totalVAT.toFixed(2)}€</span>
-                                </div>
-                                <div className="flex justify-between text-2xl font-bold border-t border-gray-300 pt-2">
-                                    <span>TOTAL:</span>
-                                    <span className="text-blue-600">{invoiceData.total.toFixed(2)}€</span>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Observaciones */}
-                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm mt-8">
-                    <CardHeader className="pb-4">
-                        <CardTitle className="text-xl text-gray-800">Observaciones</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <textarea
-                            className="w-full p-4 border border-gray-300 rounded-xl resize-none"
-                            rows={4}
-                            value={invoiceData.notes}
-                            onChange={(e) => updateInvoiceField('notes', e.target.value)}
-                            placeholder="Observaciones adicionales sobre la factura..."
-                        />
-                    </CardContent>
-                </Card>
-
-                {/* Botones de Acción */}
-                <div className="flex justify-end gap-4 mt-8 pb-8">
-                    <Button
-                        onClick={() => router.back()}
-                        variant="outline"
-                        disabled={loading || sendingEmail}
-                        className="px-6 py-3 rounded-xl"
-                    >
-                        Cancelar
-                    </Button>
-                    {savedInvoiceId && invoiceData.clientEmail && (
-                        <Button
-                            onClick={sendInvoiceEmail}
-                            disabled={sendingEmail}
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-                        >
-                            {sendingEmail ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Enviando...
-                                </>
-                            ) : (
-                                <>
-                                    <Mail className="w-4 h-4" />
-                                    Enviar por Email
-                                </>
-                            )}
-                        </Button>
-                    )}
-                    <Button
-                        onClick={saveInvoice}
-                        disabled={loading || sendingEmail}
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
-                    >
-                        {loading ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Creando Factura...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4" />
-                                Crear Factura
-                            </>
-                        )}
-                    </Button>
-                </div>
                     </div>
                 </div>
             </main>

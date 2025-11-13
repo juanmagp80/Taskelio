@@ -3,15 +3,12 @@
 import ClientMessageAlert from '@/components/ClientMessageAlert';
 import NotificationBell from '@/components/NotificationBell';
 import SubscriptionStatus from '@/components/SubscriptionStatus';
-import { Button } from '@/components/ui/Button';
 import { useTrialStatus } from '@/src/lib/useTrialStatus';
 import { cn } from '@/src/lib/utils';
 import {
   BarChart3,
-  Bot,
   Brain,
   Briefcase,
-  Building2,
   Calculator,
   Calendar,
   CheckSquare,
@@ -24,7 +21,6 @@ import {
   Home,
   LogOut,
   MessageCircle,
-  Presentation,
   Receipt,
   Settings,
   Star,
@@ -33,7 +29,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface SidebarProps {
   userEmail?: string;
@@ -341,7 +337,7 @@ export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
                 {userEmail || 'Sin email'}
               </p>
             </div>
-            <ChevronUp 
+            <ChevronUp
               className={cn(
                 "h-4 w-4 text-slate-600 dark:text-slate-400 transition-transform duration-200",
                 isUserMenuOpen && "rotate-180"
@@ -369,7 +365,7 @@ export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
                   <Settings className="h-4 w-4 mr-2" />
                   Configuración
                 </Link>
-                
+
                 <Link
                   href="/dashboard/billing"
                   className="flex items-center px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
