@@ -76,7 +76,6 @@ export async function POST(req: NextRequest) {
     Notas del proyecto: ${project.notes || 'Sin notas adicionales'}
     `;
 
-    console.log('⚠️ Analizando riesgos del proyecto:', project.name);
 
     // Llamada a OpenAI para análisis de riesgos
     const completion = await openai.chat.completions.create({
@@ -139,7 +138,6 @@ export async function POST(req: NextRequest) {
     });
 
     const response = completion.choices[0]?.message?.content || '{}';
-    console.log('🤖 Respuesta de OpenAI para análisis de riesgos:', response);
 
     let analysis;
     let parseError = false;
@@ -256,8 +254,6 @@ export async function POST(req: NextRequest) {
       // No fallar la respuesta por esto
     }
 
-    console.log('✅ Análisis de riesgos completado para proyecto:', project.name);
-    console.log('⚠️ Nivel de riesgo:', analysis.risk_level, `(${analysis.overall_risk_score}/10)`);
 
     return NextResponse.json(result);
 

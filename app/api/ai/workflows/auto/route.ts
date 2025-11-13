@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { eventType, entityId, userId: userInput, autoDetect } = body;
 
-        console.log('🔄 Processing automatic event:', { eventType, entityId, userInput, autoDetect });
 
         const supabase = createSupabaseAdmin();
 
@@ -20,27 +19,27 @@ export async function POST(request: NextRequest) {
         if (isUUID) {
             // userInput es un UUID, usarlo directamente
             userId = userInput;
-            console.log('✅ Using UUID directly:', userId);
         } else {
-            // userInput es un email, obtener el ID
-            const { data: userIdFromEmail, error: userError } = await supabase
-                .rpc('get_user_id_by_email', { user_email: userInput });
+            // userInput es un email, obtener el ID desde profiles
+            const { data: profile, error: userError } = await supabase
+                .from('profiles')
+                .select('id, email')
+                .eq('email', userInput)
+                .single();
 
-            if (userError || !userIdFromEmail) {
+            if (userError || !profile) {
                 return NextResponse.json({
                     error: 'Usuario no encontrado por email'
                 }, { status: 404 });
             }
 
-            userId = userIdFromEmail;
-            console.log('✅ Found user ID from email:', userId);
+            userId = profile.id;
         }
 
         const results = [];
 
         if (autoDetect) {
             // Modo detección automática: buscar eventos recientes
-            console.log('🔍 Auto-detecting recent events...');
 
             const recentEvents = await detectRecentEvents(userId, 24); // Últimas 24 horas
 
@@ -57,7 +56,6 @@ export async function POST(request: NextRequest) {
                         .contains('data_points', { event: { entityId: event.entityId } });
 
                     if (recentEmails && recentEmails.length > 0) {
-                        console.log(`⏭️ Saltando evento ${event.type} para entidad ${event.entityId} - Email ya enviado recientemente`);
                         continue;
                     }
 
@@ -157,7 +155,6 @@ export async function POST(request: NextRequest) {
 
         } else {
             // Modo manual: procesar evento específico
-            console.log('📧 Processing specific event:', eventType, entityId);
 
             // Obtener datos automáticamente del evento
             const eventData = await getEventDataAutomatically(eventType, entityId, userId);
@@ -249,18 +246,19 @@ export async function GET(request: NextRequest) {
         if (isUUID) {
             // userInput es un UUID, usarlo directamente
             userId = userInput;
-            console.log('✅ GET: Using UUID directly:', userId);
         } else {
-            // userInput es un email, obtener el ID
-            const { data: userIdFromEmail, error: userError } = await supabase
-                .rpc('get_user_id_by_email', { user_email: userInput });
+            // userInput es un email, obtener el ID desde profiles
+            const { data: profile, error: userError } = await supabase
+                .from('profiles')
+                .select('id, email')
+                .eq('email', userInput)
+                .single();
 
-            if (userError || !userIdFromEmail) {
+            if (userError || !profile) {
                 return NextResponse.json({ error: 'Usuario no encontrado por email' }, { status: 404 });
             }
 
-            userId = userIdFromEmail;
-            console.log('✅ GET: Found user ID from email:', userId);
+            userId = profile.id;
         }
 
         // Detectar eventos recientes

@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
             }, { status: 401 });
         }
 
-        console.log('👤 Usuario autenticado:', user.id);
         const results: {
             user_id: string;
             clients: any[];
@@ -56,7 +55,6 @@ export async function POST(request: NextRequest) {
         };
 
         // 1. CREAR CLIENTES DE PRUEBA
-        console.log('👥 Creando clientes de prueba...');
         
         const clientsData = [
             {
@@ -119,18 +117,15 @@ export async function POST(request: NextRequest) {
 
             if (!basicError && basicClients) {
                 results.clients = basicClients;
-                console.log('✅ Clientes creados (versión básica):', basicClients.length);
             } else {
                 results.errors.push({ table: 'clients_basic', error: basicError?.message });
             }
         } else if (clients) {
             results.clients = clients;
-            console.log('✅ Clientes creados:', clients.length);
         }
 
         // 2. CREAR PROYECTOS (si tenemos clientes)
         if (results.clients.length > 0) {
-            console.log('📋 Creando proyectos...');
             
             const projectsData = [
                 {
@@ -191,17 +186,14 @@ export async function POST(request: NextRequest) {
 
                 if (!basicProjectError && basicProjects) {
                     results.projects = basicProjects;
-                    console.log('✅ Proyectos creados (versión básica):', basicProjects.length);
                 }
             } else if (projects) {
                 results.projects = projects;
-                console.log('✅ Proyectos creados:', projects.length);
             }
         }
 
         // 3. CREAR FACTURAS
         if (results.clients.length > 0) {
-            console.log('💰 Creando facturas...');
             
             const today = new Date();
             const futureDate = new Date(today.getTime() + 15 * 24 * 60 * 60 * 1000); // +15 días
@@ -272,11 +264,9 @@ export async function POST(request: NextRequest) {
 
                 if (!basicInvoiceError && basicInvoices) {
                     results.invoices = basicInvoices;
-                    console.log('✅ Facturas creadas (versión básica):', basicInvoices.length);
                 }
             } else if (invoices) {
                 results.invoices = invoices;
-                console.log('✅ Facturas creadas:', invoices.length);
             }
         }
 
@@ -306,10 +296,8 @@ export async function POST(request: NextRequest) {
 
             if (!tasksError && tasks) {
                 results.tasks = tasks;
-                console.log('✅ Tareas creadas:', tasks.length);
             }
         } catch (error) {
-            console.log('ℹ️ Tabla tasks no disponible, omitiendo...');
         }
 
         // Resumen final
@@ -332,7 +320,6 @@ export async function POST(request: NextRequest) {
             ]
         };
 
-        console.log('📊 Resumen:', summary);
         return NextResponse.json(summary);
 
     } catch (error) {

@@ -53,21 +53,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             expand={true}
             richColors={false}
             closeButton={true}
-            toastOptions={{
-              duration: Infinity, // No se cierra automáticamente
-              style: {
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Verde como el toast personalizado
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                borderRadius: '12px',
-                padding: '16px',
-                fontSize: '14px',
-                fontWeight: '600',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(16px)',
-                animation: 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-              },
-            }}
           />
           </ThemeProvider>
         </CookieCleanupProvider>

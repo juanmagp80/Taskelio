@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Brain, MessageSquare, RefreshCw, Lightbulb, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
+import { showToast } from '@/utils/toast';
 
 interface ConversationAnalyzerProps {
   clientId: string;
@@ -35,14 +36,14 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
       const data = await response.json();
       
       if (data.error) {
-        alert(`Error: ${data.error}`);
+        showToast.error(`Error: ${data.error}`);
         return;
       }
 
       setAnalysis(data.analysis);
     } catch (error) {
       console.error('Error analyzing conversation:', error);
-      alert('Error al analizar la conversación');
+      showToast.error('Error al analizar la conversación');
     } finally {
       setIsAnalyzing(false);
     }
@@ -60,7 +61,7 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
       const data = await response.json();
       
       if (data.error) {
-        alert(`Error: ${data.error}`);
+        showToast.error(`Error: ${data.error}`);
         return;
       }
 
@@ -70,7 +71,7 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
       }
     } catch (error) {
       console.error('Error suggesting response:', error);
-      alert('Error al sugerir respuesta');
+      showToast.error('Error al sugerir respuesta');
     } finally {
       setIsAnalyzing(false);
     }

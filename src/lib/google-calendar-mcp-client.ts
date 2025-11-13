@@ -63,7 +63,6 @@ export class GoogleCalendarMCPClient {
       // En una implementación real, esto sería una llamada al servidor MCP
       // Por ahora, simulamos la respuesta
 
-      console.log(`🔄 Sincronizando calendario para usuario ${userId}...`);
 
       return {
         success: true,
@@ -115,7 +114,6 @@ export class GoogleCalendarMCPClient {
       }
 
       // En una implementación real, aquí también se crearía en Google Calendar
-      console.log(`📅 Evento creado: ${eventData.title}`);
 
       return {
         success: true,
@@ -210,7 +208,6 @@ export class GoogleCalendarMCPClient {
       }
 
       // En una implementación real, aquí se llamaría al servidor MCP para enviar el email
-      console.log(`📧 Enviando recordatorio ${reminderType} para "${event.title}" a ${event.clients.email}`);
 
       // Registrar el recordatorio enviado
       const { error: reminderError } = await this.supabase
@@ -246,7 +243,6 @@ export class GoogleCalendarMCPClient {
   async startAutomation(): Promise<MCPResponse> {
     try {
       // En una implementación real, esto iniciaría el cron job en el servidor MCP
-      console.log('🤖 Iniciando automatización de recordatorios...');
 
       return {
         success: true,
@@ -266,7 +262,6 @@ export class GoogleCalendarMCPClient {
   async stopAutomation(): Promise<MCPResponse> {
     try {
       // En una implementación real, esto detendría el cron job en el servidor MCP
-      console.log('⏹️ Deteniendo automatización de recordatorios...');
 
       return {
         success: true,
@@ -328,7 +323,6 @@ export class GoogleCalendarMCPClient {
    */
   async runReminderCheck(): Promise<MCPResponse> {
     try {
-      console.log('🔍 Ejecutando verificación manual de recordatorios...');
 
       // Obtener reuniones próximas
       const upcomingResult = await this.getUpcomingMeetings(undefined, 25);

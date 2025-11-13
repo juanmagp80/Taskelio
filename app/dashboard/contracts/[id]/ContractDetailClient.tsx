@@ -160,7 +160,6 @@ export default function ContractDetailClient({ contractId, userEmail }: Contract
         if (!contract || !canUseFeatures) return;
 
         try {
-            console.log('🚀 Enviando contrato por email:', contract.id);
 
             // Llamar a la API para enviar el email
             const response = await fetch('/api/contracts/send-email', {
@@ -187,7 +186,6 @@ export default function ContractDetailClient({ contractId, userEmail }: Contract
             });
 
             showToast.success('✅ Contrato enviado por email correctamente');
-            console.log('📧 Email enviado exitosamente:', result.emailId);
 
         } catch (error) {
             console.error('Error sending contract email:', error);

@@ -2,6 +2,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import TrialBanner from '@/components/TrialBanner';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
 import { useTrialStatus } from '@/src/lib/useTrialStatus';
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DashboardBonsai({
     userEmail,
@@ -28,7 +30,6 @@ export default function DashboardBonsai({
     isDemo?: boolean;
     totalTaskTime?: number;
 }) {
-    console.log('🚀 DashboardBonsai INICIADO:', { userEmail, isDemo, totalTaskTime });
     const supabase = createSupabaseClient();
     const router = useRouter();
 
@@ -59,6 +60,16 @@ export default function DashboardBonsai({
     // Estados para datos dinámicos
     const [realProjects, setRealProjects] = useState<any[]>([]);
     const [realClients, setRealClients] = useState<any[]>([]);
+    const [topClientsByRevenue, setTopClientsByRevenue] = useState<any[]>([]);
+    const [weeklyProductivityData, setWeeklyProductivityData] = useState([
+        { day: 'Lun', hours: 0, percentage: 0 },
+        { day: 'Mar', hours: 0, percentage: 0 },
+        { day: 'Mié', hours: 0, percentage: 0 },
+        { day: 'Jue', hours: 0, percentage: 0 },
+        { day: 'Vie', hours: 0, percentage: 0 },
+        { day: 'Sáb', hours: 0, percentage: 0 },
+        { day: 'Dom', hours: 0, percentage: 0 }
+    ]);
     const [loading, setLoading] = useState(true);
 
     const [recentActivity, setRecentActivity] = useState<Array<{
@@ -87,13 +98,11 @@ export default function DashboardBonsai({
 
     // Cargar métricas del dashboard
     const loadDashboardData = async () => {
-        console.log('🔥 loadDashboardData EJECUTÁNDOSE');
         try {
             setLoading(true);
 
             // ✅ Si está en modo demo, usar datos ficticios
             if (isDemo) {
-                console.log('🎭 Modo DEMO activado - usando datos ficticios');
                 setMetrics({
                     totalClients: 12,
                     activeProjects: 5,
@@ -171,8 +180,6 @@ export default function DashboardBonsai({
                 return;
             }
 
-            console.log('💼 Modo REAL activado - cargando datos de Supabase');
-            console.log('🔍 isDemo =', isDemo);
 
             if (!supabase) {
                 console.error('Supabase client not available');
@@ -196,7 +203,7 @@ export default function DashboardBonsai({
             ] = await Promise.all([
                 supabase.from('clients').select('*').eq('user_id', user.id),
                 supabase.from('projects').select('*').eq('user_id', user.id),
-                supabase.from('invoices').select('amount, created_at, issue_date, paid_date').eq('status', 'paid').eq('user_id', user.id)
+                supabase.from('invoices').select('amount, total_amount, created_at, issue_date, paid_date, client_id, client_name, client:clients(id, name, email)').eq('status', 'paid').eq('user_id', user.id)
             ]);
 
             const activeProjects = allProjects?.filter((p: any) =>
@@ -237,55 +244,157 @@ export default function DashboardBonsai({
                 .gte('start_time', startOfMonth.toISOString())
                 .lte('start_time', endOfMonth.toISOString());
 
+            // Consultar eventos del calendario de la semana actual (completados)
+            const { data: weeklyCalendarEvents } = await supabase
+                .from('calendar_events')
+                .select('start_time, end_time')
+                .eq('user_id', user.id)
+                .eq('status', 'completed')
+                .gte('start_time', startOfWeek.toISOString())
+                .lte('start_time', endOfWeek.toISOString());
+
+            // Consultar eventos del calendario del mes actual (completados)
+            const { data: monthlyCalendarEvents } = await supabase
+                .from('calendar_events')
+                .select('start_time, end_time')
+                .eq('user_id', user.id)
+                .eq('status', 'completed')
+                .gte('start_time', startOfMonth.toISOString())
+                .lte('start_time', endOfMonth.toISOString());
+
+            // Calcular minutos de time_entries
             const totalMinutesThisWeek = (weeklyTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 60), 0) || 0;
             const billableMinutesThisWeek = (weeklyTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds ? entry.duration_seconds / 60 : 0), 0) || 0;
 
-            const totalRevenue = invoices?.reduce((sum: number, invoice: any) => {
-                return sum + (invoice.amount || 0);
+            // Calcular minutos de eventos del calendario (semana)
+            const calendarMinutesThisWeek = (weeklyCalendarEvents || []).reduce((sum: number, event: any) => {
+                if (event.start_time && event.end_time) {
+                    const start = new Date(event.start_time).getTime();
+                    const end = new Date(event.end_time).getTime();
+                    const duration = (end - start) / 1000 / 60; // convertir a minutos
+                    return sum + duration;
+                }
+                return sum;
             }, 0) || 0;
 
-            console.log('💰 Facturas encontradas:', invoices?.length || 0);
-            console.log('💰 Total ingresos calculado:', totalRevenue);
-            console.log('🔍 Facturas para gráfica:', invoices);
 
-            // Calcular ingresos por mes para la gráfica
-            const monthlyData = [
-                { month: 'Mar', value: 0, amount: 0 },
-                { month: 'Abr', value: 0, amount: 0 },
-                { month: 'May', value: 0, amount: 0 },
-                { month: 'Jun', value: 0, amount: 0 },
-                { month: 'Jul', value: 0, amount: 0 },
-                { month: 'Ago', value: 0, amount: 0 }
+            // Calcular productividad por día de la semana (Lun-Dom)
+            const dailyHours = [0, 0, 0, 0, 0, 0, 0]; // Lun=0, Dom=6
+            
+            // Agrupar time_entries por día de la semana
+            (weeklyTimeData || []).forEach((entry: any) => {
+                const entryDate = new Date(entry.start_time);
+                let dayOfWeek = entryDate.getDay(); // 0=Dom, 1=Lun, ..., 6=Sáb
+                // Convertir al formato deseado: 0=Lun, 6=Dom
+                dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                dailyHours[dayOfWeek] += (entry.duration_seconds / 60 / 60); // convertir a horas
+            });
+
+            // Agrupar calendar_events por día de la semana
+            (weeklyCalendarEvents || []).forEach((event: any) => {
+                if (event.start_time && event.end_time) {
+                    const eventDate = new Date(event.start_time);
+                    let dayOfWeek = eventDate.getDay();
+                    dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    const start = new Date(event.start_time).getTime();
+                    const end = new Date(event.end_time).getTime();
+                    const hours = (end - start) / 1000 / 60 / 60;
+                    dailyHours[dayOfWeek] += hours;
+                }
+            });
+
+            // Calcular porcentajes relativos (basado en el día con más horas)
+            const maxDailyHours = Math.max(...dailyHours, 1); // mínimo 1 para evitar división por 0
+            const weeklyProductivity = [
+                { day: 'Lun', hours: Math.round(dailyHours[0] * 10) / 10, percentage: Math.round((dailyHours[0] / maxDailyHours) * 100) },
+                { day: 'Mar', hours: Math.round(dailyHours[1] * 10) / 10, percentage: Math.round((dailyHours[1] / maxDailyHours) * 100) },
+                { day: 'Mié', hours: Math.round(dailyHours[2] * 10) / 10, percentage: Math.round((dailyHours[2] / maxDailyHours) * 100) },
+                { day: 'Jue', hours: Math.round(dailyHours[3] * 10) / 10, percentage: Math.round((dailyHours[3] / maxDailyHours) * 100) },
+                { day: 'Vie', hours: Math.round(dailyHours[4] * 10) / 10, percentage: Math.round((dailyHours[4] / maxDailyHours) * 100) },
+                { day: 'Sáb', hours: Math.round(dailyHours[5] * 10) / 10, percentage: Math.round((dailyHours[5] / maxDailyHours) * 100) },
+                { day: 'Dom', hours: Math.round(dailyHours[6] * 10) / 10, percentage: Math.round((dailyHours[6] / maxDailyHours) * 100) }
             ];
+
+            setWeeklyProductivityData(weeklyProductivity);
+
+            const totalRevenue = invoices?.reduce((sum: number, invoice: any) => {
+                return sum + (invoice.total_amount || invoice.amount || 0);
+            }, 0) || 0;
+
+
+            // Calcular top clientes por ingresos
+            const clientRevenue = new Map<string, { name: string; revenue: number }>();
+
+            invoices?.forEach((invoice: any) => {
+                const clientName = invoice.client_name || invoice.client?.name || 'Cliente sin nombre';
+                const amount = invoice.total_amount || invoice.amount || 0;
+
+                if (clientRevenue.has(clientName)) {
+                    const existing = clientRevenue.get(clientName)!;
+                    existing.revenue += amount;
+                } else {
+                    clientRevenue.set(clientName, { name: clientName, revenue: amount });
+                }
+            });
+
+            // Convertir a array y ordenar por revenue
+            const topClients = Array.from(clientRevenue.values())
+                .sort((a, b) => b.revenue - a.revenue)
+                .slice(0, 5)
+                .map((client, index, arr) => {
+                    const maxRevenue = arr[0]?.revenue || 1;
+                    return {
+                        name: client.name,
+                        revenue: Math.round(client.revenue),
+                        percentage: Math.round((client.revenue / maxRevenue) * 100)
+                    };
+                });
+
+            setTopClientsByRevenue(topClients);
+
+            // Calcular ingresos por mes para la gráfica - ÚLTIMOS 6 MESES DESDE HOY
+            const today = new Date();
+            const currentMonth = today.getMonth(); // 0-11
+            const currentYear = today.getFullYear();
+            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            
+            // Generar array de los últimos 6 meses
+            const monthlyData: Array<{ month: string; value: number; amount: number; monthIndex: number; year: number }> = [];
+            for (let i = 5; i >= 0; i--) {
+                const monthIndex = (currentMonth - i + 12) % 12;
+                const monthYear = currentMonth - i < 0 ? currentYear - 1 : currentYear;
+                monthlyData.push({
+                    month: monthNames[monthIndex],
+                    value: 0,
+                    amount: 0,
+                    monthIndex: monthIndex,
+                    year: monthYear
+                });
+            }
+
 
             // Sumar facturas por mes usando issue_date (fecha de emisión)
             invoices?.forEach((invoice: any) => {
                 // Usar issue_date si existe, sino created_at
                 const dateStr = invoice.issue_date || invoice.created_at;
                 const invoiceDate = new Date(dateStr);
-                const month = invoiceDate.getMonth(); // 0-11
-                const year = invoiceDate.getFullYear();
+                const invoiceMonth = invoiceDate.getMonth(); // 0-11
+                const invoiceYear = invoiceDate.getFullYear();
 
-                console.log('📅 Procesando factura:', {
                     amount: invoice.amount,
                     issue_date: invoice.issue_date,
                     created_at: invoice.created_at,
-                    month: invoiceDate.getMonth() + 1,
-                    year
+                    month: invoiceMonth + 1,
+                    year: invoiceYear
                 });
 
-                if (year === 2025) {
-                    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                    const monthName = monthNames[month];
-                    const chartMonth = monthlyData.find(m => m.month === monthName);
-                    if (chartMonth) {
-                        chartMonth.amount += parseFloat(invoice.amount) || 0;
-                        console.log(`💰 Agregando €${invoice.amount} a ${monthName}. Total: €${chartMonth.amount}`);
-                    }
+                // Buscar si esta factura pertenece a alguno de los últimos 6 meses
+                const chartMonth = monthlyData.find(m => m.monthIndex === invoiceMonth && m.year === invoiceYear);
+                if (chartMonth) {
+                    chartMonth.amount += parseFloat(invoice.amount) || 0;
                 }
             });
 
-            console.log('📊 Datos mensuales finales:', monthlyData);
 
             // Calcular valores relativos para la gráfica (basado en el máximo)
             const maxAmount = Math.max(...monthlyData.map(m => m.amount));
@@ -297,13 +406,58 @@ export default function DashboardBonsai({
 
             const totalMinutesThisMonth = (monthlyTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 60), 0) || 0;
 
+            // Calcular minutos de eventos del calendario (mes)
+            const calendarMinutesThisMonth = (monthlyCalendarEvents || []).reduce((sum: number, event: any) => {
+                if (event.start_time && event.end_time) {
+                    const start = new Date(event.start_time).getTime();
+                    const end = new Date(event.end_time).getTime();
+                    const duration = (end - start) / 1000 / 60; // convertir a minutos
+                    return sum + duration;
+                }
+                return sum;
+            }, 0) || 0;
+
+
+            // Consultar TIEMPO TOTAL ACUMULADO (sin filtros de fecha)
+            const { data: allTimeData } = await supabase
+                .from('time_entries')
+                .select('duration_seconds')
+                .eq('user_id', user.id);
+
+            const { data: allCalendarEvents } = await supabase
+                .from('calendar_events')
+                .select('start_time, end_time')
+                .eq('user_id', user.id)
+                .eq('status', 'completed');
+
+            // Calcular tiempo total acumulado de time_entries
+            const totalMinutesAllTime = (allTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 60), 0) || 0;
+
+            // Calcular tiempo total acumulado de eventos del calendario
+            const calendarMinutesAllTime = (allCalendarEvents || []).reduce((sum: number, event: any) => {
+                if (event.start_time && event.end_time) {
+                    const start = new Date(event.start_time).getTime();
+                    const end = new Date(event.end_time).getTime();
+                    const duration = (end - start) / 1000 / 60;
+                    return sum + duration;
+                }
+                return sum;
+            }, 0) || 0;
+
+            const totalAccumulatedMinutes = totalMinutesAllTime + calendarMinutesAllTime;
+
+
+            // Sumar tiempo de time_entries + eventos del calendario
+            const totalWeekMinutes = totalMinutesThisWeek + calendarMinutesThisWeek;
+            const totalMonthMinutes = totalMinutesThisMonth + calendarMinutesThisMonth;
+
             setMetrics({
                 totalClients: clients?.length || 0,
                 activeProjects: activeProjects.length,
                 completedProjects: completedProjects.length,
                 monthlyRevenue: totalRevenue,
-                hoursThisWeek: Math.round((totalMinutesThisWeek / 60) * 10) / 10,
-                hoursThisMonth: Math.round((totalMinutesThisMonth / 60) * 10) / 10,
+                hoursThisWeek: Math.round((totalWeekMinutes / 60) * 10) / 10,
+                hoursThisMonth: Math.round((totalAccumulatedMinutes / 60) * 10) / 10,
                 billableHoursThisWeek: Math.round((billableMinutesThisWeek / 60) * 10) / 10
             });
 
@@ -390,13 +544,56 @@ export default function DashboardBonsai({
         loadRecentActivity();
     }, []);
 
+    // Verificar si viene de Stripe checkout exitoso
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const success = urlParams.get('success');
+
+        if (sessionId && success === 'true') {
+            verifyStripeSession(sessionId);
+
+            // Limpiar parámetros de la URL sin recargar
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    }, []);
+
+    const verifyStripeSession = async (sessionId: string) => {
+        try {
+            toast.info('Verificando pago...', { duration: 3000 });
+
+            const response = await fetch(`/api/stripe/verify-session?session_id=${sessionId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success('¡Pago procesado correctamente! Bienvenido al Plan PRO 🎉', {
+                    duration: 5000
+                });
+
+                // Recargar la página para actualizar el estado de suscripción
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                toast.error('Error verificando el pago: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (error) {
+            console.error('Error verificando sesión de Stripe:', error);
+            toast.error('Error verificando el pago');
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="flex h-screen bg-gray-50">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <div className="ml-56 min-h-screen">
-                {/* Trial Banner - Solo si no es demo */}
-                {!isDemo && <TrialBanner userEmail={userEmail} />}
+            <div className="flex-1 flex flex-col overflow-hidden ml-56">
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                
+                <div className="flex-1 overflow-auto">
+                    {/* Trial Banner - Solo si no es demo */}
+                    {!isDemo && <TrialBanner userEmail={userEmail} />}
 
                 {/* Header estilo Bonsai */}
                 <div className="bg-white border-b border-gray-200">
@@ -507,13 +704,9 @@ export default function DashboardBonsai({
                                             <Clock className="h-8 w-8 text-blue-600" />
                                         </div>
                                         <div className="ml-4">
-                                            <p className="text-sm font-medium text-gray-600">TIEMPO ACUMULADO (Clyra)</p>
+                                            <p className="text-sm font-medium text-gray-600">TIEMPO ACUMULADO</p>
                                             <p className="text-2xl font-semibold text-gray-900">
-                                                {(() => {
-                                                    const h = Math.floor(totalTaskTime / 3600);
-                                                    const m = Math.floor((totalTaskTime % 3600) / 60);
-                                                    return `${h}h ${m}m`;
-                                                })()}
+                                                {metrics.hoursThisMonth}h
                                             </p>
                                         </div>
                                     </div>
@@ -580,10 +773,10 @@ export default function DashboardBonsai({
                                     {/* Distribución de tiempo */}
                                     <div className="space-y-4">
                                         {[
-                                            { category: 'Desarrollo', hours: Math.round(metrics.hoursThisWeek * 0.4), color: 'bg-blue-600', percentage: 40 },
-                                            { category: 'Diseño', hours: Math.round(metrics.hoursThisWeek * 0.25), color: 'bg-purple-600', percentage: 25 },
-                                            { category: 'Reuniones', hours: Math.round(metrics.hoursThisWeek * 0.2), color: 'bg-orange-600', percentage: 20 },
-                                            { category: 'Administración', hours: Math.round(metrics.hoursThisWeek * 0.15), color: 'bg-gray-600', percentage: 15 }
+                                            { category: 'Desarrollo', hours: Math.round(metrics.hoursThisWeek * 0.4), color: 'bg-blue-600', percentage: metrics.hoursThisWeek > 0 ? 40 : 0 },
+                                            { category: 'Diseño', hours: Math.round(metrics.hoursThisWeek * 0.25), color: 'bg-purple-600', percentage: metrics.hoursThisWeek > 0 ? 25 : 0 },
+                                            { category: 'Reuniones', hours: Math.round(metrics.hoursThisWeek * 0.2), color: 'bg-orange-600', percentage: metrics.hoursThisWeek > 0 ? 20 : 0 },
+                                            { category: 'Administración', hours: Math.round(metrics.hoursThisWeek * 0.15), color: 'bg-gray-600', percentage: metrics.hoursThisWeek > 0 ? 15 : 0 }
                                         ].map((item, index) => (
                                             <div key={item.category} className="space-y-2">
                                                 <div className="flex justify-between items-center">
@@ -661,15 +854,7 @@ export default function DashboardBonsai({
                                 </div>
 
                                 <div className="flex items-end justify-between h-40 gap-3">
-                                    {[
-                                        { day: 'Lun', hours: 8.5, percentage: 85 },
-                                        { day: 'Mar', hours: 7.2, percentage: 72 },
-                                        { day: 'Mié', hours: 9.1, percentage: 91 },
-                                        { day: 'Jue', hours: 6.8, percentage: 68 },
-                                        { day: 'Vie', hours: 7.5, percentage: 75 },
-                                        { day: 'Sáb', hours: 3.2, percentage: 32 },
-                                        { day: 'Dom', hours: 1.5, percentage: 15 }
-                                    ].map((day, index) => (
+                                    {weeklyProductivityData.map((day, index) => (
                                         <div key={day.day} className="flex-1 flex flex-col items-center">
                                             <div className="w-full bg-gray-100 rounded-t overflow-hidden mb-2 relative group" style={{ height: '120px' }}>
                                                 <div
@@ -827,13 +1012,7 @@ export default function DashboardBonsai({
                                     </div>
                                     <div className="p-6">
                                         <div className="space-y-4">
-                                            {[
-                                                { name: 'TechCorp Solutions', revenue: Math.round(metrics.monthlyRevenue * 0.35) || 5250, percentage: 100 },
-                                                { name: 'Digital Innovations', revenue: Math.round(metrics.monthlyRevenue * 0.25) || 3750, percentage: 75 },
-                                                { name: 'StartupHub', revenue: Math.round(metrics.monthlyRevenue * 0.20) || 3000, percentage: 60 },
-                                                { name: 'Creative Agency', revenue: Math.round(metrics.monthlyRevenue * 0.15) || 2250, percentage: 45 },
-                                                { name: 'Local Business', revenue: Math.round(metrics.monthlyRevenue * 0.05) || 750, percentage: 20 }
-                                            ].map((client, index) => (
+                                            {topClientsByRevenue.length > 0 ? topClientsByRevenue.map((client, index) => (
                                                 <div key={client.name} className="group hover:bg-gray-50 rounded-lg p-3 transition-all duration-200">
                                                     <div className="flex items-center justify-between mb-2">
                                                         <div className="flex items-center gap-3">
@@ -858,7 +1037,15 @@ export default function DashboardBonsai({
                                                         ></div>
                                                     </div>
                                                 </div>
-                                            ))}
+                                            )) : (
+                                                <div className="text-center py-8">
+                                                    <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Sin datos de clientes</h4>
+                                                    <p className="text-sm text-gray-600">
+                                                        Comienza a trabajar en proyectos para ver tus clientes principales
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -920,6 +1107,7 @@ export default function DashboardBonsai({
                         </>
                     )}
                 </div>
+            </div>
             </div>
         </div>
     );

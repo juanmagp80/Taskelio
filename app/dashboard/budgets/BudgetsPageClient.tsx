@@ -2,6 +2,7 @@
 
 import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import TrialBanner from '@/components/TrialBanner';
 import { Button } from '@/components/ui/Button';
 import {
@@ -618,12 +619,23 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                .font('Helvetica-Bold')
                .text('PRESUPUESTO', marginLeft, 25);
 
+            // Mapeo de estados a español
+            const statusTranslations: { [key: string]: string } = {
+                'draft': 'BORRADOR',
+                'sent': 'ENVIADO',
+                'approved': 'APROBADO',
+                'rejected': 'RECHAZADO',
+                'pending': 'PENDIENTE',
+                'accepted': 'ACEPTADO',
+                'declined': 'RECHAZADO'
+            };
+
             // Información del documento en el encabezado
             doc.fontSize(12)
                .font('Helvetica')
                .text(`Nº ${budgetNumber}`, pageWidth - 200, 30)
                .text(`Fecha: ${new Date(budget.created_at).toLocaleDateString('es-ES')}`, pageWidth - 200, 50)
-               .text(`Estado: ${budget.status.toUpperCase()}`, pageWidth - 200, 70);
+               .text(`Estado: ${statusTranslations[budget.status] || budget.status.toUpperCase()}`, pageWidth - 200, 70);
 
             // === SECCIÓN DE INFORMACIÓN DE CONTACTO MEJORADA ===
             let yPosition = 120;
@@ -650,19 +662,11 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                .font('Helvetica');
 
             if (freelancerInfo) {
-                // Nombre de la empresa o freelancer
+                // Nombre de la empresa o freelancer (solo uno)
                 const displayName = freelancerInfo.company || freelancerInfo.full_name || 'Freelancer';
                 doc.font('Helvetica-Bold')
                    .text(displayName, marginLeft + 10, freelancerY);
                 freelancerY += 15;
-
-                // Nombre personal si hay empresa
-                if (freelancerInfo.company && freelancerInfo.full_name) {
-                    doc.font('Helvetica')
-                       .fillColor(textColor)
-                       .text(freelancerInfo.full_name, marginLeft + 10, freelancerY);
-                    freelancerY += 12;
-                }
 
                 // Email
                 if (user?.email) {
@@ -964,7 +968,10 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                 'draft': 'BORRADOR',
                 'sent': 'ENVIADO',
                 'approved': 'APROBADO',
-                'rejected': 'RECHAZADO'
+                'rejected': 'RECHAZADO',
+                'pending': 'PENDIENTE',
+                'accepted': 'ACEPTADO',
+                'declined': 'RECHAZADO'
             };
 
             const statusColor = statusColors[budget.status] || '#64748b';
@@ -979,21 +986,6 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                .fontSize(10)
                .font('Helvetica-Bold')
                .text(statusLabel, statusBadgeX + 10, footerTextY + 3);
-
-            // Información adicional de contacto en el pie
-            if (freelancerInfo && (freelancerInfo.phone || freelancerInfo.website)) {
-                doc.fontSize(8)
-                   .fillColor(grayColor)
-                   .font('Helvetica');
-                
-                let contactInfo = '';
-                if (freelancerInfo.phone) contactInfo += `Tel: ${freelancerInfo.phone}  `;
-                if (freelancerInfo.website) contactInfo += `Web: ${freelancerInfo.website}`;
-                
-                if (contactInfo) {
-                    doc.text(contactInfo, marginLeft, footerY + 65);
-                }
-            }
 
             // Finalizar el documento
             doc.end();
@@ -1020,7 +1012,6 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
 
     const handleSend = async (budgetId: string) => {
         try {
-            console.log('🚀 Enviando presupuesto por email:', budgetId);
 
             const response = await fetch('/api/budgets/send-email', {
                 method: 'POST',
@@ -1045,7 +1036,6 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             ));
 
             showToast.success('✅ Presupuesto enviado por email correctamente');
-            console.log('📧 Email enviado exitosamente:', result.emailId);
 
         } catch (error) {
             console.error('Error sending budget email:', error);
@@ -1068,11 +1058,14 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
     });
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <TrialBanner userEmail={userEmail} />
+        <div className="flex h-screen bg-gray-50">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <div className="flex-1 ml-56">
+            <div className="flex-1 flex flex-col overflow-hidden ml-56">
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                
+                <div className="flex-1 overflow-auto">
+                    <TrialBanner userEmail={userEmail} />
                 <div className="w-full">
                     {/* Header */}
                     <div className="bg-white border-b border-gray-200 px-6 py-6">
@@ -1272,7 +1265,6 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                         </div>
                     </div>
                 </div>
-            </div>
 
             {/* Modal de confirmación de eliminación */}
             <DeleteConfirmationModal
@@ -1282,6 +1274,8 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                 budgetTitle={deleteModal.budgetTitle}
                 isDeleting={deleteModal.isDeleting}
             />
+            </div>
+            </div>
         </div>
     );
 }

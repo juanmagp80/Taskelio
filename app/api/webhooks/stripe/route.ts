@@ -9,12 +9,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
-  console.log('🎯 Webhook de Stripe - Inicio del procesamiento');
   
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
-  console.log('📋 Webhook details:', {
     hasSignature: !!signature,
     bodyLength: body.length,
     signature: signature?.substring(0, 20) + '...'
@@ -31,9 +29,7 @@ export async function POST(request: NextRequest) {
   let event: Stripe.Event;
 
   try {
-    console.log('🔐 Verificando firma del webhook...');
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    console.log('✅ Firma verificada correctamente');
   } catch (error: any) {
     console.error('❌ Webhook signature verification failed:', error.message);
     return NextResponse.json(
@@ -45,7 +41,6 @@ export async function POST(request: NextRequest) {
   const supabase = createSupabaseAdmin();
 
   try {
-    console.log('🎯 Webhook de Stripe recibido:', {
       type: event.type,
       id: event.id
     });
@@ -77,7 +72,6 @@ export async function POST(request: NextRequest) {
       }
       
       default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
@@ -91,7 +85,6 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSubscriptionChange(subscription: Stripe.Subscription, supabase: any) {
-  console.log('🔄 Procesando cambio de suscripción de Stripe:', {
     subscriptionId: subscription.id,
     metadata: subscription.metadata,
     status: subscription.status,
@@ -102,7 +95,6 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
   let targetEmail: string | null = subscription.metadata?.customer_email || null;
   const userId = subscription.metadata?.user_id;
   
-  console.log('🔍 Buscando usuario con metadata:', {
     targetEmail,
     userId,
     customerId: subscription.customer
@@ -114,7 +106,6 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
       const customer = await stripe.customers.retrieve(subscription.customer as string);
       if (customer && !customer.deleted) {
         targetEmail = customer.email || null;
-        console.log('📧 Email obtenido del customer de Stripe:', targetEmail);
       }
     } catch (error) {
       console.error('❌ Error obteniendo customer de Stripe:', error);
@@ -130,7 +121,6 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     return;
   }
 
-  console.log('📝 Actualizando perfil para:', targetEmail);
 
   // Actualizar el perfil del usuario con el estado de suscripción real
   const { error } = await supabase
@@ -150,7 +140,6 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     console.error('❌ Error actualizando perfil del usuario:', error);
     throw error;
   } else {
-    console.log('✅ Perfil actualizado exitosamente:', {
       email: targetEmail,
       status: subscription.status,
       plan: 'pro',
@@ -160,7 +149,6 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
 }
 
 async function handleSubscriptionCancellation(subscription: Stripe.Subscription, supabase: any) {
-  console.log('🚫 Procesando cancelación de suscripción:', subscription.id);
   
   // Actualizar perfil por stripe_subscription_id
   const { error } = await supabase
@@ -174,7 +162,6 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
   if (error) {
     console.error('❌ Error cancelando suscripción en perfil:', error);
   } else {
-    console.log('✅ Suscripción cancelada exitosamente:', subscription.id);
   }
 }
 
@@ -182,7 +169,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
   const subscriptionId = (invoice as any).subscription;
   
   if (subscriptionId) {
-    console.log('✅ Procesando pago exitoso para suscripción:', subscriptionId);
     
     // Actualizar estado de suscripción a activo en profiles
     const { error } = await supabase
@@ -196,7 +182,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
     if (error) {
       console.error('❌ Error actualizando perfil después del pago:', error);
     } else {
-      console.log('✅ Perfil actualizado después del pago exitoso:', subscriptionId);
     }
   }
 }
@@ -205,7 +190,6 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
   const subscriptionId = (invoice as any).subscription;
   
   if (subscriptionId) {
-    console.log('❌ Procesando fallo de pago para suscripción:', subscriptionId);
     
     // Marcar suscripción como past_due en profiles
     const { error } = await supabase
@@ -219,7 +203,6 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
     if (error) {
       console.error('❌ Error actualizando perfil después del fallo de pago:', error);
     } else {
-      console.log('⚠️ Perfil marcado como atrasado después del fallo de pago:', subscriptionId);
     }
   }
 }

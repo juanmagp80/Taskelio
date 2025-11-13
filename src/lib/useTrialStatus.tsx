@@ -39,7 +39,7 @@ export function useTrialStatus(userEmail?: string) {
             setLoading(true);
             setError(null);
 
-            if (!supabase || !userEmail) {
+            if (!supabase) {
                 setLoading(false);
                 return;
             }
@@ -51,6 +51,7 @@ export function useTrialStatus(userEmail?: string) {
                 router.push('/login');
                 return;
             }
+
 
             // Obtener datos del perfil y suscripción
             const { data: profile, error: profileError } = await supabase
@@ -111,9 +112,13 @@ export function useTrialStatus(userEmail?: string) {
                 .eq('name', profile?.subscription_plan === 'free' ? 'Trial Gratuito' : 'Pro')
                 .single();
 
-            // Calcular días restantes
+            // Calcular días restantes (usando días naturales, sin considerar la hora)
             const now = new Date();
+            now.setHours(0, 0, 0, 0); // Resetear a medianoche del día actual
             const trialEnd = profile?.trial_ends_at ? new Date(profile.trial_ends_at) : null;
+            if (trialEnd) {
+                trialEnd.setHours(0, 0, 0, 0); // Resetear a medianoche del día final
+            }
             const daysRemaining = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
 
             const isExpired = profile?.subscription_status === 'trial' && daysRemaining <= 0;
@@ -183,8 +188,20 @@ export function useTrialStatus(userEmail?: string) {
         }
     };
 
-    const redirectToUpgrade = () => {
-        router.push('/subscription');
+    const redirectToUpgrade = async () => {
+        try {
+            // Usar el sistema de checkout directo
+            const { createCheckoutAndRedirect } = await import('@/lib/stripe-client');
+            await createCheckoutAndRedirect(
+                'price_1RyeBiHFKglWYpZiSeo70KYD', // ID del precio PRO
+                `${window.location.origin}/dashboard?success=true`,
+                `${window.location.origin}/dashboard?canceled=true`
+            );
+        } catch (error) {
+            console.error('Error iniciando checkout:', error);
+            // Fallback a la página de suscripción
+            router.push('/subscription');
+        }
     };
 
     const hasReachedLimit = (type: 'clients' | 'projects' | 'storage' | 'emails'): boolean => {
@@ -206,9 +223,66 @@ export function useTrialStatus(userEmail?: string) {
         }
     };
 
+    // Función para verificar automáticamente si el usuario tiene una suscripción activa en Stripe
+    const checkForActiveSubscription = async () => {
+        try {
+            if (!supabase) return;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user?.email) return;
+
+
+            const response = await fetch('/api/stripe/sync-subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    userEmail: user.email 
+                }),
+            });
+
+            if (!response.ok) {
+                return; // Silencioso si hay error
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.hasActiveSubscription) {
+                
+                // Recargar el estado completo del trial
+                await checkTrialStatus();
+            }
+        } catch (error) {
+            // Silencioso, no molestar al usuario
+        }
+    };
+
     useEffect(() => {
         checkTrialStatus();
-    }, [userEmail]);
+    }, []); // Quitar dependencia de userEmail
+
+    // Verificación automática periódica
+    useEffect(() => {
+        if (loading || trialInfo?.status === 'active') return;
+
+        // Verificar inmediatamente
+        const timer = setTimeout(() => {
+            checkForActiveSubscription();
+        }, 1000);
+
+        // Verificar cada 15 segundos si no es PRO
+        const interval = setInterval(() => {
+            if (trialInfo?.status !== 'active') {
+                checkForActiveSubscription();
+            }
+        }, 15000);
+
+        return () => {
+            clearTimeout(timer);
+            clearInterval(interval);
+        };
+    }, [trialInfo?.status, loading]);
 
     return {
         trialInfo,

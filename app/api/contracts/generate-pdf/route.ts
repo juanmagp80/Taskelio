@@ -51,9 +51,7 @@ export async function POST(request: NextRequest) {
 
         if (!companyError && company) {
             companyData = company;
-            console.log('🏢 Datos de empresa obtenidos:', company);
         } else {
-            console.log('⚠️ No se encontró empresa para user_id:', user.id);
         }
 
         // Obtener contrato con información del cliente
@@ -92,9 +90,7 @@ export async function POST(request: NextRequest) {
 
 
 
-        console.log('📄 Generando PDF del contrato...');
         const pdfBuffer = await generateContractPDF(contract, profile, companyData);
-        console.log('✅ PDF generado correctamente, tamaño:', pdfBuffer.length, 'bytes');
 
         // Devolver el PDF como respuesta
         return new NextResponse(new Uint8Array(pdfBuffer), {
@@ -121,7 +117,9 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
         const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
-            format: 'a4'
+            format: 'a4',
+            putOnlyUsedFonts: true,
+            compress: true
         });
 
         // Configuración
@@ -130,25 +128,29 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
         const pageWidth = 210; // A4 width in mm
         const contentWidth = pageWidth - (marginLeft * 2);
 
-        // Función para limpiar texto - Solo ASCII básico
+        // Función para limpiar texto y convertir a caracteres seguros para jsPDF
         const cleanText = (text: string) => {
             if (!text) return '';
 
             return text
-                // Reemplazos específicos de caracteres acentuados problemáticos
-                .replace(/[áàäâāăą]/g, 'a').replace(/[ÁÀÄÂĀĂĄ]/g, 'A')
-                .replace(/[éèëêēėę]/g, 'e').replace(/[ÉÈËÊĒĖĘ]/g, 'E')
-                .replace(/[íìïîīį]/g, 'i').replace(/[ÍÌÏÎĪĮ]/g, 'I')
-                .replace(/[óòöôōőø]/g, 'o').replace(/[ÓÒÖÔŌŐØ]/g, 'O')
-                .replace(/[úùüûūų]/g, 'u').replace(/[ÚÙÜÛŪŲ]/g, 'U')
-                .replace(/[çć]/g, 'c').replace(/[ÇĆ]/g, 'C')
-                .replace(/ß/g, 'ss')
-
-                // Mantener ñ y caracteres básicos españoles + ASCII + saltos de línea
-                .replace(/[^\x20-\x7EñÑ\n\r]/g, '') // ASCII + ñ + saltos de línea
-
-                // Limpiar caracteres especiales restantes
-                .replace(/"/g, "'")
+                // Normalizar caracteres Unicode primero
+                .normalize('NFD')
+                // Remover marcas diacríticas (acentos) excepto ñ
+                .replace(/[\u0300-\u036f]/g, '')
+                // Normalizar de vuelta
+                .normalize('NFC')
+                // Reemplazos específicos para caracteres españoles
+                .replace(/á/g, 'a').replace(/Á/g, 'A')
+                .replace(/é/g, 'e').replace(/É/g, 'E')
+                .replace(/í/g, 'i').replace(/Í/g, 'I')
+                .replace(/ó/g, 'o').replace(/Ó/g, 'O')
+                .replace(/ú/g, 'u').replace(/Ú/g, 'U')
+                .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+                // Mantener ñ y Ñ
+                // Remover caracteres no imprimibles y especiales problemáticos
+                .replace(/[^\x20-\x7E\nñÑ¿¡€]/g, '')
+                // Limpiar comillas y llaves
+                .replace(/["''""]/g, "'")
                 .replace(/[{}]/g, "")
                 .trim();
         }; let currentY = marginTop;
@@ -160,7 +162,7 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
 
         doc.setFontSize(18);
         doc.setTextColor(37, 99, 235);
-        const title = 'CONTRATO DE SERVICIOS PROFESIONALES';
+        const title = cleanText('CONTRATO DE SERVICIOS PROFESIONALES');
         const titleWidth = doc.getTextWidth(title);
         const titleX = (pageWidth - titleWidth) / 2;
         doc.text(title, titleX, currentY);
@@ -168,7 +170,7 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
 
         doc.setFontSize(12);
         doc.setTextColor(100, 100, 100);
-        const subtitle = 'DOCUMENTO OFICIAL';
+        const subtitle = cleanText('DOCUMENTO OFICIAL');
         const subtitleWidth = doc.getTextWidth(subtitle);
         const subtitleX = (pageWidth - subtitleWidth) / 2;
         doc.text(subtitle, subtitleX, currentY);
@@ -176,7 +178,7 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
 
         // Número de contrato
         doc.setFontSize(11);
-        const contractNumber = `Número de Contrato: CONT-2025-${contract.id?.substring(0, 4) || '0000'}`;
+        const contractNumber = cleanText(`Numero de Contrato: CONT-2025-${contract.id?.substring(0, 4) || '0000'}`);
         const contractNumberWidth = doc.getTextWidth(contractNumber);
         const contractNumberX = (pageWidth - contractNumberWidth) / 2;
         doc.text(contractNumber, contractNumberX, currentY);
@@ -190,7 +192,7 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
         // Lugar y fecha
         doc.setFontSize(11);
         doc.setTextColor(0, 0, 0);
-        const place = `📍 LUGAR Y FECHA: Madrid, ${new Date().toLocaleDateString('es-ES')}`;
+        const place = cleanText(`LUGAR Y FECHA: Madrid, ${new Date().toLocaleDateString('es-ES')}`);
         doc.text(place, marginLeft, currentY);
         currentY += 15;
 
@@ -487,14 +489,11 @@ function generateDetailedContractContent(contract: any, companyData: any, profil
 
     // Debug: mostrar solo si el NIF está faltante
     if (!contract.clients?.nif) {
-        console.log('⚠️  NIF del cliente está faltante:', contract.clients?.name);
-        console.log('📋 Cliente completo:', JSON.stringify(contract.clients, null, 2));
     }
 
     // Detectar el tipo de servicio del contrato
     const serviceType = contract.service_type?.toLowerCase() || detectServiceType(contract.title, contract.description || '');
 
-    console.log('🔍 Tipo de servicio detectado:', serviceType, 'para contrato:', contract.title);
 
     const templates = {
         desarrollo: generateDesarrolloContent(contract, companyName, clientName, addressProvider, addressClient, dniProvider, dniClient),

@@ -1,6 +1,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
 import {
     AlertTriangle,
@@ -112,6 +113,85 @@ export default function ProposalsPageClientBonsai({ userEmail }: ProposalsPageCl
 
     const createSampleProposals = () => {
         showToast.error('Funcionalidad de datos demo - proximamente');
+    };
+
+    const handleViewProposal = (proposalId: string) => {
+        router.push(`/dashboard/proposals/${proposalId}`);
+    };
+
+    const handleCopyProposal = async (proposal: Proposal) => {
+        if (!canUseFeatures) {
+            showToast.warning('Tu periodo de prueba ha expirado. Actualiza tu plan para continuar.');
+            return;
+        }
+
+        try {
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError || !user) {
+                throw new Error('Usuario no autenticado');
+            }
+
+            const { data, error } = await supabase
+                .from('proposals')
+                .insert([{
+                    user_id: user.id,
+                    client_id: proposal.client_id,
+                    prospect_name: proposal.prospect_name ? `${proposal.prospect_name} (Copia)` : null,
+                    prospect_email: proposal.prospect_email,
+                    title: `${proposal.title} (Copia)`,
+                    description: proposal.description,
+                    services: proposal.services,
+                    pricing: proposal.pricing,
+                    terms: proposal.terms,
+                    timeline: proposal.timeline,
+                    status: 'draft',
+                    total_amount: proposal.total_amount,
+                    currency: proposal.currency,
+                    notes: proposal.notes,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            showToast.success('✅ Propuesta duplicada exitosamente');
+            loadProposals();
+        } catch (error) {
+            console.error('Error copying proposal:', error);
+            showToast.error('❌ Error al duplicar la propuesta');
+        }
+    };
+
+    const handleEditProposal = (proposalId: string) => {
+        router.push(`/dashboard/proposals/${proposalId}/edit`);
+    };
+
+    const handleSendProposal = async (proposalId: string) => {
+        if (!canUseFeatures) {
+            showToast.warning('Tu periodo de prueba ha expirado. Actualiza tu plan para continuar.');
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('proposals')
+                .update({
+                    status: 'sent',
+                    sent_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', proposalId);
+
+            if (error) throw error;
+
+            showToast.success('✅ Propuesta marcada como enviada');
+            loadProposals();
+        } catch (error) {
+            console.error('Error sending proposal:', error);
+            showToast.error('❌ Error al enviar la propuesta');
+        }
     };
 
     const loadProposals = async () => {
@@ -231,11 +311,13 @@ export default function ProposalsPageClientBonsai({ userEmail }: ProposalsPageCl
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <TrialBanner userEmail={userEmail} />
+        <div className="flex h-screen bg-gray-50">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <div className="flex-1 ml-56">
+            <div className="flex flex-col flex-1 ml-56">
+                <TrialBanner userEmail={userEmail} />
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                <div className="flex-1 overflow-auto">
                 <div className="max-w-7xl mx-auto">
                     {/* Header Bonsai Style */}
                     <div className="bg-white border-b border-gray-200 px-6 py-6">
@@ -459,21 +541,37 @@ export default function ProposalsPageClientBonsai({ userEmail }: ProposalsPageCl
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <button className="text-gray-400 hover:text-gray-600">
+                                                <button 
+                                                    onClick={() => handleViewProposal(proposal.id)}
+                                                    className="text-gray-400 hover:text-blue-600 transition-colors"
+                                                    title="Ver propuesta"
+                                                >
                                                     <Eye className="w-4 h-4" />
                                                 </button>
 
-                                                <button className="text-gray-400 hover:text-gray-600">
+                                                <button 
+                                                    onClick={() => handleCopyProposal(proposal)}
+                                                    className="text-gray-400 hover:text-green-600 transition-colors"
+                                                    title="Duplicar propuesta"
+                                                >
                                                     <Copy className="w-4 h-4" />
                                                 </button>
 
-                                                <button className="text-gray-400 hover:text-gray-600">
+                                                <button 
+                                                    onClick={() => handleEditProposal(proposal.id)}
+                                                    className="text-gray-400 hover:text-orange-600 transition-colors"
+                                                    title="Editar propuesta"
+                                                >
                                                     <Edit3 className="w-4 h-4" />
                                                 </button>
 
                                                 {proposal.status === 'draft' && (
-                                                    <button className="text-sm px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium transition-colors">
-                                                        <Send className="w-4 h-4 mr-1 inline" />
+                                                    <button 
+                                                        onClick={() => handleSendProposal(proposal.id)}
+                                                        className="text-sm px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium transition-colors flex items-center gap-1"
+                                                        title="Marcar como enviada"
+                                                    >
+                                                        <Send className="w-4 h-4" />
                                                         Enviar
                                                     </button>
                                                 )}
@@ -484,6 +582,7 @@ export default function ProposalsPageClientBonsai({ userEmail }: ProposalsPageCl
                             </div>
                         )}
                     </div>
+                </div>
                 </div>
             </div>
 

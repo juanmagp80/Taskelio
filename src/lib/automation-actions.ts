@@ -93,7 +93,6 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
             if (!companyError && companySettings) {
                 if (companySettings.company_name) userCompany = companySettings.company_name;
                 if (companySettings.phone) userPhone = companySettings.phone;
-                console.log('🏢 Datos de company_settings:', { company_name: companySettings.company_name, phone: companySettings.phone });
             } else {
                 // 2. Fallback a profiles
                 const { data: userProfile, error: profileError } = await payload.supabase
@@ -104,14 +103,12 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
                 if (!profileError && userProfile) {
                     if (userProfile.company) userCompany = userProfile.company;
                     if (userProfile.phone) userPhone = userProfile.phone;
-                    console.log('👤 Datos de profiles:', { company: userProfile.company, phone: userProfile.phone });
                 }
             }
         } catch (error) {
             console.warn('⚠️ No se pudo obtener empresa/teléfono del usuario, usando valores por defecto');
         }
         
-        console.log('📊 Variables finales para email:', { userCompany, userPhone, clientName: payload.client.name });
 
         // Preparar variables para el template
         const variables = {
@@ -169,7 +166,6 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
                 // Continuar sin registrar la comunicación
             } else {
                 communicationData = commData;
-                console.log('✅ Comunicación registrada exitosamente');
             }
         } catch (commError) {
             console.warn('⚠️ Error registrando comunicación, continuando sin registrar:', commError);
@@ -177,7 +173,9 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
         }
 
         // Determinar email de destino basado en el parámetro to_user
-        const recipientEmail = emailData.to_user 
+        // Convertir a boolean correctamente (puede venir como string "true" desde JSON)
+        const sendToUser = emailData.to_user === true || emailData.to_user === 'true';
+        const recipientEmail = sendToUser
             ? (payload.user.email || 'noreply@taskelio.app')  // Enviar al usuario (freelancer)
             : (payload.client.email || ''); // Enviar al cliente (comportamiento por defecto)
 
@@ -190,7 +188,6 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
             };
         }
 
-        console.log('📧 Enviando email a:', emailData.to_user ? 'Usuario' : 'Cliente', recipientEmail);
 
         // Enviar email usando el servicio real
         const emailResult = await emailService.sendEmail({
@@ -211,12 +208,13 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
 
         return {
             success: true,
-            message: `Email "${emailSubject}" enviado correctamente a ${payload.client.email}`,
+            message: `Email "${emailSubject}" enviado correctamente a ${recipientEmail}`,
             data: {
                 communicationId: communicationData?.id || null,
-                recipient: payload.client.email,
+                recipient: recipientEmail,
                 subject: emailSubject, // Usar el asunto con variables reemplazadas
-                emailResult: emailResult.data
+                emailResult: emailResult.data,
+                sentToUser: sendToUser
             }
         };
 
@@ -293,7 +291,6 @@ const assignTaskAction: ActionExecutor = async (action, payload) => {
             due_date: dueDate?.toISOString() || null
         };
 
-        console.log('🔍 DEBUG: Datos para insertar tarea:', taskInsert);
 
         const { data: taskCreated, error: taskError } = await payload.supabase
             .from('tasks')
@@ -892,7 +889,6 @@ export async function executeAutomationAction(
         }
 
         // Log de inicio
-        console.log(`🚀 Ejecutando acción: ${action.type}`, {
             executionId: payload.executionId,
             client: payload.client.name,
             automation: payload.automation.name
@@ -903,7 +899,6 @@ export async function executeAutomationAction(
 
         // Log del resultado
         if (result.success) {
-            console.log(`✅ Acción completada: ${action.type}`, result);
         } else {
             console.error(`❌ Acción falló: ${action.type}`, result);
         }

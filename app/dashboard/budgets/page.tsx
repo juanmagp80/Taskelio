@@ -10,18 +10,14 @@ export default async function BudgetsPage() {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    console.log('No session found');
     redirect('/login');
   }
 
   if (!session.user) {
-    console.log('No user found in session');
     redirect('/login');
   }
 
   const userEmail = session.user.email;
-  console.log('User email type:', typeof userEmail);
-  console.log('User email value:', userEmail);
 
   if (typeof userEmail !== 'string') {
     console.error('Invalid email format:', userEmail);

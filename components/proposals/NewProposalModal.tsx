@@ -3,8 +3,8 @@
 import { Button } from '@/components/ui/Button';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
 import { showToast } from '@/utils/toast';
-import { Calendar, DollarSign, FileText, Mail, User, X } from 'lucide-react';
-import React, { useState } from 'react';
+import { Calendar, DollarSign, FileText, Mail, Plus, User, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface NewProposalModalProps {
     isOpen: boolean;
@@ -26,9 +26,20 @@ interface PricingPackage {
     features: string[];
 }
 
+interface Client {
+    id: string;
+    name: string;
+    email: string | null;
+    company: string | null;
+}
+
 export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail }: NewProposalModalProps) {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [loadingClients, setLoadingClients] = useState(false);
+    const [showNewClientForm, setShowNewClientForm] = useState(false);
+    const [selectedClientId, setSelectedClientId] = useState<string>('');
     
     // Datos básicos de la propuesta
     const [proposalData, setProposalData] = useState({
@@ -83,6 +94,52 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
         features: ['']
     });
 
+    // Cargar clientes al abrir el modal
+    useEffect(() => {
+        if (isOpen) {
+            fetchClients();
+        }
+    }, [isOpen]);
+
+    const fetchClients = async () => {
+        setLoadingClients(true);
+        try {
+            const supabase = createSupabaseClient();
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError || !user) {
+                throw new Error('Usuario no autenticado');
+            }
+
+            const { data, error } = await supabase
+                .from('clients')
+                .select('id, name, email, company')
+                .eq('user_id', user.id)
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+
+            setClients(data || []);
+        } catch (error) {
+            console.error('Error fetching clients:', error);
+            showToast.error('Error cargando clientes');
+        } finally {
+            setLoadingClients(false);
+        }
+    };
+
+    const handleClientSelect = (clientId: string) => {
+        setSelectedClientId(clientId);
+        const client = clients.find(c => c.id === clientId);
+        if (client) {
+            setProposalData(prev => ({
+                ...prev,
+                prospect_name: client.company || client.name,
+                prospect_email: client.email || ''
+            }));
+        }
+    };
+
     const resetForm = () => {
         setProposalData({
             prospect_name: '',
@@ -105,6 +162,8 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
             notes: ''
         });
         setStep(1);
+        setSelectedClientId('');
+        setShowNewClientForm(false);
         setNewService({ name: '', description: '' });
         setNewPhase({ name: '', duration: '', deliverable: '' });
         setCurrentPackage({ name: '', price: 0, description: '', features: [''] });
@@ -216,6 +275,32 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                 throw new Error('Usuario no autenticado');
             }
 
+            // Si es un nuevo cliente (showNewClientForm = true), crearlo primero
+            let clientId = selectedClientId;
+            
+            if (showNewClientForm && proposalData.prospect_name.trim()) {
+                
+                const { data: newClient, error: clientError } = await supabase
+                    .from('clients')
+                    .insert([{
+                        user_id: user.id,
+                        name: proposalData.prospect_name,
+                        company: proposalData.prospect_name,
+                        email: proposalData.prospect_email || null,
+                        status: 'active',
+                        created_at: new Date().toISOString()
+                    }])
+                    .select()
+                    .single();
+
+                if (clientError) {
+                    console.error('Error creating client:', clientError);
+                    throw new Error('Error creando el cliente');
+                }
+                
+                clientId = newClient.id;
+            }
+
             // Preparar fecha de validez si no se especificó
             const validUntil = proposalData.valid_until || 
                 new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -224,6 +309,7 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                 .from('proposals')
                 .insert([{
                     user_id: user.id,
+                    client_id: clientId || null,
                     prospect_name: proposalData.prospect_name,
                     prospect_email: proposalData.prospect_email || null,
                     title: proposalData.title,
@@ -247,7 +333,10 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                 throw new Error('Error creando la propuesta');
             }
 
-            showToast.success('✅ Propuesta creada exitosamente');
+            showToast.success(showNewClientForm 
+                ? '✅ Cliente y propuesta creados exitosamente' 
+                : '✅ Propuesta creada exitosamente'
+            );
             resetForm();
             onSuccess();
             onClose();
@@ -318,33 +407,91 @@ export default function NewProposalModal({ isOpen, onClose, onSuccess, userEmail
                     {/* Paso 1: Información Básica */}
                     {step === 1 && (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <User className="inline h-4 w-4 mr-1" />
-                                        Nombre del Cliente *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="ej: TechCorp Solutions"
-                                        value={proposalData.prospect_name}
-                                        onChange={(e) => setProposalData(prev => ({ ...prev, prospect_name: e.target.value }))}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <Mail className="inline h-4 w-4 mr-1" />
-                                        Email del Cliente
-                                    </label>
-                                    <input
-                                        type="email"
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="ej: contacto@techcorp.com"
-                                        value={proposalData.prospect_email}
-                                        onChange={(e) => setProposalData(prev => ({ ...prev, prospect_email: e.target.value }))}
-                                    />
-                                </div>
+                            {/* Selector de Cliente */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <User className="inline h-4 w-4 mr-1" />
+                                    Seleccionar Cliente *
+                                </label>
+                                
+                                {!showNewClientForm ? (
+                                    <div className="space-y-3">
+                                        <select
+                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            value={selectedClientId}
+                                            onChange={(e) => handleClientSelect(e.target.value)}
+                                            disabled={loadingClients}
+                                        >
+                                            <option value="">
+                                                {loadingClients ? 'Cargando clientes...' : 'Selecciona un cliente existente'}
+                                            </option>
+                                            {clients.map((client) => (
+                                                <option key={client.id} value={client.id}>
+                                                    {client.company || client.name} {client.email && `(${client.email})`}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewClientForm(true)}
+                                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            Crear nuevo cliente
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h5 className="font-medium text-gray-900">Nuevo Cliente</h5>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowNewClientForm(false);
+                                                    setProposalData(prev => ({ ...prev, prospect_name: '', prospect_email: '' }));
+                                                }}
+                                                className="text-gray-500 hover:text-gray-700"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Nombre / Empresa *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    placeholder="ej: TechCorp Solutions"
+                                                    value={proposalData.prospect_name}
+                                                    onChange={(e) => setProposalData(prev => ({ ...prev, prospect_name: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    <Mail className="inline h-4 w-4 mr-1" />
+                                                    Email
+                                                </label>
+                                                <input
+                                                    type="email"
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    placeholder="ej: contacto@techcorp.com"
+                                                    value={proposalData.prospect_email}
+                                                    onChange={(e) => setProposalData(prev => ({ ...prev, prospect_email: e.target.value }))}
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                            <p className="text-sm text-blue-700">
+                                                💡 Este cliente se creará automáticamente al guardar la propuesta
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div>

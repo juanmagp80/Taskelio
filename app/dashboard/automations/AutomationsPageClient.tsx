@@ -87,12 +87,10 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
     // Verificar si Supabase está disponible
     useEffect(() => {
         if (!supabase) {
-            console.log('⚠️ Supabase client not available - showing error state');
             setConnectionError('No se pudo conectar con la base de datos. Verifica la configuración.');
             setLoading(false);
             return;
         }
-        console.log('✅ Supabase client initialized');
         setConnectionError(null);
     }, [supabase]);
 
@@ -107,7 +105,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
     };
 
     const handleAutomationClick = async (automation: Automation) => {
-        console.log('🚀 Preparando ejecución de automatización:', automation.name);
 
         // ✅ Automatizaciones disponibles para todos los usuarios
         if (!supabase) {
@@ -116,7 +113,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             return;
         }
 
-        console.log('✅ Cliente Supabase disponible');
 
         // Verificar configuración de Supabase
         const isConfigured = typeof supabase.from === 'function' && 
@@ -139,7 +135,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
         }
 
         const { data: userData, error: userError } = await supabase.auth.getUser();
-        console.log('👤 Resultado de getUser:', { userData, userError });
         
         const user_id = userData?.user?.id || '';
 
@@ -149,7 +144,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             return;
         }
 
-        console.log('✅ Usuario autenticado con ID:', user_id);
 
         // Abrir modal y resetear estado
         setModalAutomation(automation);
@@ -162,7 +156,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
 
         // Cargar reuniones próximas si es meeting_reminder
         if (automation.trigger_type === 'meeting_reminder') {
-            console.log('�️ Cargando reuniones próximas para recordatorios...');
             
             try {
                 const now = new Date();
@@ -191,7 +184,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                     ]);
                     setEntityOptions([]);
                 } else if (!meetingsData || meetingsData.length === 0) {
-                    console.log('⚠️ No se encontraron reuniones próximas');
                     setExecutionLogs([
                         '🗓️ Buscando reuniones próximas...',
                         '⚠️ No se encontraron reuniones programadas para los próximos 30 días',
@@ -200,7 +192,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                     ]);
                     setEntityOptions([]);
                 } else {
-                    console.log('✅ Reuniones encontradas:', meetingsData);
                     
                     // Procesar reuniones con información del cliente
                     const meetingsWithInfo = meetingsData.map((meeting: any) => {
@@ -244,7 +235,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             }
         } else if (automation.trigger_type === 'client_inactive') {
             // Para automatización de cliente inactivo, detectar automáticamente
-            console.log('🔍 Detectando clientes inactivos automáticamente...');
             
             try {
                 // Importar el detector de clientes inactivos
@@ -317,7 +307,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             }
         } else if (automation.trigger_type === 'project_delayed') {
             // Para automatización de proyecto con retraso, NO mostrar lista - ejecutar directamente
-            console.log('🔍 Automatización de proyectos con retraso - Ejecución directa');
             
             setExecutionLogs([
                 '⚙️ Configurando alertas automáticas de proyectos...',
@@ -330,7 +319,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             setEntityOptions([]);
         } else {
             // Para otras automatizaciones, cargar clientes como antes
-            console.log('🔍 Cargando clientes disponibles...');
             
             try {
                 const clientsQuery = supabase
@@ -351,7 +339,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                     ]);
                     setEntityOptions([]);
                 } else if (!clientsData || clientsData.length === 0) {
-                    console.log('⚠️ No se encontraron clientes para el usuario:', user_id);
                     setExecutionLogs([
                         '🔍 Cargando clientes disponibles...',
                         `⚠️ No se encontraron clientes para el usuario: ${user_id}`,
@@ -360,7 +347,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                     ]);
                     setEntityOptions([]);
                 } else {
-                    console.log('✅ Clientes encontrados:', clientsData);
                     
                     // Obtener información adicional para cada cliente
                     const clientsWithInfo = await Promise.all(
@@ -432,17 +418,14 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
 
     const loadAutomations = async () => {
         try {
-            console.log('📋 Loading automations...');
             setLoading(true);
 
             if (!supabase) {
-                console.log('⚠️ No Supabase client available');
                 setAutomations([]);
                 setFilteredAutomations([]);
                 return;
             }
 
-            console.log('👤 Getting user...');
             const { data: { user }, error: userError } = await supabase.auth.getUser();
             
             if (userError) {
@@ -451,25 +434,21 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             }
             
             if (!user) {
-                console.log('⚠️ No user found');
                 return;
             }
 
-            console.log('📊 Loading global automations for user:', user.id, 'Email:', user.email);
             const { data, error } = await supabase
                 .from('automations')
                 .select('*')
                 // ✅ Quitar filtro de user_id para mostrar todas las automatizaciones
                 .order('created_at', { ascending: false });
 
-            console.log('🔍 Database query result (global automations):', { data, error, userEmail: user.email });
 
             if (error) {
                 console.error('❌ Error loading automations:', error);
                 return;
             }
 
-            console.log(`✅ Found ${data?.length || 0} global automations available for ${user.email}`);
             setAutomations(data || []);
             setFilteredAutomations(data || []);
 
@@ -498,7 +477,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
     };
 
     const handleExecuteAutomation = async (automation: Automation) => {
-        console.log('🚀 Preparando ejecución de automatización:', automation.name);
 
         if (!supabase) {
             console.error('❌ Cliente Supabase no disponible');
@@ -506,7 +484,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             return;
         }
 
-        console.log('✅ Cliente Supabase disponible');
 
         // Verificar configuración de Supabase
         const isConfigured = typeof supabase.from === 'function' && 
@@ -529,7 +506,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
         }
 
         const { data: userData, error: userError } = await supabase.auth.getUser();
-        console.log('👤 Resultado de getUser:', { userData, userError });
         
         const user_id = userData?.user?.id || '';
 
@@ -539,7 +515,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             return;
         }
 
-        console.log('✅ Usuario autenticado con ID:', user_id);
 
         // Abrir modal y resetear estado
         setModalAutomation(automation);
@@ -551,11 +526,8 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
         setExecuting(false);
 
         // Cargar clientes con información adicional
-        console.log('🔍 Cargando clientes disponibles...');
-        console.log('🔍 User ID:', user_id);
 
         try {
-            console.log('🔍 Iniciando query de clientes...');
             
             const clientsQuery = supabase
                 .from('clients')
@@ -563,11 +535,9 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                 .eq('user_id', user_id)
                 .order('name');
                 
-            console.log('� Query de clientes configurada');
             
             const { data: clientsData, error: clientsError } = await clientsQuery;
 
-            console.log('📊 Respuesta de clientes:', { 
                 clientsData, 
                 clientsError,
                 dataLength: clientsData?.length,
@@ -585,7 +555,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                 ]);
                 setEntityOptions([]);
             } else if (!clientsData || clientsData.length === 0) {
-                console.log('⚠️ No se encontraron clientes para el usuario:', user_id);
                 setExecutionLogs([
                     '🔍 Cargando clientes disponibles...',
                     `⚠️ No se encontraron clientes para el usuario: ${user_id}`,
@@ -595,7 +564,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                 ]);
                 setEntityOptions([]);
             } else {
-                console.log('✅ Clientes encontrados:', clientsData);
                 
                 // Obtener información adicional para cada cliente
                 const clientsWithInfo = await Promise.all(
@@ -641,7 +609,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                     })
                 );
 
-                console.log('✅ Clientes con información adicional:', clientsWithInfo);
                 setEntityOptions(clientsWithInfo);
                 setExecutionLogs([
                     '🔍 Cargando clientes disponibles...',
@@ -681,17 +648,13 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             const selected = entityOptions.find(opt => String(opt.id) === selectedEntity);
             if (selected && selected.email) {
                 alert(`Se va a enviar el correo al cliente:\n${selected.name}\nEmail: ${selected.email}`);
-                console.log('Ejecutando automatización para cliente:', selected);
             } else if (selected && selected.client_email) {
                 // Para reuniones, mostrar información de la reunión y cliente
                 alert(`Se va a enviar recordatorio de reunión:\n${selected.title || selected.summary || 'Reunión'}\nCliente: ${selected.client_name}\nEmail: ${selected.client_email}`);
-                console.log('Ejecutando recordatorio de reunión para:', selected);
             } else if (selected && !selected.client_email && !selected.email) {
                 // Solo mostrar error si no es una reunión sin email de cliente
-                console.log('Entidad seleccionada sin email:', selected);
             }
         } else {
-            console.log('Ejecutando automatización automática:', modalAutomation.trigger_type);
         }
 
         setExecuting(true);
@@ -708,7 +671,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
 
             // Verificar si es automatización de proyecto con retraso
             if (modalAutomation.trigger_type === 'project_delayed') {
-                console.log('🎯 Ejecutando automatización de proyectos con retraso...');
                 
                 try {
                     const today = new Date();
@@ -758,8 +720,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                         actions = JSON.parse(actions);
                     }
 
-                    console.log('🔍 DEBUG: Actions parseadas:', actions);
-                    console.log('🔍 DEBUG: Número de acciones:', actions.length);
 
                     let successCount = 0;
                     let errorCount = 0;
@@ -812,12 +772,9 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
 
                         // Ejecutar cada acción para este proyecto
                         for (const action of actions) {
-                            console.log(`🔍 DEBUG: Ejecutando acción ${action.type} para proyecto ${project.name}`);
-                            console.log('🔍 DEBUG: Payload para acción:', projectPayload);
                             
                             try {
                                 const result = await executeAutomationAction(action, projectPayload);
-                                console.log(`🔍 DEBUG: Resultado de ${action.type}:`, result);
                                 
                                 if (result.success) {
                                     setExecutionLogs(prev => [...prev, `✅ ${action.type} completado para ${project.name}`]);
@@ -867,19 +824,12 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
             setExecutionLogs(prev => [...prev, `📊 Entidad seleccionada: ${selected.name || selected.invoice_number || selected.title}`]);
 
             // 🔍 DEBUG: Verificar estructura de la automatización
-            console.log('🔍 DEBUG: Automatización completa:', modalAutomation);
-            console.log('🔍 DEBUG: Actions raw:', modalAutomation?.actions);
-            console.log('🔍 DEBUG: Actions type:', typeof modalAutomation?.actions);
-            console.log('🔍 DEBUG: Actions length:', modalAutomation?.actions?.length);
             
             // Parsear las acciones si están como string
             let actions = modalAutomation?.actions;
             if (typeof actions === 'string') {
-                console.log('🔄 DEBUG: Parseando actions string...');
                 try {
                     actions = JSON.parse(actions);
-                    console.log('✅ DEBUG: Actions parseadas:', actions);
-                    console.log('✅ DEBUG: Actions parseadas length:', actions.length);
                 } catch (parseError) {
                     console.error('❌ DEBUG: Error parseando actions:', parseError);
                     setExecutionLogs(prev => [...prev, '❌ Error: Las acciones de la automatización están mal formateadas']);
@@ -895,7 +845,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
                 setExecuting(false);
                 return;
             } else {
-                console.log('✅ DEBUG: Automatización tiene', actions.length, 'acciones configuradas');
             }
 
             const executionId = crypto.randomUUID();
@@ -932,18 +881,13 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
 
             // Convertir actions a array si es un objeto único
             const actionsArray = Array.isArray(actions) ? actions : [actions];
-            console.log('🔄 DEBUG: Actions como array:', actionsArray);
 
             // Ejecutar cada acción de la automatización
             for (const action of actionsArray) {
                 setExecutionLogs(prev => [...prev, `🔄 Ejecutando acción: ${action.name || action.type}`]);
-                console.log('🔄 DEBUG: Ejecutando acción:', action);
-                console.log('🔄 DEBUG: Payload completo:', payload);
 
                 try {
-                    console.log('🚀 DEBUG: Llamando executeAutomationAction...');
                     const result = await executeAutomationAction(action, payload);
-                    console.log('📊 DEBUG: Resultado de executeAutomationAction:', result);
                     
                     if (result.success) {
                         setExecutionLogs(prev => [

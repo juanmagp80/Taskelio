@@ -6,7 +6,6 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
-  console.log('🔴 DEBUG: Sidebar renderizado con userEmail:', userEmail);
   
   return (
     <div className="flex h-full w-56 flex-col fixed inset-y-0 z-50 bg-red-500 border-r border-slate-200">

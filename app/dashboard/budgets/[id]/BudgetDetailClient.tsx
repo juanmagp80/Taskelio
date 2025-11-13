@@ -119,7 +119,6 @@ export function BudgetDetailClient({ budgetId, userEmail }: BudgetDetailClientPr
         if (!budget) return;
 
         try {
-            console.log('🚀 Enviando presupuesto por email:', budget.id);
             
             // Llamar a la API para enviar el email
             const response = await fetch('/api/budgets/send-email', {
@@ -146,7 +145,6 @@ export function BudgetDetailClient({ budgetId, userEmail }: BudgetDetailClientPr
             });
 
             showToast.success('✅ Presupuesto enviado por email correctamente');
-            console.log('📧 Email enviado exitosamente:', result.emailId);
             
         } catch (error) {
             console.error('Error sending budget email:', error);

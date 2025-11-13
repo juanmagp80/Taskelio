@@ -4,7 +4,6 @@ export async function GET(request: NextRequest) {
     // Solo para desarrollo - usuario de prueba
     const testUserEmail = 'juanmagpdev@gmail.com';
 
-    console.log('🔧 Debug Dashboard - Usuario de prueba:', testUserEmail);
 
     // Simular el componente DashboardClient con isDemo=false para probar datos reales
     return new NextResponse(`
@@ -35,9 +34,6 @@ export async function GET(request: NextRequest) {
 
                 <script>
                     // Simular la carga del DashboardClient
-                    console.log('🔧 Debug: Iniciando carga del dashboard...');
-                    console.log('🔧 Debug: Usuario:', '${testUserEmail}');
-                    console.log('🔧 Debug: isDemo: false');
                 </script>
             </div>
         </body>

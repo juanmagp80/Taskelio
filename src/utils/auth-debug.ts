@@ -17,7 +17,6 @@ export const debugSupabaseCookies = () => {
                 };
             });
 
-        console.log('🍪 Supabase Cookies Debug:', {
             total: supabaseCookies.length,
             cookies: supabaseCookies,
             timestamp: new Date().toISOString()
@@ -42,7 +41,6 @@ export const checkAuthenticationState = async () => {
         
         const hasAuthCookies = cookies.length > 0;
         
-        console.log('🔐 Authentication State Check:', {
             hasAuthCookies,
             cookieCount: cookies.length,
             timestamp: new Date().toISOString()

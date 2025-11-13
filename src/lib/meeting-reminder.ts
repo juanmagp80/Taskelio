@@ -28,7 +28,6 @@ interface MeetingReminderData {
 
 export async function checkUpcomingMeetings(): Promise<void> {
   try {
-    console.log('🔍 Iniciando monitoreo de reuniones próximas...');
     
     // Usar service role key para bypass RLS
     const supabase = createServiceSupabaseClient();
@@ -38,7 +37,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
     const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
     
-    console.log(`⏰ Buscando reuniones entre ${oneHourFromNow.toLocaleString('es-ES')} y ${threeHoursFromNow.toLocaleString('es-ES')}`);
     
     // 1. Buscar reuniones en calendar_events (donde type = 'meeting')
     const { data: meetings, error: meetingsError } = await supabase
@@ -73,18 +71,14 @@ export async function checkUpcomingMeetings(): Promise<void> {
     
     if (meetingsError) {
       console.error('❌ Error obteniendo reuniones:', meetingsError);
-      console.log('⚠️ No se pudieron obtener las reuniones del calendario');
       return;
     }
     
-    console.log(`📊 Reuniones encontradas: ${meetings?.length || 0}`);
     
     // Debug: mostrar todas las reuniones encontradas
     if (meetings && meetings.length > 0) {
-      console.log('📋 Detalles de reuniones encontradas:');
       meetings.forEach((meeting, index) => {
         const client = Array.isArray(meeting.clients) ? meeting.clients[0] : meeting.clients;
-        console.log(`${index + 1}. ${meeting.title} - ${meeting.start_time} - Cliente: ${client?.name || 'Sin cliente'}`);
       });
     }
     
@@ -99,7 +93,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
       
       // Si la reunión es entre 1 y 3 horas desde ahora (expandido para incluir más reuniones)
       if (timeDiffHours >= 1 && timeDiffHours <= 3) {
-        console.log(`⏰ Reunión próxima: ${meeting.title} en ${timeDiffHours.toFixed(1)} horas`);
         
         const client = Array.isArray(meeting.clients) ? meeting.clients[0] : meeting.clients;
         const project = Array.isArray(meeting.projects) ? meeting.projects[0] : meeting.projects;
@@ -121,7 +114,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
     
     // 3. Ejecutar automatización para cada recordatorio
     if (meetingReminders.length > 0) {
-      console.log(`📧 Enviando ${meetingReminders.length} recordatorios de reunión...`);
       
       // Obtener la automatización de recordatorio de reunión (usar la más reciente)
       const { data: automation, error: autoError } = await supabase
@@ -135,7 +127,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
       
       if (autoError || !automation) {
         console.error('❌ No se encontró automatización de recordatorio de reunión activa');
-        console.log('🔧 Creando automatización de recordatorio...');
         await createMeetingReminderAutomation(supabase);
         return;
       }
@@ -151,7 +142,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
           .single();
         
         if (recentReminder) {
-          console.log(`⏭️ Recordatorio ya enviado para reunión ${reminder.meeting_title}`);
           continue;
         }
         
@@ -200,7 +190,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
           );
           
           if (result.success) {
-            console.log(`✅ Recordatorio enviado para reunión: ${reminder.meeting_title}`);
             
             // Registrar la ejecución
             await supabase
@@ -240,7 +229,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
       }
       
     } else {
-      console.log('✅ No hay reuniones próximas que requieran recordatorio');
     }
     
   } catch (error) {
@@ -250,7 +238,6 @@ export async function checkUpcomingMeetings(): Promise<void> {
 
 // Función para crear automatización de recordatorio si no existe
 async function createMeetingReminderAutomation(supabase: any): Promise<void> {
-  console.log('🔧 Creando automatización de recordatorio de reunión...');
   
   const meetingReminderTemplate = `<!DOCTYPE html>
 <html lang="es">
@@ -422,13 +409,11 @@ async function createMeetingReminderAutomation(supabase: any): Promise<void> {
   if (error) {
     console.error('❌ Error creando automatización:', error);
   } else {
-    console.log('✅ Automatización de recordatorio de reunión creada');
   }
 }
 
 // Función para crear reuniones de ejemplo si no existen
 async function createSampleCalendarMeeting(supabase: any): Promise<void> {
-  console.log('🔧 Creando reunión de ejemplo en calendar_events...');
   
   // Obtener un cliente existente
   const { data: existingClient } = await supabase
@@ -463,15 +448,8 @@ async function createSampleCalendarMeeting(supabase: any): Promise<void> {
     if (meetingError) {
       console.error('❌ Error creando reunión de prueba:', meetingError);
     } else {
-      console.log('✅ Reunión de prueba creada en calendar_events:');
-      console.log(`   📋 Título: ${newMeeting.title}`);
-      console.log(`   📅 Fecha: ${new Date(newMeeting.start_time).toLocaleDateString('es-ES')}`);
-      console.log(`   ⏰ Hora: ${new Date(newMeeting.start_time).toLocaleTimeString('es-ES')}`);
-      console.log(`   👤 Cliente: ${client.name}`);
     }
   } else {
-    console.log('⚠️ No hay clientes disponibles. Las reuniones requieren clientes asociados.');
-    console.log('💡 Primero agrega algunos clientes en el sistema CRM.');
   }
 }
 

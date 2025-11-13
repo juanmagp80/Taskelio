@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { userId, hours = 24, sendEmails = true } = body;
 
-        console.log('🤖 Processing auto-email system:', { userId, hours, sendEmails });
 
         const supabase = createSupabaseAdmin();
 
@@ -20,31 +19,22 @@ export async function POST(request: NextRequest) {
 
         if (isUUID) {
             actualUserId = userId;
-            console.log('✅ Using UUID directly:', actualUserId);
         } else {
-            // userId es un email, obtener el ID usando función SQL si existe
+            // userId es un email, obtener el ID desde profiles
             try {
-                const { data: userIdFromEmail, error: userError } = await supabase
-                    .rpc('get_user_id_by_email', { user_email: userId });
+                const { data: profile, error: userError } = await supabase
+                    .from('profiles')
+                    .select('id, email')
+                    .eq('email', userId)
+                    .single();
 
-                if (userError || !userIdFromEmail) {
-                    // Si la función SQL no existe, buscar en auth.users
-                    console.log('⚠️ Función SQL no encontrada, buscando en auth.users...');
-                    const { data: userData, error: authError } = await supabase.auth.admin.listUsers();
-
-                    if (authError) {
-                        throw new Error('No se pudo obtener usuarios de auth');
-                    }
-
-                    const foundUser = userData.users.find(u => u.email === userId);
-                    if (!foundUser) {
-                        throw new Error('Usuario no encontrado por email');
-                    }
-
-                    actualUserId = foundUser.id;
-                } else {
-                    actualUserId = userIdFromEmail;
+                if (userError || !profile) {
+                    return NextResponse.json({
+                        error: 'Usuario no encontrado por email'
+                    }, { status: 404 });
                 }
+
+                actualUserId = profile.id;
             } catch (error) {
                 return NextResponse.json({
                     error: `Usuario no encontrado por email: ${error instanceof Error ? error.message : 'Error desconocido'}`
@@ -64,10 +54,8 @@ export async function POST(request: NextRequest) {
 
         if (profileData) {
             userData = profileData;
-            console.log('✅ Usuario encontrado en profiles:', userData.email);
         } else {
             // Si no existe en profiles, obtener de auth.users
-            console.log('⚠️ Usuario no encontrado en profiles, buscando en auth...');
             const { data: authUserData, error: authUserError } = await supabase.auth.admin.getUserById(actualUserId);
 
             if (authUserError || !authUserData.user) {
@@ -81,12 +69,10 @@ export async function POST(request: NextRequest) {
                 full_name: authUserData.user.user_metadata?.full_name || authUserData.user.user_metadata?.name || 'Usuario',
                 company_name: authUserData.user.user_metadata?.company_name || null
             };
-            console.log('✅ Usuario encontrado en auth:', userData.email);
         }
 
         // Detectar eventos recientes
         const recentEvents = await detectRecentEvents(actualUserId, hours);
-        console.log(`🔍 Found ${recentEvents.length} recent events`);
 
         const results = [];
         let emailsSent = 0;
@@ -104,7 +90,6 @@ export async function POST(request: NextRequest) {
                     .contains('data_points', { event: { entityId: event.entityId } });
 
                 if (recentEmails && recentEmails.length > 0) {
-                    console.log(`⏭️ Saltando evento ${event.type} para entidad ${event.entityId} - Email ya enviado recientemente`);
                     continue;
                 }
 
@@ -169,7 +154,6 @@ export async function POST(request: NextRequest) {
                     recipientEmail = eventData.context.client.email;
                     recipientName = eventData.context.client.name || 'Cliente';
                 } else {
-                    console.log('⚠️ No se encontró email del cliente para el evento:', event.type);
                     continue;
                 }
 
@@ -187,7 +171,6 @@ export async function POST(request: NextRequest) {
 
                         if (emailResult.success) {
                             emailsSent++;
-                            console.log(`✅ Email enviado a ${recipientEmail}: ${email.subject}`);
                         } else {
                             console.error(`❌ Error enviando email a ${recipientEmail}:`, emailResult.error);
                         }

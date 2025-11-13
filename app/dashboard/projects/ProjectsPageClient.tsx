@@ -1,5 +1,6 @@
 'use client';
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import TrialBanner from '@/components/TrialBanner';
 import CustomDatePicker from '@/components/ui/DatePicker';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
@@ -359,9 +360,9 @@ export default function ProjectsPageClient({ userEmail }: ProjectsPageClientProp
 
     // Render
     return (
-        <div className={"min-h-screen bg-gradient-to-br from-slate-50/80 via-blue-50/40 to-indigo-50/60 dark:from-slate-900 dark:to-slate-800"}>
+        <div className="flex h-screen bg-gradient-to-br from-slate-50/80 via-blue-50/40 to-indigo-50/60 dark:from-slate-900 dark:to-slate-800 relative">
             {/* Elementos decorativos animados de fondo */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500/3 via-purple-500/3 to-indigo-500/3 rounded-full blur-3xl animate-pulse"></div>
                 <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-purple-500/3 via-pink-500/3 to-indigo-500/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
                 <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-br from-indigo-500/3 via-blue-500/3 to-purple-500/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
@@ -372,9 +373,13 @@ export default function ProjectsPageClient({ userEmail }: ProjectsPageClientProp
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
             {/* Main Content */}
-            <main className="flex-1 ml-64 overflow-auto relative z-10">
+            <div className="flex flex-col flex-1 ml-64 relative z-10">
+                <div className="relative z-50 bg-white dark:bg-slate-900 shadow-md">
+                    <Header userEmail={userEmail} onLogout={handleLogout} />
+                </div>
+                <div className="flex-1 overflow-auto">
                 {/* Header Ultra Premium */}
-                <div className="bg-white/60 backdrop-blur-2xl border-b border-white/40 sticky top-0 z-20 shadow-xl shadow-slate-500/5">
+                <div className="bg-white/60 backdrop-blur-2xl border-b border-white/40 z-10 shadow-xl shadow-slate-500/5">
                     <div className="p-8">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                             <div className="flex items-center gap-6">
@@ -1292,7 +1297,8 @@ export default function ProjectsPageClient({ userEmail }: ProjectsPageClientProp
                         </div>
                     </div>
                 </div>
-            </main>
+                </div>
+            </div>
 
             {/* Modal Espectacular de Nuevo Proyecto con estilos de Cliente */}
             {showForm && (

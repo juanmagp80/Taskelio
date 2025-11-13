@@ -19,7 +19,6 @@ interface BudgetMonitoringData {
 
 export async function checkBudgetExceeded(): Promise<void> {
   try {
-    console.log('🔍 Iniciando monitoreo de presupuestos...');
     
     const supabase = await createServerSupabaseClient();
     
@@ -52,7 +51,6 @@ export async function checkBudgetExceeded(): Promise<void> {
       return;
     }
     
-    console.log(`📊 Analizando ${projects?.length || 0} proyectos...`);
     
     // 2. Calcular gasto actual de cada proyecto
     const budgetAlerts: BudgetMonitoringData[] = [];
@@ -73,7 +71,6 @@ export async function checkBudgetExceeded(): Promise<void> {
       
       // 3. Verificar si excede el 80%
       if (budgetPercentage >= 80) {
-        console.log(`⚠️ Presupuesto excedido en proyecto: ${project.name} (${budgetPercentage.toFixed(1)}%)`);
         
         const client = Array.isArray(project.clients) ? project.clients[0] : project.clients;
         
@@ -94,7 +91,6 @@ export async function checkBudgetExceeded(): Promise<void> {
     
     // 4. Ejecutar automatización para cada alerta
     if (budgetAlerts.length > 0) {
-      console.log(`🚨 Enviando ${budgetAlerts.length} alertas de presupuesto...`);
       
       // Obtener la automatización de presupuesto excedido
       const { data: automation, error: autoError } = await supabase
@@ -120,7 +116,6 @@ export async function checkBudgetExceeded(): Promise<void> {
           .single();
         
         if (recentAlert) {
-          console.log(`⏭️ Alerta ya enviada para proyecto ${alert.project_name} en las últimas 24 horas`);
           continue;
         }
         
@@ -169,7 +164,6 @@ export async function checkBudgetExceeded(): Promise<void> {
           );
           
           if (result.success) {
-            console.log(`✅ Alerta enviada para proyecto: ${alert.project_name}`);
             
             // Registrar la ejecución
             await supabase
@@ -209,7 +203,6 @@ export async function checkBudgetExceeded(): Promise<void> {
       }
       
     } else {
-      console.log('✅ No hay proyectos con presupuesto excedido');
     }
     
   } catch (error) {

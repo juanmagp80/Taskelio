@@ -38,13 +38,11 @@ export const cleanSupabaseCookies = () => {
                     document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
                     document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
                     cleaned++;
-                    console.log('🧹 Cleaned corrupted Supabase cookie:', cookieName);
                 }
             }
         });
         
         if (cleaned > 0) {
-            console.log(`✅ Cleaned ${cleaned} corrupted Supabase cookies`);
             // Recargar la página después de limpiar cookies para que Supabase se reinicie limpiamente
             setTimeout(() => {
                 window.location.reload();

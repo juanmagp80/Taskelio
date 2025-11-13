@@ -1,7 +1,9 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { toast } from 'sonner';
 import {
     AlertTriangle,
     Calendar,
@@ -103,7 +105,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
     // Función para manejar la creación de nueva plantilla
     const handleNewTemplateClick = () => {
         if (!canUseFeatures) {
-            alert('Tu periodo de prueba ha expirado. Actualiza tu plan para continuar creando plantillas.');
+            toast.error('Tu periodo de prueba ha expirado. Actualiza tu plan para continuar creando plantillas.');
             return;
         }
         setShowForm(true);
@@ -255,7 +257,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
 
             if (clientsError) {
                 console.error('Error fetching clients:', clientsError);
-                alert('Error al obtener los clientes');
+                toast.error('Error al obtener los clientes');
                 return;
             }
 
@@ -284,7 +286,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
     const createProjectFromTemplate = async () => {
         try {
             if (!supabase || !templateToUse || !selectedClient || !projectData.name.trim()) {
-                alert('Por favor, completa todos los campos requeridos');
+                toast.error('Por favor, completa todos los campos requeridos');
                 return;
             }
 
@@ -328,7 +330,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
 
             if (error) {
                 console.error('Error creating project:', error);
-                alert('Error al crear el proyecto: ' + error.message);
+                toast.error('Error al crear el proyecto: ' + error.message);
                 return;
             }
 
@@ -352,14 +354,16 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                     end_date: ''
                 });
 
-                alert('¡Proyecto creado exitosamente!');
+                toast.success('¡Proyecto creado exitosamente!');
 
-                // Redirigir al proyecto creado
-                router.push(`/dashboard/projects/${data[0].id}`);
+                // Redirigir al proyecto creado después de un pequeño delay
+                setTimeout(() => {
+                    router.push(`/dashboard/projects/${data[0].id}`);
+                }, 1000);
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error inesperado al crear el proyecto');
+            toast.error('Error inesperado al crear el proyecto');
         }
     };
 
@@ -497,11 +501,13 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
 
     // Render
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="flex h-screen bg-gray-50">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <div className="ml-56 min-h-screen">
+            <div className="flex flex-col flex-1 ml-56">
                 <TrialBanner userEmail={userEmail} />
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                <div className="flex-1 overflow-auto">
 
                 {/* Header */}
                 <div className="bg-white border-b border-gray-200">
@@ -867,6 +873,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                             )}
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
 

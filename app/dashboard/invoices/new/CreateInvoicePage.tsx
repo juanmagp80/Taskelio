@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import CustomDatePicker from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/Input';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { showToast } from '@/utils/toast';
 import {
     ArrowLeft,
     Calculator,
@@ -180,7 +181,7 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
         
         try {
             if (!formData.client_id || !formData.title.trim() || items.some(item => !item.description.trim())) {
-                alert('Por favor completa todos los campos obligatorios');
+                showToast.warning('Por favor completa todos los campos obligatorios');
                 return;
             }
 
@@ -215,7 +216,7 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
 
             if (invoiceError) {
                 console.error('Error creating invoice:', invoiceError);
-                alert('Error al crear la factura');
+                showToast.error('Error al crear la factura');
                 return;
             }
 
@@ -242,10 +243,11 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
             }
 
             // Redirigir a la factura creada
+            showToast.success('Factura creada exitosamente');
             router.push(`/dashboard/invoices/${invoiceData.id}`);
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al crear la factura');
+            showToast.error('Error al crear la factura');
         } finally {
             setLoading(false);
         }

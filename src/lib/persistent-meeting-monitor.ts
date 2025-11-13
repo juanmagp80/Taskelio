@@ -28,7 +28,6 @@ export class PersistentMeetingMonitor {
         .single();
 
       if (config && config.value === 'true') {
-        console.log('⚠️ Monitoreo ya está activo según la base de datos');
         return { success: false, message: 'Monitoreo ya está activo' };
       }
 
@@ -48,7 +47,6 @@ export class PersistentMeetingMonitor {
 
       this.isRunning = true;
 
-      console.log('✅ Monitoreo automático iniciado y persistido');
       return { success: true, message: 'Monitoreo automático iniciado' };
 
     } catch (error) {
@@ -75,7 +73,6 @@ export class PersistentMeetingMonitor {
 
       this.isRunning = false;
 
-      console.log('✅ Monitoreo automático detenido');
       return { success: true, message: 'Monitoreo automático detenido' };
 
     } catch (error) {
@@ -111,7 +108,6 @@ export class PersistentMeetingMonitor {
 
   private async executeMonitoring(): Promise<void> {
     try {
-      console.log('⏰ Ejecutando monitoreo automático persistente...');
       
       // Importar dinámicamente para evitar problemas de dependencias circulares
       const { runMeetingReminderMonitoring } = await import('./meeting-reminder');
@@ -126,7 +122,6 @@ export class PersistentMeetingMonitor {
           updated_at: new Date().toISOString()
         });
 
-      console.log('✅ Monitoreo automático persistente completado');
 
     } catch (error) {
       console.error('❌ Error en monitoreo automático persistente:', error);
@@ -137,7 +132,6 @@ export class PersistentMeetingMonitor {
   async autoStart(): Promise<void> {
     const status = await this.getStatus();
     if (status.isActive && !this.isRunning) {
-      console.log('🔄 Restaurando monitoreo automático desde base de datos...');
       await this.start();
     }
   }

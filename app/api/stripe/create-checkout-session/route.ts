@@ -1,9 +1,10 @@
 import { createCheckoutSession } from '@/lib/stripe-server';
+import { createServerSupabaseClient } from '@/src/lib/supabase-server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, successUrl, cancelUrl, userEmail } = await request.json();
+    const { priceId, successUrl, cancelUrl } = await request.json();
 
     if (!priceId) {
       return NextResponse.json(
@@ -12,18 +13,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!userEmail) {
+    // Obtener el usuario autenticado desde Supabase
+    const supabase = await createServerSupabaseClient();
+    
+    // Verificar autenticación del usuario
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('❌ Authentication failed:', authError);
       return NextResponse.json(
-        { error: 'User email is required' },
-        { status: 400 }
+        { error: 'Usuario no autenticado' },
+        { status: 401 }
       );
     }
 
-    // Para simplificar, vamos a usar un enfoque temporal
-    // En producción deberías verificar la autenticación del usuario
-
-    // Generar un ID temporal para el usuario basado en el email
-    const userId = Buffer.from(userEmail).toString('base64').substring(0, 20);
+    const userId = user.id;
+    const userEmail = user.email;
 
     // Crear sesión de checkout en Stripe
     const session = await createCheckoutSession(
@@ -33,6 +38,7 @@ export async function POST(request: NextRequest) {
       userId,
       userEmail
     );
+
 
     return NextResponse.json({ sessionId: session.id });
 

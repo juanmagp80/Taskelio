@@ -9,13 +9,11 @@ export async function GET(req: Request) {
     // Por ahora usar directamente tu user_id conocido para testing
     const user_id = 'e7ed7c8d-229a-42d1-8a44-37bcc64c440c';
     
-    console.log('🔍 ANÁLISIS DIRECTO - Usuario (hardcoded):', user_id);
 
     // Fechas para los últimos 90 días
     const now = new Date();
     const past90 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-    console.log('📅 Rango de fechas:', past90.toISOString(), 'hasta', now.toISOString());
 
     // Verificar conexión básica de Supabase
     try {
@@ -24,9 +22,7 @@ export async function GET(req: Request) {
         .select('count(*)')
         .limit(1);
       
-      console.log('🔌 Test conexión Supabase:', testConnection, testError);
     } catch (connError) {
-      console.log('❌ Error de conexión:', connError);
     }
 
     // Intentar obtener CUALQUIER dato de calendar_events
@@ -35,10 +31,7 @@ export async function GET(req: Request) {
       .select('id, start_time, end_time, time_tracked, is_billable, productivity_score, actual_revenue, title, user_id')
       .limit(10); // Límite bajo para test
 
-    console.log('📊 Cualquier evento en calendar_events:', allEvents?.length || 0);
     if (allEvents && allEvents.length > 0) {
-      console.log('📋 Primer evento encontrado:', allEvents[0]);
-      console.log('📋 User IDs únicos:', [...new Set(allEvents.map(e => e.user_id))]);
     }
 
     // También intentar con tu user_id específico pero SIN filtros
@@ -48,7 +41,6 @@ export async function GET(req: Request) {
       .eq('user_id', user_id)
       .limit(5);
 
-    console.log('👤 Eventos para tu user_id:', userEvents?.length || 0);
     
     if (userEvents && userEvents.length > 0) {
       // Si encontramos eventos para el usuario, proceder con análisis básico

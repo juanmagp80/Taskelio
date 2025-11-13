@@ -1,6 +1,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import TrialBanner from '@/components/TrialBanner';
 import { getCitiesByProvince, getProvinceNames } from '@/src/data/spanish-locations';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
@@ -426,11 +427,13 @@ export default function ClientsPageClient({ userEmail }: ClientsPageClientProps)
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <TrialBanner userEmail={userEmail} />
+        <div className="flex h-screen bg-gray-50">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <div className="flex-1 ml-56">
+            <div className="flex flex-col flex-1 ml-56">
+                <TrialBanner userEmail={userEmail} />
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                <div className="flex-1 overflow-auto">
                 <div className="w-full">
                     {/* Header Bonsai Style */}
                     <div className="bg-white border-b border-gray-200 px-6 py-6">
@@ -810,6 +813,7 @@ export default function ClientsPageClient({ userEmail }: ClientsPageClientProps)
                             </div>
                         )}
                     </div>
+                </div>
                 </div>
             </div>
 

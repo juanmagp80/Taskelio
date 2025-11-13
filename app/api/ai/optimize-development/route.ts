@@ -8,7 +8,6 @@ const openai = new OpenAI({
 
 export async function GET(req: Request) {
   try {
-    console.log('🚀 INICIANDO ANÁLISIS DE OPTIMIZACIÓN DE DESARROLLO');
     
     // Usar service key para bypasses RLS
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,10 +30,6 @@ export async function GET(req: Request) {
   const now = new Date();
   const past90 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-  console.log('🔍 INICIANDO ANÁLISIS DE DESARROLLO');
-  console.log('User ID:', user_id);
-  console.log('Fecha límite (hace 90 días):', past90.toISOString());
-  console.log('Fecha actual:', now.toISOString());
 
   // Horas trabajadas y productividad
   const { data: events, error: eventsError } = await supabase
@@ -43,9 +38,7 @@ export async function GET(req: Request) {
     .eq('user_id', user_id)
     .gte('start_time', past90.toISOString());
 
-  console.log('📅 Eventos encontrados:', events?.length || 0);
   if (events && events.length > 0) {
-    console.log('📋 Primer evento:', {
       id: events[0].id,
       start_time: events[0].start_time,
       time_tracked: events[0].time_tracked,
@@ -63,9 +56,7 @@ export async function GET(req: Request) {
     .eq('status', 'completed')
     .gte('completed_at', past90.toISOString());
 
-  console.log('📋 Tareas encontradas:', tasks?.length || 0);
   if (tasks && tasks.length > 0) {
-    console.log('📝 Primera tarea:', {
       id: tasks[0].id,
       title: tasks[0].title,
       total_time_seconds: tasks[0].total_time_seconds,
@@ -81,9 +72,7 @@ export async function GET(req: Request) {
     .eq('user_id', user_id)
     .gte('issue_date', past90.toISOString());
 
-  console.log('💰 Facturas encontradas:', invoices?.length || 0);
   if (invoices && invoices.length > 0) {
-    console.log('💳 Primera factura:', {
       id: invoices[0].id,
       total_amount: invoices[0].total_amount,
       status: invoices[0].status,
@@ -100,7 +89,6 @@ export async function GET(req: Request) {
     .eq('status', 'sent')
     .gte('sent_at', past90.toISOString());
 
-  console.log('Presupuestos encontrados:', budgets?.length || 0);
   if (budgetsError) console.error('Error presupuestos:', budgetsError);
 
   // Mensajes con clientes (usando JOIN para filtrar por user_id)
@@ -117,13 +105,11 @@ export async function GET(req: Request) {
     .eq('clients.user_id', user_id)
     .gte('created_at', past90.toISOString());
 
-  console.log('Mensajes encontrados:', messages?.length || 0);
   if (messagesError) console.error('Error mensajes:', messagesError);
 
   // Calcular métricas básicas
   const totalHours = events?.reduce((sum, event) => {
     const hours = event.time_tracked ? event.time_tracked / 3600 : 0; // Convertir segundos a horas
-    console.log(`Evento ${event.id}: ${event.time_tracked} segundos = ${hours} horas`);
     return sum + hours;
   }, 0) || 0;
 
@@ -145,26 +131,12 @@ export async function GET(req: Request) {
 
   const combinedRevenue = totalRevenue + eventRevenue;
 
-  console.log('📊 MÉTRICAS CALCULADAS:');
-  console.log('- Total horas:', totalHours);
-  console.log('- Horas facturables:', billableHours);
-  console.log('- Productividad promedio:', avgProductivity);
-  console.log('- Revenue total:', combinedRevenue);
-  console.log('- Event revenue:', eventRevenue);
-  console.log('- Invoice revenue:', totalRevenue);
   
-  console.log('🔢 DETALLES DE CÁLCULO:');
   if (events) {
     events.forEach((event, index) => {
       const hours = event.time_tracked ? event.time_tracked / 3600 : 0;
-      console.log(`  Evento ${index + 1}: ${event.time_tracked} seg = ${hours.toFixed(2)}h, revenue: €${event.actual_revenue || 0}`);
     });
   }
-  console.log('- Horas facturables:', billableHours);
-  console.log('- Productividad promedio:', avgProductivity);
-  console.log('- Revenue total:', combinedRevenue);
-  console.log('- Event revenue:', eventRevenue);
-  console.log('- Invoice revenue:', totalRevenue);
 
   const taskCategories = tasks?.reduce((acc, task) => {
     const category = task.category || 'other';

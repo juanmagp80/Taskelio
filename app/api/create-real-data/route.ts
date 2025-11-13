@@ -16,7 +16,6 @@ export async function GET(req: Request) {
     
     const user_id = 'e7ed7c8d-229a-42d1-8a44-37bcc64c440c';
     
-    console.log('🔧 CREANDO DATOS REALES PARA ANÁLISIS');
 
     // Obtener o crear un cliente
     const { data: clients } = await supabase
@@ -68,7 +67,6 @@ export async function GET(req: Request) {
       project_id = projects[0].id;
     }
 
-    console.log('📋 Cliente:', client_id, 'Proyecto:', project_id);
 
     // Crear eventos con datos REALES de tiempo y revenue
     const eventsToCreate = [];
@@ -104,7 +102,6 @@ export async function GET(req: Request) {
       .insert(eventsToCreate)
       .select('id, time_tracked, actual_revenue');
 
-    console.log('📅 Eventos creados:', insertedEvents?.length || 0);
 
     // Crear algunas tareas
     const tasksToCreate = [
@@ -137,7 +134,6 @@ export async function GET(req: Request) {
       .insert(tasksToCreate)
       .select('id');
 
-    console.log('📋 Tareas creadas:', insertedTasks?.length || 0);
 
     // Crear facturas
     const { data: insertedInvoices } = await supabase
@@ -160,7 +156,6 @@ export async function GET(req: Request) {
       ])
       .select('id');
 
-    console.log('💰 Facturas creadas:', insertedInvoices?.length || 0);
 
     // Verificar datos creados
     const { data: finalEvents } = await supabase

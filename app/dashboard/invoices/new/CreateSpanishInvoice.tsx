@@ -22,7 +22,8 @@ import {
     Trash2, 
     Save,
     ArrowLeft,
-    Download
+    Download,
+    Mail
 } from 'lucide-react';
 
 interface Client {
@@ -49,6 +50,8 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     const [loading, setLoading] = useState(false);
     const [loadingCompany, setLoadingCompany] = useState(true);
     const [loadingClients, setLoadingClients] = useState(true);
+    const [sendingEmail, setSendingEmail] = useState(false);
+    const [savedInvoiceId, setSavedInvoiceId] = useState<string | null>(null);
     const [companyData, setCompanyData] = useState<SpanishCompanyData | null>(null);
     const [clients, setClients] = useState<Client[]>([]);
     const [selectedClientId, setSelectedClientId] = useState<string>('');
@@ -98,12 +101,10 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                console.log('❌ No user found');
                 setLoadingCompany(false);
                 return;
             }
 
-            console.log('🔍 Loading company data for user:', user.id);
 
             const { data, error } = await supabase
                 .from('company_settings')
@@ -111,7 +112,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 .eq('user_id', user.id)
                 .single();
 
-            console.log('📊 Company data query result:', { data, error });
 
             if (error && error.code !== 'PGRST116') {
                 console.error('❌ Error loading company data:', error);
@@ -120,7 +120,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             }
 
             if (data) {
-                console.log('✅ Company data found:', data);
                 setCompanyData({
                     companyName: data.company_name,
                     nif: data.nif,
@@ -136,7 +135,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                     socialCapital: data.social_capital
                 });
             } else {
-                console.log('⚠️ No company data found for user:', user.id);
             }
         } catch (error) {
             console.error('Error en loadCompanyData:', error);
@@ -156,12 +154,10 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                console.log('❌ No user found for clients');
                 setLoadingClients(false);
                 return;
             }
 
-            console.log('🔍 Loading clients for user:', user.id);
 
             const { data, error } = await supabase
                 .from('clients')
@@ -169,7 +165,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 .eq('user_id', user.id)
                 .order('name');
 
-            console.log('📊 Clients query result:', { data, error, count: data?.length });
 
             if (error) {
                 console.error('❌ Error loading clients:', error);
@@ -179,10 +174,8 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             }
 
             setClients(data || []);
-            console.log('✅ Clientes cargados:', data?.length || 0);
             
             if (data && data.length > 0) {
-                console.log('📋 First client example:', data[0]);
             }
         } catch (error) {
             console.error('Error en loadClients:', error);
@@ -241,11 +234,14 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
 
         const selectedClient = clients.find(client => client.id === clientId);
         if (selectedClient) {
-            console.log('📋 Selected client data:', selectedClient);
+            const clientNIF = selectedClient.nif || selectedClient.tax_id || '';
+            
+            
             setInvoiceData(prev => ({
                 ...prev,
-                clientName: selectedClient.company || selectedClient.name,
-                clientNIF: selectedClient.tax_id || selectedClient.nif || '',
+                clientName: selectedClient.name,
+                clientNIF: clientNIF,
+                clientEmail: selectedClient.email || '',
                 clientAddress: selectedClient.address || '',
                 clientCity: selectedClient.city || '',
                 clientPostalCode: selectedClient.postal_code || '',
@@ -324,46 +320,36 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     };
 
     const validateForm = () => {
-        console.log('🔍 Iniciando validación del formulario');
-        console.log('📊 Datos de la empresa:', companyData);
-        console.log('📋 Datos de la factura:', invoiceData);
         
         if (!companyData) {
-            console.log('❌ Falta datos de la empresa');
             toast.error('Debe configurar los datos de la empresa primero');
             router.push('/dashboard/settings/company');
             return false;
         }
 
         if (!invoiceData.clientName.trim()) {
-            console.log('❌ Falta nombre del cliente');
             toast.error('El nombre del cliente es obligatorio');
             return false;
         }
 
         if (!invoiceData.clientNIF.trim()) {
-            console.log('❌ Falta NIF del cliente');
             toast.error('El NIF/CIF del cliente es obligatorio');
             return false;
         }
 
         if (!validateSpanishNIF(invoiceData.clientNIF) && !validateSpanishCIF(invoiceData.clientNIF)) {
-            console.log('❌ NIF/CIF inválido:', invoiceData.clientNIF);
             toast.error('El NIF/CIF del cliente no es válido');
             return false;
         }
 
         // Validar items - debe haber al menos un item con descripción
-        console.log('🔍 Todos los items:', JSON.stringify(invoiceData.items, null, 2));
         
         const itemsWithDescription = invoiceData.items.filter(item => 
             item.description.trim().length > 0
         );
         
-        console.log('🔍 Items con descripción:', JSON.stringify(itemsWithDescription, null, 2));
         
         if (itemsWithDescription.length === 0) {
-            console.log('❌ No hay conceptos con descripción en la factura');
             toast.error('Debe agregar al menos un concepto con descripción a la factura');
             return false;
         }
@@ -381,28 +367,21 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
         }
 
         if (invoiceData.total <= 0) {
-            console.log('❌ Total inválido:', invoiceData.total);
             toast.error('El importe total debe ser mayor que 0');
             return false;
         }
 
-        console.log('✅ Validación del formulario exitosa');
         return true;
     };
 
     const saveInvoice = async () => {
-        console.log('🔄 Iniciando saveInvoice...');
-        console.log('📋 Datos de factura actuales:', invoiceData);
         
         if (!validateForm()) {
-            console.log('❌ Validación de formulario falló');
             return;
         }
         
-        console.log('✅ Validación de formulario exitosa');
 
         if (!supabase) {
-            console.log('❌ No hay cliente Supabase');
             toast.error('Error de conexión con la base de datos');
             return;
         }
@@ -434,7 +413,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 
             if (existingClients && existingClients.length > 0) {
                 clientId = existingClients[0].id;
-                console.log('✅ Cliente encontrado:', clientId);
             } else {
                 // Crear nuevo cliente con la estructura correcta de la tabla
                 const { data: newClient, error: clientCreateError } = await supabase
@@ -461,7 +439,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 }
                 
                 clientId = newClient.id;
-                console.log('✅ Cliente creado:', clientId);
             }
 
             // Generar número de factura si no existe
@@ -476,6 +453,10 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             const invoiceDataToSave = {
                 user_id: user.id,
                 client_id: clientId,
+                client_name: invoiceData.clientName,
+                client_nif: invoiceData.clientNIF,
+                client_email: invoiceData.clientEmail || null,
+                client_address: invoiceData.clientAddress || null,
                 invoice_number: finalInvoiceNumber,
                 title: `Factura ${finalInvoiceNumber}`,
                 description: `Factura para ${invoiceData.clientName}`,
@@ -490,7 +471,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 created_at: new Date().toISOString()
             };
 
-            console.log('💾 Guardando factura:', invoiceDataToSave);
 
             // Insertar la factura en la base de datos
             const { data: savedInvoice, error } = await supabase
@@ -505,7 +485,9 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 return;
             }
 
-            console.log('✅ Factura guardada exitosamente:', savedInvoice);
+
+            // Guardar el ID de la factura para poder enviarla por email
+            setSavedInvoiceId(savedInvoice.id);
 
             toast.success('✅ Factura creada correctamente', {
                 duration: 3000,
@@ -522,6 +504,45 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             toast.error('Error al crear la factura');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const sendInvoiceEmail = async () => {
+        if (!savedInvoiceId) {
+            toast.error('Primero debes guardar la factura antes de enviarla');
+            return;
+        }
+
+        if (!invoiceData.clientEmail) {
+            toast.error('El cliente no tiene email configurado');
+            return;
+        }
+
+        setSendingEmail(true);
+        try {
+            const response = await fetch('/api/invoices/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    invoiceId: savedInvoiceId
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Error al enviar el email');
+            }
+
+            toast.success('✅ Factura enviada por email correctamente');
+
+        } catch (error) {
+            console.error('Error sending invoice email:', error);
+            toast.error('Error al enviar la factura por email');
+        } finally {
+            setSendingEmail(false);
         }
     };
 
@@ -685,7 +706,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                                 {clients.map((client) => (
                                     <option key={client.id} value={client.id}>
                                         {client.company ? `${client.company} (${client.name})` : client.name}
-                                        {(client.tax_id || client.nif) ? ` - ${client.tax_id || client.nif}` : ''}
+                                        {client.nif ? ` - ${client.nif}` : ''}
                                     </option>
                                 ))}
                             </select>
@@ -797,7 +818,7 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
-                                                value={item.unitPrice}
+                                                value={item.unitPrice === 0 ? '' : item.unitPrice}
                                                 onChange={(e) => updateItemField(index, 'unitPrice', parseFloat(e.target.value) || 0)}
                                             />
                                         </div>
@@ -884,14 +905,33 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                     <Button
                         onClick={() => router.back()}
                         variant="outline"
-                        disabled={loading}
+                        disabled={loading || sendingEmail}
                         className="px-6 py-3 rounded-xl"
                     >
                         Cancelar
                     </Button>
+                    {savedInvoiceId && invoiceData.clientEmail && (
+                        <Button
+                            onClick={sendInvoiceEmail}
+                            disabled={sendingEmail}
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                        >
+                            {sendingEmail ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Enviando...
+                                </>
+                            ) : (
+                                <>
+                                    <Mail className="w-4 h-4" />
+                                    Enviar por Email
+                                </>
+                            )}
+                        </Button>
+                    )}
                     <Button
                         onClick={saveInvoice}
-                        disabled={loading}
+                        disabled={loading || sendingEmail}
                         className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
                     >
                         {loading ? (

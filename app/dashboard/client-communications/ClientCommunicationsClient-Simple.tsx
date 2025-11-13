@@ -106,11 +106,9 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
         if (!supabase) return;
 
         try {
-            console.log('🔄 Loading clients...');
             
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                console.log('⚠️ No user found');
                 return;
             }
 
@@ -126,7 +124,6 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                 return;
             }
 
-            console.log('✅ Clients loaded:', data?.length || 0);
             setClients(data || []);
         } catch (error) {
             console.error('Error in loadClients:', error);

@@ -4,19 +4,10 @@ import { createSupabaseClient } from '@/src/lib/supabase-client';
 
 // Simulación de envío de email (reemplaza por tu integración real)
 async function sendEmail(to: string, subject: string, body: string, priority: 'low' | 'medium' | 'high' = 'medium') {
-  console.log(`📧 [${priority.toUpperCase()}] Enviando email a ${to}`);
-  console.log(`📌 Asunto: ${subject}`);
-  console.log(`💬 Contenido: ${body}`);
-  console.log('---');
 }
 
 // Simulación de crear tarea (reemplaza por tu integración real)
 async function createTask(title: string, description: string, assignee?: string, dueDate?: string) {
-  console.log(`✅ Creando tarea: ${title}`);
-  console.log(`📝 Descripción: ${description}`);
-  if (assignee) console.log(`👤 Asignado a: ${assignee}`);
-  if (dueDate) console.log(`📅 Fecha límite: ${dueDate}`);
-  console.log('---');
 }
 
 // Nueva función para crear notificaciones internas en Supabase
@@ -29,7 +20,6 @@ async function sendNotification(
   actionData?: Record<string, any>
 ) {
   try {
-    console.log(`🔔 Creando notificación para ${userId}: ${title} - ${message}`);
     
     const supabase = createSupabaseClient();
     if (!supabase) {
@@ -56,7 +46,6 @@ async function sendNotification(
       return;
     }
 
-    console.log('✅ Notificación creada exitosamente:', data);
     return data;
   } catch (error) {
     console.error('❌ Error en sendNotification:', error);
@@ -386,10 +375,6 @@ export async function handleLeadNurturing(payload: any, user_id: string) {
 
 // Manejador central actualizado
 export async function executeAutomationAction(trigger_type: string, payload: any, user_id: string) {
-  console.log(`🚀 Ejecutando automatización: ${trigger_type}`);
-  console.log(`👤 Usuario: ${user_id}`);
-  console.log(`📦 Payload:`, payload);
-  console.log('='.repeat(50));
   
   try {
     switch (trigger_type) {
@@ -468,15 +453,11 @@ export async function executeAutomationAction(trigger_type: string, payload: any
         break;
       
       default:
-        console.log(`⚠️ Trigger type not implemented: ${trigger_type}`);
         break;
     }
     
-    console.log('✅ Automatización ejecutada exitosamente');
-    console.log('='.repeat(50));
     
   } catch (error) {
     console.error('❌ Error ejecutando automatización:', error);
-    console.log('='.repeat(50));
   }
 }

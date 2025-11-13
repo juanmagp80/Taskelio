@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createServerSupabaseClient } from '@/src/lib/supabase-server';
+import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -8,16 +8,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    
     const { userEmail } = await request.json();
-
+    
     if (!userEmail) {
       return NextResponse.json(
-        { error: 'User email is required' },
+        { error: 'Email de usuario requerido' },
         { status: 400 }
       );
     }
 
-    console.log('Syncing subscription for user:', userEmail);
 
     // Buscar cliente en Stripe
     const customers = await stripe.customers.list({
@@ -50,45 +50,64 @@ export async function POST(request: NextRequest) {
         new Date(subWithPeriod.current_period_end * 1000) > new Date();
     });
 
-    // Obtener usuario de Supabase
-    const supabase = await createServerSupabaseClient();
-    
     if (activeSubscription) {
-      console.log('Found active subscription:', activeSubscription.id);
+
+      // Usar cliente admin para actualizar
+      const supabaseAdmin = createSupabaseAdmin();
+      
+      // Buscar usuario por email
+      const { data: profiles, error: findError } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('email', userEmail)
+        .single();
+        
+      if (findError) {
+        console.error('❌ Error finding user profile:', findError);
+        return NextResponse.json({
+          success: false,
+          error: 'Usuario no encontrado',
+        }, { status: 404 });
+      }
 
       // Actualizar perfil del usuario
-      const { error: profileError } = await supabase
+      const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({
           subscription_status: 'active',
           subscription_plan: 'pro',
           stripe_customer_id: customer.id,
           stripe_subscription_id: activeSubscription.id,
+          subscription_current_period_end: new Date((activeSubscription as any).current_period_end * 1000).toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('email', userEmail);
+        .eq('id', profiles.id);
 
       if (profileError) {
-        console.error('Error updating profile:', profileError);
+        console.error('❌ Error updating profile:', profileError);
+        return NextResponse.json({
+          success: false,
+          error: 'Error actualizando perfil',
+          details: profileError
+        }, { status: 500 });
       } else {
-        console.log('✅ Profile updated successfully');
       }
 
       return NextResponse.json({
         success: true,
-        message: 'Subscription synced successfully',
+        message: 'Suscripción sincronizada exitosamente - ¡Ahora eres PRO!',
         hasActiveSubscription: true,
         subscription: {
           id: activeSubscription.id,
           status: activeSubscription.status,
+          plan: 'pro',
           current_period_end: (activeSubscription as any).current_period_end,
         },
       });
     } else {
-      console.log('No active subscription found');
       return NextResponse.json({
         success: true,
-        message: 'No active subscription found',
+        message: 'No se encontró suscripción activa',
         hasActiveSubscription: false,
       });
     }

@@ -4,26 +4,20 @@ import AutomationsPageClient from './AutomationsPageClient';
 
 export default async function AutomationsPage() {
     try {
-        console.log('🚀 Automations page loading...');
         
-        console.log('🔄 Creating Supabase client...');
         const supabase = await createServerSupabaseClient();
         
-        console.log('👤 Getting user...');
         const { data: { user }, error } = await supabase.auth.getUser();
         
-        console.log('📋 User check:', {
             hasUser: !!user,
             hasEmail: !!user?.email,
             error: error?.message,
         });
         
         if (!user) {
-            console.log('🚫 No user found - redirecting to login');
             redirect('/login');
         }
 
-        console.log('✅ Valid user found - rendering automations page');
         return <AutomationsPageClient userEmail={user.email!} />;
     } catch (error) {
         console.error('❌ Error in automations page:', error);

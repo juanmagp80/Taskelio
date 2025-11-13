@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import { showToast } from '@/utils/toast';
 import { 
   Brain, 
   Mail, 
@@ -37,12 +39,15 @@ interface UsageStats {
   recentUsage: any[];
 }
 
-export default function AutomationsAIClient() {
+interface AutomationsAIClientProps {
+  userEmail: string;
+}
+
+export default function AutomationsAIClient({ userEmail }: AutomationsAIClientProps) {
   // Función de logout para Sidebar
   const onLogout = async () => {
     // Aquí puedes agregar la lógica real de logout, por ejemplo limpiar sesión, llamar a API, redirigir, etc.
-    // Por ahora solo mostramos un alert
-    alert('Sesión cerrada');
+    showToast.info('Sesión cerrada');
   };
   const [selectedAutomation, setSelectedAutomation] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -169,7 +174,7 @@ export default function AutomationsAIClient() {
 
   const generateEmail = async () => {
     if (!emailForm.clientName) {
-      alert('El nombre del cliente es requerido');
+      showToast.warning('El nombre del cliente es requerido');
       return;
     }
 
@@ -187,11 +192,11 @@ export default function AutomationsAIClient() {
         fetchUsageStats(); // Actualizar estadísticas
       } else {
         const error = await response.json();
-        alert(error.error || 'Error al generar email');
+        showToast.error(error.error || 'Error al generar email');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al generar email');
+      showToast.error('Error al generar email');
     } finally {
       setIsGenerating(false);
     }
@@ -199,7 +204,7 @@ export default function AutomationsAIClient() {
 
   const analyzeProject = async () => {
     if (!projectForm.projectName || !projectForm.description || !projectForm.currentStatus) {
-      alert('Nombre del proyecto, descripción y estado actual son requeridos');
+      showToast.warning('Nombre del proyecto, descripción y estado actual son requeridos');
       return;
     }
 
@@ -221,11 +226,11 @@ export default function AutomationsAIClient() {
         fetchUsageStats(); // Actualizar estadísticas
       } else {
         const error = await response.json();
-        alert(error.error || 'Error al analizar proyecto');
+        showToast.error(error.error || 'Error al analizar proyecto');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al analizar proyecto');
+      showToast.error('Error al analizar proyecto');
     } finally {
       setIsGenerating(false);
     }
@@ -242,13 +247,6 @@ export default function AutomationsAIClient() {
       const data = await response.json();
       
       // Mostrar logs de debug en consola de forma muy visible
-      console.log('🔍🔍🔍 DEBUG LOGS - INICIO 🔍🔍🔍');
-      console.log('User ID:', data.debug_logs?.user_id);
-      console.log('Eventos encontrados:', data.debug_logs?.events_found);
-      console.log('Primer evento:', data.debug_logs?.first_event);
-      console.log('Métricas calculadas:', data.debug_logs?.calculated_metrics);
-      console.log('🔍�🔍 DEBUG LOGS - FIN 🔍🔍🔍');
-      console.log('�📊 RAW DATA COMPLETO:', data);
       
       if (data.success && data.analysis) {
         // Formatear el resultado para mostrar de manera más visual
@@ -314,17 +312,19 @@ ${analysis.predictions?.focus_areas?.length || 0}
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al optimizar desarrollo');
+      showToast.error('Error al optimizar desarrollo');
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-black">
-  <Sidebar onLogout={onLogout} />
+    <div className="flex h-screen bg-black">
+      <Sidebar userEmail={userEmail} onLogout={onLogout} />
       
-      <div className="flex-1 pl-48 lg:pl-64">
+      <div className="flex flex-col flex-1 ml-56">
+        <Header userEmail={userEmail} onLogout={onLogout} />
+        <div className="flex-1 overflow-auto">
         <div className="p-4 lg:p-6">
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 gap-4">
@@ -762,6 +762,7 @@ ${analysis.predictions?.focus_areas?.length || 0}
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

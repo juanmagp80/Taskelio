@@ -182,7 +182,6 @@ async function checkMCPConnection() {
 
 async function syncUserCalendar(body: any) {
   // TODO: Implementar sincronización real con MCP server
-  console.log('🔄 Sincronizando calendario...', body);
   
   // Por ahora, simular sincronización exitosa
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -195,7 +194,6 @@ async function syncUserCalendar(body: any) {
 
 async function sendMeetingReminder(body: any) {
   // TODO: Implementar envío real de recordatorio
-  console.log('📧 Enviando recordatorio...', body);
   
   // Simular envío exitoso
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -208,7 +206,6 @@ async function sendMeetingReminder(body: any) {
 
 async function startAutomation() {
   // TODO: Comunicarse con MCP server para iniciar automatización
-  console.log('▶️ Iniciando automatización...');
   
   return NextResponse.json({
     success: true,
@@ -218,7 +215,6 @@ async function startAutomation() {
 
 async function stopAutomation() {
   // TODO: Comunicarse con MCP server para detener automatización
-  console.log('⏹️ Deteniendo automatización...');
   
   return NextResponse.json({
     success: true,
@@ -228,7 +224,6 @@ async function stopAutomation() {
 
 async function runManualCheck() {
   // TODO: Ejecutar verificación manual de recordatorios
-  console.log('🔍 Ejecutando verificación manual...');
   
   return NextResponse.json({
     success: true,

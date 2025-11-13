@@ -3,12 +3,10 @@ import { runMeetingReminderMonitoring } from '@/src/lib/meeting-reminder';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔄 API meeting-reminder: Iniciando monitoreo de reuniones...');
     
     const result = await runMeetingReminderMonitoring();
     
     if (result.success) {
-      console.log('✅ API meeting-reminder: Monitoreo completado exitosamente');
       
       return NextResponse.json({
         success: true,
@@ -43,7 +41,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('📊 API meeting-reminder: Verificando estado del sistema...');
     
     return NextResponse.json({
       success: true,

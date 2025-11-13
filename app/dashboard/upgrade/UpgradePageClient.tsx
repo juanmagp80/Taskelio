@@ -88,7 +88,6 @@ export default function UpgradePageClient({ userEmail }: UpgradePageClientProps)
 
         try {
             // Aquí iría la integración con Stripe
-            console.log('Procesando suscripción:', { planId, interval: selectedInterval });
 
             // Simular proceso
             await new Promise(resolve => setTimeout(resolve, 2000));

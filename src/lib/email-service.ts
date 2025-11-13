@@ -17,7 +17,6 @@ interface EmailResult {
 class EmailService {
     async sendEmail(options: EmailOptions): Promise<EmailResult> {
         try {
-            console.log('📧 EmailService: Enviando email...', {
                 to: options.to,
                 subject: options.subject,
                 from: options.from,
@@ -52,7 +51,12 @@ class EmailService {
                 }
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-email`, {
+            // En el navegador, usar URL relativa; en servidor, construir URL absoluta
+            const baseUrl = typeof window !== 'undefined' 
+                ? '' // Navegador: URL relativa
+                : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'); // Servidor: URL absoluta
+
+            const response = await fetch(`${baseUrl}/api/send-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,14 +71,12 @@ class EmailService {
                 }),
             });
 
-            console.log('📧 EmailService: Respuesta de API:', {
                 status: response.status,
                 statusText: response.statusText,
                 ok: response.ok
             });
 
             const result = await response.json();
-            console.log('📧 EmailService: Datos de respuesta:', result);
 
             if (!response.ok) {
                 console.error('❌ EmailService: Error en API send-email:', result);
@@ -85,7 +87,6 @@ class EmailService {
                 };
             }
 
-            console.log('✅ EmailService: Email enviado exitosamente:', result);
             return result;
 
         } catch (error) {

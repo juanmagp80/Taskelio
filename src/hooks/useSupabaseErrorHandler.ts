@@ -52,7 +52,6 @@ export const useSupabaseErrorHandler = () => {
             const result = await operation();
 
             // Log de debug
-            console.log(`🔍 Supabase ${context} result:`, {
                 hasData: !!result.data,
                 hasError: !!result.error,
                 errorType: typeof result.error,
@@ -101,7 +100,6 @@ export const useSupabaseErrorHandler = () => {
 
 // Función de utilidad para logs de debug más claros
 export const debugSupabaseResult = (result: any, context: string) => {
-    console.log(`🔍 Debug ${context}:`, {
         timestamp: new Date().toISOString(),
         hasData: !!result?.data,
         dataType: typeof result?.data,

@@ -4,7 +4,6 @@ import { runBudgetMonitoring } from '@/src/lib/budget-monitoring';
 // API endpoint para ejecutar el monitoreo de presupuestos
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 API: Iniciando monitoreo de presupuestos...');
     
     // TODO: Añadir autenticación/autorización aquí
     // const authHeader = request.headers.get('authorization');
@@ -12,7 +11,6 @@ export async function POST(request: NextRequest) {
     const result = await runBudgetMonitoring();
     
     if (result.success) {
-      console.log('✅ API: Monitoreo completado exitosamente');
       return NextResponse.json({
         success: true,
         message: result.message,

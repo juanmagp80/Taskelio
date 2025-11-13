@@ -240,7 +240,6 @@ export function SpanishInvoicePDF({ invoice, company, items }: SpanishInvoicePDF
 export function useSpanishInvoicePDF() {
     const generatePDF = async (invoice: SpanishInvoiceData, company: SpanishCompanyData, items: any[]) => {
         // En una implementación real, aquí usarías html2pdf, puppeteer, o similar
-        console.log('Generando PDF para factura:', invoice.invoiceNumber);
         
         // Simulación de generación de PDF
         return new Promise((resolve) => {

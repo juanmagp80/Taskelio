@@ -7,7 +7,6 @@ let isMonitoringActive = false;
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 API auto-meeting-reminder: Iniciando monitoreo automático...');
     
     if (isMonitoringActive) {
       return NextResponse.json({
@@ -24,9 +23,7 @@ export async function POST(request: NextRequest) {
     // Configurar ejecución automática cada hora
     monitoringInterval = setInterval(async () => {
       try {
-        console.log('⏰ Ejecutando monitoreo automático de reuniones...');
         await runMeetingReminderMonitoring();
-        console.log('✅ Monitoreo automático completado');
       } catch (error) {
         console.error('❌ Error en monitoreo automático:', error);
       }
@@ -34,7 +31,6 @@ export async function POST(request: NextRequest) {
     
     isMonitoringActive = true;
     
-    console.log('✅ API auto-meeting-reminder: Monitoreo automático iniciado');
     
     return NextResponse.json({
       success: true,
@@ -59,7 +55,6 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🛑 API auto-meeting-reminder: Deteniendo monitoreo automático...');
     
     if (monitoringInterval) {
       clearInterval(monitoringInterval);
@@ -68,7 +63,6 @@ export async function DELETE(request: NextRequest) {
     
     isMonitoringActive = false;
     
-    console.log('✅ API auto-meeting-reminder: Monitoreo automático detenido');
     
     return NextResponse.json({
       success: true,
@@ -92,7 +86,6 @@ export async function DELETE(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('📊 API auto-meeting-reminder: Verificando estado del monitoreo automático...');
     
     return NextResponse.json({
       success: true,

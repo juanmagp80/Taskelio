@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🔍 Iniciando verificación de confirmación de email...');
 
         const { token } = await request.json();
 
@@ -14,7 +13,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('🔑 Verificando token:', token.substring(0, 8) + '...');
 
         // Crear cliente Supabase server
         const supabase = await createSupabaseServerClient();
@@ -37,11 +35,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Token encontrado para usuario:', confirmation.user_id);
 
         // Verificar si el token ya fue usado
         if (confirmation.confirmed_at) {
-            console.log('⚠️ Token ya fue usado anteriormente');
             return NextResponse.json(
                 {
                     error: 'Este enlace de confirmación ya fue utilizado',
@@ -56,7 +52,6 @@ export async function POST(request: NextRequest) {
         const expiresAt = new Date(confirmation.expires_at);
 
         if (now > expiresAt) {
-            console.log('⏰ Token expirado');
 
             // Eliminar token expirado
             await supabase
@@ -73,7 +68,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('⏱️ Token válido, no expirado');
 
         // Marcar el token como confirmado
         const { error: updateTokenError } = await supabase
@@ -92,7 +86,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Token marcado como confirmado');
 
         // Actualizar el usuario en auth.users para marcarlo como confirmado
         // Nota: En Supabase, necesitamos usar la tabla auth.users pero puede requerir permisos especiales
@@ -111,7 +104,6 @@ export async function POST(request: NextRequest) {
             // No es crítico, el token ya está marcado como confirmado
         }
 
-        console.log('✅ Usuario marcado como confirmado en profiles');
 
         // Obtener información del usuario para respuesta
         const { data: profile } = await supabase
@@ -120,7 +112,6 @@ export async function POST(request: NextRequest) {
             .eq('id', confirmation.user_id)
             .single();
 
-        console.log('🎉 Confirmación completada exitosamente');
 
         return NextResponse.json({
             success: true,

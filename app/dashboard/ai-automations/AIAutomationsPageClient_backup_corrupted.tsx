@@ -63,7 +63,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
     // Funciones para ejecutar automatizaciones IA
     const handleAutomationExecution = async (automation: AIAutomation) => {
-        console.log('🤖 Executing AI automation:', automation.name);
         
         // Dependiendo del tipo de automatización, mostrar modal específico o ejecutar directamente
         switch (automation.type) {
@@ -93,7 +92,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
         if (!text) return;
 
         try {
-            console.log('🧠 Analyzing sentiment with OpenAI...');
             // Crear automatización temporal en la base de datos
             const response = await fetch('/api/automations/execute', {
                 method: 'POST',
@@ -134,7 +132,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
         if (!projectBrief) return;
 
         try {
-            console.log('📝 Generating proposal with OpenAI...');
             
             const response = await fetch('/api/automations/execute', {
                 method: 'POST',
@@ -175,7 +172,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
         const complexity = prompt('Complejidad (low/medium/high):') || 'medium';
 
         try {
-            console.log('💰 Optimizing pricing with OpenAI...');
             
             const response = await fetch('/api/automations/execute', {
                 method: 'POST',
@@ -210,7 +206,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
     const executeTaskPrioritization = async (automation: AIAutomation) => {
         try {
-            console.log('⚡ Prioritizing tasks with OpenAI...');
             
             // Para demo, usar tareas simuladas
             const mockTasks = [
@@ -256,7 +251,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
         const emailType = prompt('Tipo de email (follow_up, meeting_reminder, project_update, welcome):') || 'follow_up';
 
         try {
-            console.log('📧 Generating email with OpenAI...');
             
             const response = await fetch('/api/automations/execute', {
                 method: 'POST',

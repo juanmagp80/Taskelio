@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
     Notas: ${proposal.notes || 'Sin notas adicionales'}
     `;
 
-    console.log('📄 Analizando propuesta:', proposal.title);
 
     // Llamada a OpenAI para análisis
     const completion = await openai.chat.completions.create({
@@ -114,7 +113,6 @@ NOTAS: ${proposal.notes || 'Sin notas'}`
     });
 
     const response = completion.choices[0]?.message?.content || '{}';
-    console.log('🤖 Respuesta de OpenAI:', response);
 
     let analysis;
     let parseError = false;
@@ -229,8 +227,6 @@ NOTAS: ${proposal.notes || 'Sin notas'}`
       // No fallar la respuesta por esto
     }
 
-    console.log('✅ Análisis completado para propuesta:', proposal.title);
-    console.log('📊 Score obtenido:', analysis.overall_score);
 
     return NextResponse.json(result);
 

@@ -9,12 +9,9 @@ export async function ensurePredefinedAutomationsForUser(user_id: string) {
     return;
   }
   
-  console.log('🔄 INICIANDO verificación de automatizaciones predefinidas para usuario:', user_id);
   
   // Obtener los trigger_types de las automatizaciones predefinidas
   const predefinedTriggerTypes = predefinedAutomations.map(a => a.trigger_type);
-  console.log('📋 Total de automatizaciones predefinidas disponibles:', predefinedTriggerTypes.length);
-  console.log('🏷️ Tipos de trigger:', predefinedTriggerTypes.slice(0, 5), '... y más');
   
   // Verifica cuáles automaciones predefinidas ya existen para el usuario
   const { data: existing, error } = await supabase
@@ -28,10 +25,7 @@ export async function ensurePredefinedAutomationsForUser(user_id: string) {
     return;
   }
   
-  console.log('📊 Automatizaciones existentes del usuario:', existing?.length || 0);
   if (existing && existing.length > 0) {
-    console.log('📋 Existentes:');
-    existing.forEach((a: any) => console.log(`  - ${a.name} (${a.trigger_type}) - Público: ${a.is_public}`));
   }
 
   // Determinar qué automatizaciones necesitan ser insertadas (TODAS las que falten)
@@ -51,10 +45,7 @@ export async function ensurePredefinedAutomationsForUser(user_id: string) {
       actions: JSON.stringify([]),
     }));
 
-  console.log('➕ Automatizaciones que faltan y serán insertadas:', automationsToInsert.length);
   if (automationsToInsert.length > 0) {
-    console.log('📝 Lista de nuevas automatizaciones:');
-    automationsToInsert.forEach(a => console.log(`  + ${a.name} (${a.trigger_type})`));
   }
 
   // SIEMPRE insertar las automatizaciones que falten (sin importar si es usuario nuevo o existente)
@@ -67,15 +58,10 @@ export async function ensurePredefinedAutomationsForUser(user_id: string) {
       console.error('❌ Error insertando automatizaciones predefinidas:', insertError);
       console.error('📝 Detalles del error:', JSON.stringify(insertError, null, 2));
     } else {
-      console.log(`✅ ÉXITO: Insertadas ${automationsToInsert.length} automatizaciones predefinidas para el usuario ${user_id}`);
-      console.log('🎉 El usuario ahora puede ver todas las automatizaciones predefinidas');
     }
   } else {
-    console.log('ℹ️ Todas las automatizaciones predefinidas ya existen para este usuario');
-    console.log(`📊 Total de automatizaciones del usuario: ${(existing?.length || 0)} de ${predefinedAutomations.length} disponibles`);
   }
   
-  console.log('✅ FINALIZANDO verificación de automatizaciones predefinidas');
 }
 
 // Función para forzar la actualización de TODAS las automatizaciones predefinidas
@@ -87,7 +73,6 @@ export async function forceUpdatePredefinedAutomations(user_id: string) {
     return;
   }
   
-  console.log('🔄 FORZANDO actualización de automatizaciones para:', user_id);
   
   // Eliminar todas las automatizaciones públicas/predefinidas del usuario
   const { error: deleteError } = await supabase
@@ -101,7 +86,6 @@ export async function forceUpdatePredefinedAutomations(user_id: string) {
     return;
   }
   
-  console.log('🗑️ Automatizaciones predefinidas eliminadas');
   
   // Insertar TODAS las automatizaciones predefinidas
   const automationsToInsert = predefinedAutomations.map(a => ({
@@ -124,6 +108,5 @@ export async function forceUpdatePredefinedAutomations(user_id: string) {
   if (insertError) {
     console.error('Error insertando automatizaciones:', insertError);
   } else {
-    console.log(`✅ Insertadas ${automationsToInsert.length} automatizaciones predefinidas actualizadas`);
   }
 }

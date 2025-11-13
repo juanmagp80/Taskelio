@@ -7,7 +7,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(request: NextRequest) {
-  console.log('🔴 Cancel subscription endpoint called');
   try {
     const supabaseAdmin = createSupabaseAdmin();
     
@@ -31,7 +30,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔴 Cancelling subscription for email:', userEmail);
 
     // Buscar el perfil del usuario por email usando admin client
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -40,7 +38,6 @@ export async function POST(request: NextRequest) {
       .eq('email', userEmail)
       .single();
 
-    console.log('🔴 Profile query result:', { profile: !!profile, profileError });
 
     if (profileError || !profile) {
       console.error('🔴 Error finding user profile:', profileError);
@@ -68,7 +65,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔴 Successfully cancelled subscription for email:', userEmail);
     return NextResponse.json({
       success: true,
       message: 'Suscripción cancelada exitosamente',

@@ -28,7 +28,6 @@ export function useClientMessages(userEmail?: string) {
         try {
             const supabase = createSupabaseClient();
             const userResult = await supabase.auth.getUser();
-            console.log('Supabase user result:', userResult);
             const userId = userResult?.data?.user?.id;
             if (!userId) {
                 console.error('No authenticated user found in Supabase.');
@@ -55,7 +54,6 @@ export function useClientMessages(userEmail?: string) {
 
             if (messagesError) {
                 console.error('Error loading unread messages:', messagesError);
-                console.log('Query params:', { userId, userEmail });
                 return;
             }
 

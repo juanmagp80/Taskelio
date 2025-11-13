@@ -28,7 +28,6 @@ const cleanCorruptedSupabaseCookies = () => {
                 const cookieName = trimmedCookie.split('=')[0];
                 // Eliminar la cookie corrupta
                 document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                console.log('🧹 Cleaned corrupted Supabase cookie:', cookieName);
             }
         });
     } catch (error) {

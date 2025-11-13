@@ -183,7 +183,6 @@ export default function CookieBanner({ userEmail }: CookieBannerProps) {
 
     // Activar/desactivar scripts según las preferencias
     if (prefs.analytics) {
-      console.log('🍪 Analytics cookies habilitadas');
       // Activar Google Analytics
       if (typeof window.gtag !== 'undefined') {
         window.gtag('consent', 'update', {
@@ -193,7 +192,6 @@ export default function CookieBanner({ userEmail }: CookieBannerProps) {
     }
 
     if (prefs.marketing) {
-      console.log('🍪 Marketing cookies habilitadas');
       // Activar píxeles de marketing
       if (typeof window.gtag !== 'undefined') {
         window.gtag('consent', 'update', {
@@ -205,7 +203,6 @@ export default function CookieBanner({ userEmail }: CookieBannerProps) {
     }
 
     if (prefs.functional) {
-      console.log('🍪 Functional cookies habilitadas');
       // Activar cookies funcionales (chat, preferencias, etc.)
     }
   };

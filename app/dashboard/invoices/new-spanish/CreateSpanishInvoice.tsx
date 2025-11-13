@@ -67,33 +67,25 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
     const loadCompanyData = async () => {
         try {
             setLoadingCompany(true);
-            console.log('🔍 DEBUG: Iniciando carga de datos de empresa');
 
             if (!supabase) {
-                console.log('❌ DEBUG: Cliente Supabase no disponible');
                 setLoadingCompany(false);
                 return;
             }
 
             const { data: { user } } = await supabase.auth.getUser();
-            console.log('👤 DEBUG: Usuario obtenido:', user?.id);
-            console.log('👤 DEBUG: Usuario completo:', JSON.stringify(user, null, 2));
 
             if (!user) {
-                console.log('❌ DEBUG: No hay usuario autenticado');
                 setLoadingCompany(false);
                 return;
             }
 
-            console.log('📡 DEBUG: Consultando tabla company_settings para user_id:', user.id);
 
             // Primero vamos a ver si la tabla existe y qué datos tiene
             const { data: allData, error: allError } = await supabase
                 .from('company_settings')
                 .select('*');
 
-            console.log('🗃️ DEBUG: TODOS los datos en company_settings:', allData);
-            console.log('🗃️ DEBUG: Error al consultar todos:', allError);
 
             const { data, error } = await supabase
                 .from('company_settings')
@@ -101,10 +93,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                 .eq('user_id', user.id)
                 .single();
 
-            console.log('📊 DEBUG: Respuesta de Supabase específica - Data:', data);
-            console.log('📊 DEBUG: Respuesta de Supabase específica - Error:', error);
-            console.log('📊 DEBUG: Error code:', error?.code);
-            console.log('📊 DEBUG: Error message:', error?.message);
 
             if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
                 console.error('❌ DEBUG: Error loading company data:', error);
@@ -113,8 +101,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
             }
 
             if (data) {
-                console.log('✅ DEBUG: Datos de empresa encontrados, configurando state');
-                console.log('✅ DEBUG: Datos raw:', JSON.stringify(data, null, 2));
                 setCompanyData({
                     companyName: data.company_name,
                     nif: data.nif,
@@ -129,15 +115,12 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                     registrationNumber: data.registration_number,
                     socialCapital: data.social_capital
                 });
-                console.log('🏢 DEBUG: Company data establecido correctamente');
             } else {
-                console.log('⚠️ DEBUG: No se encontraron datos de empresa (data es null/undefined)');
             }
         } catch (error) {
             console.error('💥 DEBUG: Error en loadCompanyData:', error);
             console.error('💥 DEBUG: Stack trace:', error instanceof Error ? error.stack : 'No stack available');
         } finally {
-            console.log('🏁 DEBUG: Finalizando loadCompanyData, setLoadingCompany(false)');
             setLoadingCompany(false);
         }
     };
@@ -303,7 +286,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
 
     // Pantalla de carga mientras se obtienen los datos de empresa
     if (loadingCompany) {
-        console.log('⏳ DEBUG: Mostrando pantalla de loading (loadingCompany = true)');
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
                 <div className="max-w-2xl mx-auto">
@@ -323,11 +305,8 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
         );
     }
 
-    console.log('🔄 DEBUG: loadingCompany =', loadingCompany, ', companyData =', companyData ? 'EXISTS' : 'NULL');
-    console.log('🔄 DEBUG: companyData full object:', JSON.stringify(companyData, null, 2));
 
     if (!companyData) {
-        console.log('⚠️ DEBUG: Mostrando pantalla de configuración requerida (companyData = null)');
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
                 <div className="max-w-2xl mx-auto">
@@ -342,7 +321,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
                             </p>
                             <Button
                                 onClick={() => {
-                                    console.log('🔄 DEBUG: Redirigiendo a configuración de empresa');
                                     router.push('/dashboard/settings/company');
                                 }}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
@@ -357,7 +335,6 @@ export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoice
         );
     }
 
-    console.log('✅ DEBUG: Mostrando formulario de factura (companyData existe)');
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">

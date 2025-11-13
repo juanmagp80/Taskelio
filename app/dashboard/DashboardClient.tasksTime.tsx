@@ -45,7 +45,6 @@ export default function TasksTimeBreakdown() {
                     .eq('user_id', user.id)
                     .not('total_time_seconds', 'is', null);
                 
-                console.log('🔍 Datos de tiempo:', {
                     proyectos: projectsData?.length || 0,
                     tareasConTiempo: tasksData?.length || 0,
                     tareas: tasksData
@@ -105,7 +104,6 @@ export default function TasksTimeBreakdown() {
                 // No seleccionar ningún proyecto por defecto
                 setSelectedProjectId('');
 
-                console.log('📈 Proyectos procesados:', {
                     total: projectsArray.length,
                     conTiempo: projectsArray.filter(p => p.totalTime > 0).length,
                     tiempoTotal: projectsArray.reduce((sum, p) => sum + p.totalTime, 0)

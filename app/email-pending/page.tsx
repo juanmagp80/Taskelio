@@ -1,6 +1,7 @@
 'use client'
 
 import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { showToast } from '@/utils/toast';
 import { AlertCircle, Clock, Home, LogOut, Mail, RefreshCw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -81,13 +82,13 @@ function EmailPendingContent() {
 
             if (data.success) {
                 setResendCooldown(60); // 60 segundos de cooldown
-                alert('Email de confirmación reenviado exitosamente. Revisa tu bandeja de entrada.');
+                showToast.success('Email de confirmación reenviado exitosamente. Revisa tu bandeja de entrada.');
             } else {
-                alert('Error enviando email: ' + data.error);
+                showToast.error('Error enviando email: ' + data.error);
             }
         } catch (error) {
             console.error('Error resending email:', error);
-            alert('Error enviando email. Por favor intenta más tarde.');
+            showToast.error('Error enviando email. Por favor intenta más tarde.');
         } finally {
             setLoading(false);
         }
@@ -114,11 +115,11 @@ function EmailPendingContent() {
             if (profile?.email_confirmed_at) {
                 router.push(redirectPath);
             } else {
-                alert('Tu email aún no ha sido confirmado. Por favor revisa tu bandeja de entrada.');
+                showToast.warning('Tu email aún no ha sido confirmado. Por favor revisa tu bandeja de entrada.');
             }
         } catch (error) {
             console.error('Error checking confirmation:', error);
-            alert('Error verificando confirmación. Por favor intenta más tarde.');
+            showToast.error('Error verificando confirmación. Por favor intenta más tarde.');
         } finally {
             setLoading(false);
         }

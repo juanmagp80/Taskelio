@@ -39,7 +39,6 @@ export async function createInternalNotification(
       return;
     }
 
-    console.log('✅ Notificación interna creada:', data);
     return data;
   } catch (error) {
     console.error('❌ Error en createInternalNotification:', error);

@@ -22,29 +22,69 @@ export async function POST(request: NextRequest) {
         const body: AutomationRequest = await request.json();
         const { type, data, userId: userEmail } = body;
 
-        console.log('🤖 Executing AI automation:', { type, userEmail });
 
         const supabase = createSupabaseAdmin();
         
-        // Obtener el ID del usuario desde el email
-        console.log('📧 Looking up user by email:', userEmail);
+        // Obtener el ID del usuario desde el email usando la tabla profiles
         
-        const { data: userId, error: userError } = await supabase
-            .rpc('get_user_id_by_email', { user_email: userEmail });
+        let userId: string | null = null;
+        
+        // Intentar buscar primero en profiles
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, email')
+            .eq('email', userEmail)
+            .single();
 
-        console.log('🔍 User lookup result:', { userId, userError });
-
-        if (userError || !userId) {
-            console.error('❌ User not found for email:', userEmail, userError);
-            return NextResponse.json({ 
-                error: 'Usuario no encontrado. Verifica que estés autenticado.' 
-            }, { status: 404 });
+        if (profile?.id) {
+            userId = profile.id;
+        } else {
+            // Si no se encuentra en profiles, buscar en auth.users como fallback
+            
+            const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+            
+            if (authError) {
+                console.error('❌ Error listing auth users:', authError);
+                return NextResponse.json({ 
+                    error: 'Error de autenticación del servidor' 
+                }, { status: 500 });
+            }
+            
+            const authUser = authData.users.find(u => u.email === userEmail);
+            
+            if (authUser) {
+                userId = authUser.id;
+                
+                // Crear perfil si no existe
+                const { error: insertError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: userId,
+                        email: userEmail,
+                        full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Usuario',
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (!insertError) {
+                }
+            } else {
+                console.error('❌ User not found in profiles or auth.users:', userEmail);
+                return NextResponse.json({ 
+                    error: 'Usuario no encontrado. Verifica que estés autenticado correctamente.' 
+                }, { status: 404 });
+            }
         }
-
-        console.log('✅ User ID found:', userId);
+        
+        // Validar que tenemos un userId antes de continuar
+        if (!userId) {
+            console.error('❌ No userId obtained');
+            return NextResponse.json({ 
+                error: 'Error obteniendo ID de usuario' 
+            }, { status: 500 });
+        }
+        
         let result: any = null;
 
-        console.log('🔀 Processing automation type:', type);
 
         switch (type) {
             case 'sentiment_analysis':
@@ -81,7 +121,6 @@ export async function POST(request: NextRequest) {
                 }, { status: 400 });
         }
 
-        console.log('✅ Automation completed successfully');
         return NextResponse.json({ 
             success: true, 
             data: result 
@@ -99,19 +138,14 @@ export async function POST(request: NextRequest) {
 
 async function executeSentimentAnalysis(data: any, userId: string, supabase: any) {
     try {
-        console.log('🎭 Starting sentiment analysis for user:', userId);
         const { text, clientId, source = 'manual' } = data;
-        console.log('📝 Analysis data:', { text: text?.substring(0, 50) + '...', clientId, source });
         
         // Analizar sentimiento con OpenAI
-        console.log('🤖 Calling OpenAI analyzeFeedback...');
         const analysis = await analyzeFeedback(text);
-        console.log('✅ OpenAI analysis complete:', analysis);
         
         // Buscar información del cliente si existe
         let clientData = null;
         if (clientId) {
-            console.log('👤 Looking up client:', clientId);
             const { data: client } = await supabase
                 .from('clients')
                 .select('name, email, company')
@@ -119,7 +153,6 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
                 .eq('user_id', userId)
                 .single();
             clientData = client;
-            console.log('👤 Client data:', clientData);
         }
         
         // Preparar datos para inserción
@@ -145,8 +178,6 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
             suggested_actions: analysis.suggested_actions
         };
         
-        console.log('💾 Saving to ai_insights...');
-        console.log('📊 Insert data:', insertData);
         
         const { data: savedAnalysis, error } = await supabase
             .from('ai_insights')
@@ -159,11 +190,9 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
             throw new Error('Error guardando análisis de sentimiento: ' + error.message);
         }
         
-        console.log('✅ Saved to database:', savedAnalysis.id);
 
         // Si es negativo y urgente, crear tarea automática
         if (analysis.sentiment === 'negative' && analysis.urgency === 'high') {
-            console.log('🚨 Creating urgent task...');
             await supabase
                 .from('tasks')
                 .insert({

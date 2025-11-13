@@ -10,7 +10,6 @@ export default async function ClientCommunicationsPage() {
     
     // Si Supabase no está configurado, usar versión simplificada
     if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your_supabase_project_url_here')) {
-        console.log('🚧 Client Communications in demo mode - Supabase not configured');
         return <ClientCommunicationsSimple />;
     }
     
@@ -30,7 +29,6 @@ export default async function ClientCommunicationsPage() {
             .limit(1);
         
         if (tablesError && tablesError.message.includes('relation "client_tokens" does not exist')) {
-            console.log('📋 Client communication tables not found - showing simple version');
             return <ClientCommunicationsSimple />;
         }
         

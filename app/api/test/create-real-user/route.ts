@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from '@/src/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🔧 Creating test user with real subscription data...');
 
         const supabase = await createServerSupabaseClient();
         
@@ -12,7 +11,6 @@ export async function POST(request: NextRequest) {
         const userEmail = body.userEmail || 'amazonjgp80@gmail.com';
         const userId = body.userId || crypto.randomUUID();
 
-        console.log('👤 Creating profile for:', { userId, userEmail });
 
         const profileData = {
             id: userId,
@@ -36,7 +34,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingUser) {
-      console.log('🔄 User already exists, updating...');
       const { data, error } = await supabase
         .from('profiles')
         .update({
@@ -59,7 +56,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log('✅ Profile updated successfully');
       return NextResponse.json({
         success: true,
         message: 'Usuario PRO actualizado exitosamente',
@@ -68,7 +64,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Si no existe, crear nuevo usuario
-    console.log('✨ Creating new user...');
     const { data, error } = await supabase
       .from('profiles')
       .insert([profileData])
@@ -83,7 +78,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Profile saved successfully:', data);
         
         return NextResponse.json({
             success: true,

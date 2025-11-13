@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { showToast } from '@/utils/toast';
 import {
     ArrowLeft,
     Building,
@@ -177,7 +178,7 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
 
     const createProject = async () => {
         if (!projectFormData.name.trim() || !supabase) {
-            alert('Por favor, ingresa al menos el nombre del proyecto');
+            showToast.warning('Por favor, ingresa al menos el nombre del proyecto');
             return;
         }
 
@@ -215,7 +216,7 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
 
             if (error) {
                 console.error('Error creating project:', error);
-                alert('Error al crear el proyecto: ' + error.message);
+                showToast.error('Error al crear el proyecto: ' + error.message);
                 return;
             }
 
@@ -230,10 +231,11 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
                     end_date: ''
                 });
                 setShowProjectModal(false);
+                showToast.success('Proyecto creado exitosamente');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error inesperado al crear el proyecto');
+            showToast.error('Error inesperado al crear el proyecto');
         }
     };
 

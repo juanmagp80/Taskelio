@@ -237,8 +237,6 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
                 return;
             }
 
-            console.log('📋 Tasks fetched - RAW DATA:', tasksData);
-            console.log('📋 Tasks analyzed:', tasksData?.map((task: Task) => ({
                 id: task.id,
                 title: task.title,
                 is_running: task.is_running,
@@ -343,18 +341,12 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
 
             const now = new Date().toISOString();
             
-            console.log(`🔄 TOGGLE TIMER INICIO:`);
-            console.log(`   - Task ID: ${taskId}`);
-            console.log(`   - Currently Running: ${isCurrentlyRunning}`);
-            console.log(`   - Timestamp: ${now}`);
             
             // Buscar la tarea actual para ver su estado
             const currentTask = tasks.find(t => t.id === taskId);
-            console.log(`   - Task actual:`, currentTask);
             
             if (isCurrentlyRunning) {
                 // PARAR: Calcular tiempo transcurrido y sumarlo al total
-                console.log(`⏹️ PARANDO cronómetro para tarea: ${taskId}`);
                 
                 if (currentTask?.last_start) {
                     // Calcular tiempo transcurrido en esta sesión
@@ -370,12 +362,6 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
                     const sessionSeconds = Math.floor(sessionMs / 1000);
                     const newTotalSeconds = (currentTask.total_time_seconds || 0) + sessionSeconds;
                     
-                    console.log(`⏱️ Calculando tiempo de sesión:`);
-                    console.log(`   - Inicio: ${new Date(startTime).toISOString()}`);
-                    console.log(`   - Fin: ${new Date(nowMs).toISOString()}`);
-                    console.log(`   - Sesión: ${sessionSeconds} segundos`);
-                    console.log(`   - Total anterior: ${currentTask.total_time_seconds || 0} segundos`);
-                    console.log(`   - Nuevo total: ${newTotalSeconds} segundos`);
                     
                     // Actualizar en base de datos
                     const { error } = await supabase
@@ -392,9 +378,7 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
                         return;
                     }
 
-                    console.log(`✅ Cronómetro PARADO - Total guardado: ${newTotalSeconds}s`);
                 } else {
-                    console.log(`⚠️ No hay last_start, solo parando sin calcular tiempo`);
                     
                     const { error } = await supabase
                         .from('tasks')
@@ -409,25 +393,20 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
                         return;
                     }
 
-                    console.log(`✅ Cronómetro PARADO exitosamente`);
                 }
 
             } else {
                 // INICIAR: Solo cambiar el estado a running
-                console.log(`▶️ INICIANDO cronómetro para tarea: ${taskId}`);
                 
                 // Parar otras tareas primero
-                console.log(`🛑 Parando otras tareas...`);
                 const stopResult = await supabase
                     .from('tasks')
                     .update({ is_running: false })
                     .eq('project_id', projectId)
                     .eq('is_running', true);
                 
-                console.log(`🛑 Resultado de parar otras tareas:`, stopResult);
 
                 // Iniciar esta tarea
-                console.log(`🚀 Iniciando tarea ${taskId}...`);
                 const { data: updateData, error } = await supabase
                     .from('tasks')
                     .update({
@@ -437,20 +416,16 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
                     })
                     .eq('id', taskId);
 
-                console.log(`🚀 Resultado de iniciar tarea:`, { data: updateData, error });
 
                 if (error) {
                     console.error('❌ Error iniciando:', error);
                     return;
                 }
 
-                console.log(`✅ Cronómetro INICIADO exitosamente a las ${now}`);
             }
 
             // Recargar tareas
-            console.log(`🔄 Recargando tareas después del toggle...`);
             await fetchTasks();
-            console.log(`✅ Tareas recargadas después del toggle`);
 
         } catch (error) {
             console.error('❌ Error en toggleTaskTimer:', error);
@@ -459,10 +434,8 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
 
     // Función para formatear tiempo
     const formatTime = (seconds: number) => {
-        console.log(`🕐 formatTime called with: ${seconds} seconds`);
         
         if (!seconds) {
-            console.log(`🕐 formatTime result: '0m' (no seconds)`);
             return '0m';
         }
         
@@ -470,38 +443,28 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
 
-        console.log(`🕐 formatTime breakdown: ${hours}h ${minutes}m ${secs}s`);
 
         if (hours > 0) {
             const result = `${hours}h ${minutes}m`;
-            console.log(`🕐 formatTime result: '${result}' (has hours)`);
             return result;
         } else if (minutes > 0) {
             const result = `${minutes}m`;
-            console.log(`🕐 formatTime result: '${result}' (has minutes)`);
             return result;
         } else {
             const result = `${secs}s`;
-            console.log(`🕐 formatTime result: '${result}' (only seconds)`);
             return result;
         }
     };
 
     // useEffect para actualizar cronómetros en tiempo real (SIMPLIFICADO)
     useEffect(() => {
-        console.log(`🕐 Timer useEffect - Tasks count: ${tasks.length}`);
         
         const interval = setInterval(() => {
             const newLiveTimers: {[taskId: string]: number} = {};
             const now = Date.now();
-            console.log(`🕐 Timer tick - Now: ${now} (${new Date(now).toISOString()})`);
             
             tasks.forEach(task => {
                 let displayTime = task.total_time_seconds || 0;
-                console.log(`🔍 Processing task ${task.title}:`);
-                console.log(`   - is_running: ${task.is_running}`);
-                console.log(`   - total_time_seconds: ${task.total_time_seconds}`);
-                console.log(`   - last_start: ${task.last_start}`);
                 
                 if (task.is_running && task.last_start) {
                     // TAREA CORRIENDO: mostrar tiempo acumulado + tiempo de sesión actual
@@ -511,29 +474,22 @@ export default function ProjectDetailsBonsai({ projectId, userEmail }: ProjectDe
                     } else {
                         startTime = new Date(task.last_start + 'Z').getTime();
                     }
-                    console.log(`   - startTime parsed: ${startTime} (${new Date(startTime).toISOString()})`);
                     
                     const elapsedMs = now - startTime;
-                    console.log(`   - elapsedMs: ${elapsedMs}`);
                     
                     const elapsedSeconds = Math.floor(elapsedMs / 1000);
-                    console.log(`   - elapsedSeconds: ${elapsedSeconds}`);
                     
                     displayTime = (task.total_time_seconds || 0) + elapsedSeconds;
-                    console.log(`   - displayTime: ${displayTime} (acumulado + sesión actual)`);
                     
                     // Log solo las tareas que están corriendo
-                    console.log(`⏱️ Task ${task.title}: ${elapsedSeconds}s elapsed, total: ${displayTime}s`);
                 } else {
                     // TAREA PARADA: mostrar solo el tiempo acumulado
                     displayTime = task.total_time_seconds || 0;
-                    console.log(`   - displayTime: ${displayTime} (solo tiempo acumulado)`);
                 }
                 
                 newLiveTimers[task.id] = displayTime;
             });
             
-            console.log(`🕐 New live timers:`, newLiveTimers);
             setLiveTimers(newLiveTimers);
         }, 1000);
 

@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from '@/src/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🔧 Endpoint para crear perfil PRO del usuario autenticado');
 
         const supabase = await createServerSupabaseClient();
         
@@ -17,7 +16,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('👤 Usuario autenticado:', user.email, 'ID:', user.id);
 
         // Verificar si ya existe el perfil
         const { data: existingProfile } = await supabase
@@ -27,7 +25,6 @@ export async function POST(request: NextRequest) {
             .single();
 
         if (existingProfile) {
-            console.log('📝 Perfil existente, actualizando a PRO...');
             
             // Actualizar perfil existente a PRO
             const { data: updatedProfile, error: updateError } = await supabase
@@ -50,14 +47,12 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            console.log('✅ Perfil actualizado a PRO exitosamente');
             return NextResponse.json({
                 success: true,
                 message: 'Perfil actualizado a PRO exitosamente',
                 profile: updatedProfile
             });
         } else {
-            console.log('🆕 Creando nuevo perfil PRO...');
             
             // Crear nuevo perfil PRO
             const trialStartDate = new Date();
@@ -87,7 +82,6 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            console.log('✅ Perfil PRO creado exitosamente');
             return NextResponse.json({
                 success: true,
                 message: 'Perfil PRO creado exitosamente',

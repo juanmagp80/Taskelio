@@ -3,10 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('👤 Getting user profile...');
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
-    console.log('🔎 Query params:', { email });
 
     const supabaseAdmin = createSupabaseAdmin();
     let profile;
@@ -14,7 +12,6 @@ export async function GET(request: NextRequest) {
 
     if (email) {
       // Buscar por email usando server client (temporal fix para API key issue)
-      console.log('🔍 Fetching profile by email:', email);
       const { createServerSupabaseClient } = await import('@/src/lib/supabase-server');
       const supabase = await createServerSupabaseClient();
       const result = await supabase
@@ -22,7 +19,6 @@ export async function GET(request: NextRequest) {
         .select('*')
         .eq('email', email)
         .single();
-      console.log('🔎 Supabase result:', result);
       profile = result.data;
       profileError = result.error;
     } else {
@@ -30,7 +26,6 @@ export async function GET(request: NextRequest) {
       const { createServerSupabaseClient } = await import('@/src/lib/supabase-server');
       const supabase = await createServerSupabaseClient();
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      console.log('🔎 Auth result:', { user, authError });
       if (authError || !user) {
         console.error('❌ No authenticated user:', authError);
         return NextResponse.json(
@@ -38,13 +33,11 @@ export async function GET(request: NextRequest) {
           { status: 401 }
         );
       }
-      console.log('🔍 Fetching profile for authenticated user:', user.id);
       const result = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-      console.log('🔎 Supabase result:', result);
       profile = result.data;
       profileError = result.error;
     }
@@ -63,7 +56,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('✅ Profile found:', profile);
     return NextResponse.json({
       success: true,
       profile: profile

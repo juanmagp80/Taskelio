@@ -1,16 +1,15 @@
 import { createServerSupabaseClient } from '@/src/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import DashboardClient from './DashboardClient';
+// El archivo principal del dashboard fue renombrado a DashboardBonsai
+import DashboardClient from './DashboardBonsai';
 
 export default async function DashboardPage() {
     try {
-        console.log('🚀 Dashboard page loading...');
 
         // ✅ Verificar si Supabase está configurado
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        console.log('📋 Environment check:', {
             hasUrl: !!supabaseUrl,
             hasKey: !!supabaseKey,
             urlValid: supabaseUrl?.startsWith('https://'),
@@ -18,7 +17,6 @@ export default async function DashboardPage() {
 
         // Si Supabase no está configurado, usar modo demo
         if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your_supabase_project_url_here')) {
-            console.log('🚧 Dashboard in demo mode - Supabase not configured');
             return (
                 <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 text-slate-900 relative overflow-hidden">
                     <div className="fixed inset-0 z-0">
@@ -91,16 +89,13 @@ export default async function DashboardPage() {
             );
         }
 
-        console.log('🔄 Creating Supabase client...');
         const supabase = await createServerSupabaseClient();
 
-        console.log('👤 Getting session...');
         const {
             data: { session },
             error: sessionError
         } = await supabase.auth.getSession();
 
-        console.log('📋 Session check:', {
             hasSession: !!session,
             hasUser: !!session?.user,
             hasEmail: !!session?.user?.email,
@@ -111,16 +106,13 @@ export default async function DashboardPage() {
         // 🔧 DEBUG: Para desarrollo, si no hay sesión, usar usuario de prueba
         let userEmail = session?.user?.email;
         if (!userEmail) {
-            console.log('🔧 DEBUG: No session found, using test user for development');
             userEmail = 'juanmagpdev@gmail.com';
         }
 
         if (!userEmail) {
-            console.log('🚫 No valid session - redirecting to login');
             redirect('/login');
         }
 
-        console.log('✅ Valid session found - rendering dashboard');
         return <DashboardClient userEmail={userEmail} />;
     } catch (error) {
         console.error('❌ Error in dashboard page:', error);

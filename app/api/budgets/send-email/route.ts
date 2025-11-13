@@ -7,7 +7,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🚀 Iniciando proceso de envío de presupuesto...');
 
         const { budgetId } = await request.json();
 
@@ -19,7 +18,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('📋 Budget ID recibido:', budgetId);
 
         // Verificar autenticación
         const supabase = await createSupabaseServerClient();
@@ -33,10 +31,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Usuario autenticado:', user.email);
 
         // Obtener el presupuesto completo con cliente y items
-        console.log('🔍 Buscando presupuesto...');
         const { data: budget, error: budgetError } = await supabase
             .from('budgets')
             .select(`
@@ -69,8 +65,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Presupuesto encontrado:', budget.title);
-        console.log('📧 Email del cliente:', budget.clients?.email);
 
         if (!budget.clients?.email) {
             return NextResponse.json(
@@ -86,20 +80,14 @@ export async function POST(request: NextRequest) {
             .eq('id', user.id)
             .single();
 
-        console.log('👤 Perfil usuario:', profile?.full_name || user.email);
-        console.log('🏢 Empresa:', profile?.company || 'No configurada');
 
         // Verificar configuración de Resend
-        console.log('🔑 Verificando configuración de Resend...');
-        console.log('🔑 RESEND_API_KEY presente:', !!process.env.RESEND_API_KEY);
-        console.log('🔑 FROM_EMAIL:', process.env.FROM_EMAIL);
 
         if (!process.env.RESEND_API_KEY) {
             console.warn('⚠️ RESEND_API_KEY no configurada, enviando simulado');
             return await sendSimulatedEmail(budget, supabase, budgetId, user.id);
         }
 
-        console.log('✅ Resend configurado correctamente, enviando email REAL');
 
         // Generar contenido del email
         const emailHtml = generateBudgetEmailHtml(budget, profile);
@@ -113,20 +101,9 @@ export async function POST(request: NextRequest) {
         const fromName = profile?.full_name || profile?.company || 'Taskelio';
         const formattedFrom = `${fromName} <${fromEmail}>`;
 
-        console.log('📧 Enviando email real a:', budget.clients.email);
-        console.log('📤 Desde:', formattedFrom);
-        console.log('↩️ Responder a:', replyToEmail);
-        console.log('👤 Email del freelancer (user.email):', user.email);
-        console.log('📋 Email del perfil (profile?.email):', profile?.email);
 
         try {
             // Enviar email con Resend
-            console.log('🔄 Intentando enviar email con Resend...');
-            console.log('📧 Parámetros del email:');
-            console.log('  - from:', formattedFrom);
-            console.log('  - to:', budget.clients.email);
-            console.log('  - reply_to:', replyToEmail);
-            console.log('  - subject:', `Presupuesto: ${budget.title}`);
 
             const emailResult = await resend.emails.send({
                 from: formattedFrom,
@@ -144,7 +121,6 @@ export async function POST(request: NextRequest) {
                 }
             });
 
-            console.log('📬 Resultado de Resend:', emailResult);
 
             if (emailResult.error) {
                 console.error('❌ Error enviando email:', emailResult.error);
@@ -154,7 +130,6 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            console.log('✅ Email enviado exitosamente, ID:', emailResult.data?.id);
 
             // Actualizar el estado del presupuesto
             const { error: updateError } = await supabase
@@ -174,7 +149,6 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            console.log('✅ Presupuesto actualizado exitosamente');
 
             return NextResponse.json({
                 success: true,
@@ -216,8 +190,6 @@ export async function POST(request: NextRequest) {
 
 // Función de fallback para envío simulado
 async function sendSimulatedEmail(budget: any, supabase: any, budgetId: string, userId: string) {
-    console.log('📧 Modo simulación - enviando email a:', budget.clients.email);
-    console.log('📄 Presupuesto:', budget.title, '- Total:', budget.total_amount);
 
     // Simular delay
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -272,7 +244,19 @@ function generateBudgetEmailHtml(budget: any, profile: any): string {
     const total = subtotal + taxAmount;
 
     // Obtener información de la empresa/freelancer
-    const companyName = profile?.company || profile?.full_name || 'Freelancer';
+    // Buscar el nombre del emisor en este orden de prioridad:
+    // 1. Nombre de la empresa (si está configurado)
+    // 2. Nombre completo del usuario
+    // 3. Email del usuario (sin el dominio)
+    const getUserNameFromEmail = (email: string) => {
+        return email.split('@')[0].replace(/[._-]/g, ' ').split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+    };
+    
+    const companyName = profile?.company || 
+                        profile?.full_name || 
+                        (profile?.email ? getUserNameFromEmail(profile.email) : 'Prestador del Servicio');
     const contactEmail = profile?.email || 'contacto@ejemplo.com';
     const contactPhone = profile?.phone || '';
     const website = profile?.website || '';
@@ -538,12 +522,10 @@ function generateBudgetEmailHtml(budget: any, profile: any): string {
             <h3 style="color: #0056b3; margin-top: 0;">💬 ¿Tienes preguntas?</h3>
             <p style="margin-bottom: 0; color: #0056b3;">
                 Puedes responder directamente a este email o contactarme en: <strong>${contactEmail}</strong>
-                ${contactPhone ? ` • 📞 ${contactPhone}` : ''}
             </p>
         </div>
 
         <div class="footer">
-            <p><strong>Presupuesto generado por ${companyName}</strong></p>
             <p>Este es un email automático generado por nuestro sistema de gestión.</p>
             <p style="margin-bottom: 0;">Gracias por confiar en nuestros servicios profesionales.</p>
         </div>

@@ -57,7 +57,6 @@ export default function ClientCommunicationsSimple({ userEmail = "demo@example.c
                 .limit(1);
 
             if (checkError) {
-                console.log('Error checking tables:', checkError);
                 if (checkError.code === 'PGRST116' || checkError.message.includes('does not exist')) {
                     setTablesExist(false);
                 } else {

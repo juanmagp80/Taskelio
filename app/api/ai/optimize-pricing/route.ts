@@ -172,8 +172,6 @@ FORMATO OBLIGATORIO (JSON):
       }
       
     } catch (parseError) {
-      console.log('⚠️ Error parseando JSON de OpenAI:', parseError);
-      console.log('📝 Respuesta raw:', analysisText);
       
       // Crear análisis más detallado basado en los datos reales
       const totalItems = budgetData.items.length;

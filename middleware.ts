@@ -35,19 +35,10 @@ export async function middleware(req: NextRequest) {
   // IMPORTANTE: Refresh session antes de verificar
   const { data: { session }, error } = await supabase.auth.getSession();
 
-  console.log('🔄 Middleware - Session check:', {
-    path: req.nextUrl.pathname,
-    hasSession: !!session,
-    sessionExpiry: session?.expires_at,
-    currentTime: Math.floor(Date.now() / 1000),
-    error: error?.message
-  });
-
   // Refresh session if expired
   if (session?.expires_at) {
     const timeNow = Math.floor(Date.now() / 1000);
     if (session.expires_at <= timeNow) {
-      console.log('🔄 Refreshing expired session...');
       await supabase.auth.refreshSession();
     }
   }
@@ -80,15 +71,8 @@ export async function middleware(req: NextRequest) {
           .eq('id', session.user.id)
           .single();
 
-        console.log('📧 Email confirmation check:', {
-          userId: session.user.id,
-          emailConfirmed: !!profile?.email_confirmed_at,
-          error: profileError?.message
-        });
-
         // Si no hay confirmación de email, redirigir a página de confirmación pendiente
         if (!profile?.email_confirmed_at && !profileError) {
-          console.log('⚠️ Email not confirmed, redirecting to pending page');
           const url = req.nextUrl.clone();
           url.pathname = '/email-pending';
           url.searchParams.set('redirect', pathname);

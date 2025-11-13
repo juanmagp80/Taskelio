@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from '@/src/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🔧 Activating subscription for authenticated user...');
 
         const supabase = await createServerSupabaseClient();
         
@@ -18,7 +17,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('👤 Authenticated user:', { id: user.id, email: user.email });
 
         const profileData = {
             subscription_status: 'active',
@@ -40,7 +38,6 @@ export async function POST(request: NextRequest) {
 
         let result;
         if (existingProfile) {
-            console.log('🔄 Updating existing profile...');
             // Actualizar perfil existente
             const { data, error } = await supabase
                 .from('profiles')
@@ -51,7 +48,6 @@ export async function POST(request: NextRequest) {
 
             result = { data, error };
         } else {
-            console.log('✨ Creating new profile...');
             // Crear nuevo perfil
             const { data, error } = await supabase
                 .from('profiles')
@@ -75,7 +71,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Profile saved successfully:', result.data);
         
         return NextResponse.json({
             success: true,

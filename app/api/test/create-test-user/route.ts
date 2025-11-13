@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from '@/src/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🔧 Creando usuario de prueba...');
 
         const supabase = await createServerSupabaseClient();
         
@@ -33,7 +32,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Usuario de prueba creado exitosamente');
         
         return NextResponse.json({
             success: true,

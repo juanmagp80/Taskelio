@@ -134,7 +134,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
     };
 
     const handleExecuteAutomation = async (automation: Automation) => {
-        console.log('🚀 Preparando ejecución de automatización:', automation.name);
         
         if (!supabase) {
             alert('Error: Cliente Supabase no disponible');
@@ -159,7 +158,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
         setExecuting(false);
 
         // Cargar clientes con información adicional
-        console.log('🔍 Cargando clientes disponibles...');
         
         try {
             const { data: clientsData, error: clientsError } = await supabase
@@ -225,7 +223,6 @@ export default function AutomationsPageClient({ userEmail }: AutomationsPageClie
         const selected = entityOptions.find(opt => String(opt.id) === selectedEntity);
         if (selected && selected.email) {
             alert(`Se va a enviar el correo al cliente:\n${selected.name}\nEmail: ${selected.email}`);
-            console.log('Ejecutando automatización para cliente:', selected);
         } else if (selected) {
             alert('No se ha seleccionado email de cliente.');
         }

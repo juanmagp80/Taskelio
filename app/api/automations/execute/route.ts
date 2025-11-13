@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
     try {
         const { event, userId, data }: AutomationTrigger = await request.json();
 
-        console.log('🔥 Automation trigger received:', { event, userId });
 
         const supabase = createSupabaseAdmin();
 
@@ -35,7 +34,6 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        console.log(`📋 Found ${automations.length} automations to execute`);
 
         const results = [];
 
@@ -43,11 +41,9 @@ export async function POST(request: NextRequest) {
         for (const automation of automations) {
             const start = Date.now();
             try {
-                console.log(`🚀 Executing automation: ${automation.name}`);
 
                 // Verificar condiciones si existen
                 if (automation.trigger_conditions && !checkConditions(data, automation.trigger_conditions)) {
-                    console.log('⏭️  Conditions not met, skipping');
                     continue;
                 }
 

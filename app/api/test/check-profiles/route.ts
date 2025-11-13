@@ -3,7 +3,6 @@ import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
 
 export async function GET(request: NextRequest) {
     try {
-        console.log('🔍 Verificando perfiles existentes con admin client...');
 
         const supabaseAdmin = createSupabaseAdmin();
         
@@ -21,7 +20,6 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        console.log(`📊 Se encontraron ${profiles?.length || 0} perfiles`);
         
         return NextResponse.json({
             success: true,

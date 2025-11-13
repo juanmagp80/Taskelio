@@ -207,7 +207,6 @@ export default function AutomationsAIClient() {
 
   return (
     <div className="flex min-h-screen bg-black">
-  <Sidebar onLogout={() => { console.log('Logout'); }} />
       
       <div className="flex-1 pl-64">
         <div className="p-6">

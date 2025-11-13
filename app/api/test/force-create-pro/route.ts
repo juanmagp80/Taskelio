@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('🔧 Creación manual de perfil PRO para:', userEmail);
 
         // Crear cliente con clave de servicio (bypasa RLS)
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -41,7 +40,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('👤 Usuario encontrado en auth:', user.id);
 
         // Verificar si ya existe el perfil
         const { data: existingProfile } = await supabase

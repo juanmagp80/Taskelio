@@ -39,15 +39,19 @@ export const createCheckoutAndRedirect = async (
   try {
     // Verificar si Stripe está configurado
     if (!stripePublicKey || stripePublicKey === 'pk_test_EJEMPLO_TEMPORAL') {
-      alert('⚠️ Stripe no está configurado correctamente.\n\nPara configurarlo:\n1. Ve a https://dashboard.stripe.com/\n2. Obtén tus claves API\n3. Actualiza .env.local con tus claves reales\n4. Reinicia el servidor');
+      const { showToast } = await import('@/utils/toast');
+      showToast.warning(
+        '⚠️ Stripe no está configurado correctamente',
+        'Para configurarlo:\n1. Ve a https://dashboard.stripe.com/\n2. Obtén tus claves API\n3. Actualiza .env.local con tus claves reales\n4. Reinicia el servidor'
+      );
       return;
     }
 
-    // Obtener el usuario actual de Supabase
+    // Verificar si el usuario está autenticado
     const supabase = await import('@/src/lib/supabase-client').then(m => m.createSupabaseClient());
     const { data: { user } } = await supabase.auth.getUser();
     
-    if (!user?.email) {
+    if (!user) {
       throw new Error('Usuario no autenticado');
     }
 
@@ -58,9 +62,9 @@ export const createCheckoutAndRedirect = async (
       },
       body: JSON.stringify({
         priceId,
-        userEmail: user.email,
-        successUrl: successUrl || `${window.location.origin}/payment/success`,
-        cancelUrl: cancelUrl || `${window.location.origin}/payment/cancel`,
+        // URL de éxito que incluirá el session_id automáticamente por Stripe
+        successUrl: successUrl || `${window.location.origin}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: cancelUrl || `${window.location.origin}/dashboard?canceled=true`,
       }),
     });
 

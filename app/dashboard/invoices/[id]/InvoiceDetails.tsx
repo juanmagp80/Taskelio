@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { showToast } from '@/utils/toast';
 import {
     AlertCircle,
     ArrowLeft,
@@ -153,9 +154,10 @@ export default function InvoiceDetails({ invoiceId, userEmail }: InvoiceDetailsP
             if (error) throw error;
 
             fetchInvoiceDetails(); // Recargar datos
+            showToast.success('Estado actualizado correctamente');
         } catch (error) {
             console.error('Error updating invoice status:', error);
-            alert('Error al actualizar el estado de la factura');
+            showToast.error('Error al actualizar el estado de la factura');
         }
     };
 

@@ -5,13 +5,11 @@ import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 Starting debug analysis...');
     
     // Primero leer el body
     const body = await request.json();
     const { period = '30_days', userId } = body;
     
-    console.log('📝 Request body:', { period, userId });
 
     // Método 1: Intentar con Route Handler Client
     let supabase = createRouteHandlerClient({ cookies });
@@ -23,17 +21,14 @@ export async function POST(request: NextRequest) {
       user = authResult.data?.user;
       authError = authResult.error;
       
-      console.log('🔐 Auth attempt 1 (Route Handler):', { 
         user: user ? { id: user.id, email: user.email } : null, 
         authError: authError?.message 
       });
     } catch (error) {
-      console.log('❌ Route handler auth failed:', error);
     }
 
     // Método 2: Si falla, intentar con Service Role
     if (authError || !user) {
-      console.log('🔄 Trying service role method...');
       
       if (userId) {
         try {
@@ -44,9 +39,7 @@ export async function POST(request: NextRequest) {
 
           // Crear objeto user ficticio para las consultas
           user = { id: userId };
-          console.log('✅ Using service role for user:', userId);
         } catch (error) {
-          console.log('❌ Service role setup failed:', error);
         }
       }
     }
@@ -63,7 +56,6 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    console.log(`🔍 Testing data collection for user ${user.id}...`);
 
     // Prueba simple de conexión a la base de datos
     try {
@@ -73,7 +65,6 @@ export async function POST(request: NextRequest) {
         .eq('user_id', user.id)
         .limit(1);
 
-      console.log('🧪 Test query result:', { 
         success: !testError, 
         error: testError?.message,
         hasData: testEvents && testEvents.length > 0
@@ -90,7 +81,6 @@ export async function POST(request: NextRequest) {
       }
 
     } catch (dbError) {
-      console.log('❌ Database test failed:', dbError);
       return NextResponse.json({
         error: 'Error de base de datos',
         debug: {
@@ -110,7 +100,6 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     };
 
-    console.log('✅ Debug analysis completed successfully');
     return NextResponse.json(debugResponse);
 
   } catch (error) {

@@ -6,7 +6,6 @@ import { getBaseUrlFromRequest } from '../../../../lib/url';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-console.log('🔧 Variables de entorno:', {
     supabaseUrl: supabaseUrl ? '✅ Configurada' : '❌ Faltante',
     serviceKey: supabaseServiceKey ? '✅ Configurada' : '❌ Faltante',
     resendKey: process.env.RESEND_API_KEY ? '✅ Configurada' : '❌ Faltante',
@@ -14,16 +13,13 @@ console.log('🔧 Variables de entorno:', {
 });
 
 export async function POST(request: NextRequest) {
-    console.log('🚀 API send-token-email ejecutándose...');
     
     try {
         const body = await request.json();
         const { clientId, message, freelancerName } = body;
         
-        console.log('📨 Datos recibidos:', { clientId, message, freelancerName });
 
         if (!clientId) {
-            console.log('❌ Error: ID de cliente requerido');
             return NextResponse.json(
                 { error: 'ID de cliente requerido' },
                 { status: 400 }
@@ -42,10 +38,8 @@ export async function POST(request: NextRequest) {
         // Intentar primero con service role, luego con anon key como fallback
         let supabase;
         if (supabaseServiceKey) {
-            console.log('🔑 Usando service role key...');
             supabase = createClient(supabaseUrl, supabaseServiceKey);
         } else {
-            console.log('⚠️ Service role key no disponible, usando anon key...');
             const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
             if (!anonKey) {
                 return NextResponse.json(
@@ -63,7 +57,6 @@ export async function POST(request: NextRequest) {
             .eq('id', clientId)
             .single();
 
-        console.log('👤 Búsqueda de cliente:', { 
             clientId, 
             found: !!client, 
             error: clientError?.message || 'ninguno'
@@ -83,7 +76,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('📧 Cliente encontrado:', { 
             name: client.name, 
             email: client.email,
             company: client.company || 'Sin empresa'
@@ -93,7 +85,6 @@ export async function POST(request: NextRequest) {
         let token;
         
         try {
-            console.log('🔍 Buscando token existente...');
             const { data: existingToken, error: tokenError } = await supabase
                 .from('client_tokens')
                 .select('token')
@@ -103,13 +94,10 @@ export async function POST(request: NextRequest) {
 
             if (existingToken && !tokenError) {
                 token = existingToken.token;
-                console.log('🔄 Usando token existente:', token);
             } else {
-                console.log('🆕 Generando nuevo token...');
                 
                 // Generar token manualmente
                 const manualToken = generateManualToken();
-                console.log('🔑 Token generado:', manualToken);
                 
                 // Intentar insertar el token en la base de datos
                 const { data: insertData, error: insertError } = await supabase
@@ -126,25 +114,21 @@ export async function POST(request: NextRequest) {
                 if (insertError) {
                     console.error('❌ Error insertando token:', insertError);
                     // Usar token temporal sin guardar para desarrollo
-                    console.log('⚠️ Usando token temporal para desarrollo.');
                     token = manualToken;
                 } else {
                     token = insertData.token;
-                    console.log('✅ Token guardado en base de datos:', token);
                 }
             }
         } catch (error) {
             console.error('❌ Error en gestión de tokens:', error);
             // Generar token temporal para desarrollo
             token = generateManualToken();
-            console.log('🔧 Usando token temporal de desarrollo:', token);
         }
 
         // Generar URL del portal usando detección automática de host/puerto
         const baseUrl = getBaseUrlFromRequest(request);
         const portalUrl = `${baseUrl}/client-portal/${token}`;
         
-        console.log('🔗 Portal URL generada:', portalUrl);
 
         // Preparar el email
         const emailContent = {
@@ -162,11 +146,9 @@ export async function POST(request: NextRequest) {
         // Enviar email usando el proveedor configurado
         try {
             await sendEmail(emailContent);
-            console.log('✅ Email enviado exitosamente a:', client.email);
         } catch (emailError) {
             console.error('❌ Error enviando email:', emailError);
             // No lanzar error aquí para que el token se genere aunque falle el email
-            console.log('⚠️ Token generado pero email no enviado. URL del portal:', portalUrl);
         }
 
         // Registrar el envío en logs (opcional) - simplificado
@@ -182,7 +164,6 @@ export async function POST(request: NextRequest) {
                     sent_at: new Date().toISOString()
                 });
         } catch (logError) {
-            console.log('⚠️ No se pudo guardar log (tabla no existe):', logError);
         }
 
         return NextResponse.json({
@@ -366,8 +347,6 @@ async function sendEmail(emailContent: any) {
     // OPCIÓN 4: NODEMAILER (Gmail/SMTP)
     if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
         // Para Nodemailer necesitarías instalarlo: npm install nodemailer
-        console.log('📧 Nodemailer configurado pero no implementado en este ejemplo');
-        console.log('Instala nodemailer y descomenta la implementación si lo necesitas');
         
         // const nodemailer = require('nodemailer');
         // const transporter = nodemailer.createTransporter({ ... });
@@ -377,15 +356,6 @@ async function sendEmail(emailContent: any) {
     }
 
     // Si no hay ningún proveedor configurado
-    console.log('⚠️ No hay proveedor de email configurado');
-    console.log('📧 Simulando envío para desarrollo...');
-    console.log('Destinatario:', to);
-    console.log('Asunto:', subject);
-    console.log('Configurado en .env.local una de estas variables:');
-    console.log('- RESEND_API_KEY (recomendado)');
-    console.log('- SENDGRID_API_KEY');
-    console.log('- POSTMARK_API_KEY');
-    console.log('- SMTP_HOST + SMTP_USER + SMTP_PASS');
     
     throw new Error('No hay proveedor de email configurado. Revisa tu archivo .env.local');
 }

@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
       state: 'taskelio-google-calendar'
     });
 
-    console.log('🔗 Redirigiendo a Google OAuth:', authUrl);
 
     // Redirigir al usuario a Google
     return NextResponse.redirect(authUrl);

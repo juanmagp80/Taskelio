@@ -89,9 +89,6 @@ export async function GET(
             address: company?.address || ''
         };
 
-        console.log('Generating PDF for invoice:', invoice.invoice_number);
-        console.log('Items count:', items?.length || 0);
-        console.log('Company info:', companyInfo);
 
         // ✅ GENERAR PDF
         const pdfBuffer = await renderToBuffer(

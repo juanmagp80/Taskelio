@@ -107,7 +107,6 @@ const TasksPageClient: React.FC = () => {
     const fetchTasks = async () => {
         setLoading(true);
         try {
-            console.log('🔑 Cargando tareas del usuario principal:', MAIN_USER_ID);
 
             const { data, error } = await supabase
                 .from('tasks')
@@ -120,9 +119,7 @@ const TasksPageClient: React.FC = () => {
                 setError('Error cargando tareas: ' + error.message);
                 setTasks([]);
             } else {
-                console.log('✅ Tareas cargadas:', data?.length || 0);
                 if (data && data.length > 0) {
-                    console.log('📋 Primeras tareas:', data.slice(0, 3).map(t => ({
                         title: t.title,
                         status: t.status
                     })));
@@ -142,7 +139,6 @@ const TasksPageClient: React.FC = () => {
     // Función para obtener proyectos del usuario principal
     const fetchProjects = async () => {
         try {
-            console.log('🔑 Cargando proyectos del usuario principal:', MAIN_USER_ID);
 
             const { data, error } = await supabase
                 .from('projects')
@@ -154,9 +150,7 @@ const TasksPageClient: React.FC = () => {
                 console.error('❌ Error fetching projects:', error);
                 setProjects([]);
             } else {
-                console.log('✅ Proyectos cargados:', data?.length || 0);
                 if (data && data.length > 0) {
-                    console.log('📁 Primeros proyectos:', data.slice(0, 3).map(p => p.name));
                 }
                 setProjects((data || []) as Project[]);
             }
@@ -168,7 +162,6 @@ const TasksPageClient: React.FC = () => {
 
     // Efecto inicial - cargar datos
     useEffect(() => {
-        console.log('🚀 Iniciando carga de datos públicos...');
         fetchTasks();
         fetchProjects();
     }, []);
@@ -212,7 +205,6 @@ const TasksPageClient: React.FC = () => {
                 console.error('Error creando tarea:', error);
                 showToast.error('Error al crear la tarea: ' + error.message);
             } else {
-                console.log('✅ Tarea creada exitosamente');
                 await fetchTasks();
                 setShowCreateModal(false);
                 setNewTask({
@@ -253,7 +245,6 @@ const TasksPageClient: React.FC = () => {
                 console.error('Error actualizando tarea:', error);
                 showToast.error('Error al actualizar la tarea: ' + error.message);
             } else {
-                console.log('✅ Tarea actualizada exitosamente');
                 await fetchTasks();
                 setShowEditModal(false);
                 setEditingTask(null);
@@ -278,7 +269,6 @@ const TasksPageClient: React.FC = () => {
                 console.error('Error eliminando tarea:', error);
                 showToast.error('Error al eliminar la tarea: ' + error.message);
             } else {
-                console.log('✅ Tarea eliminada exitosamente');
                 await fetchTasks();
                 setShowDeleteModal(false);
                 setTaskToDelete(null);

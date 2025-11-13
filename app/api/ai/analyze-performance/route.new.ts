@@ -87,7 +87,6 @@ async function collectUserData(supabase: any, userId: string, period: string) {
   try {
     const dateRange = getPeriodRange(period);
     
-    console.log(`📅 Rango de fechas para análisis:`, {
       period,
       start: dateRange.start,
       end: dateRange.end
@@ -156,7 +155,6 @@ async function collectUserData(supabase: any, userId: string, period: string) {
       aiInsights: aiInsights || []
     };
 
-    console.log(`✅ Datos recopilados exitosamente:`, {
       calendarEvents: result.calendarEvents.length,
       timeTrackingSessions: result.timeTrackingSessions.length,
       budgetsData: result.budgetsData.length,
@@ -347,7 +345,6 @@ IMPORTANTE:
 - Las recomendaciones deben ser accionables y específicas`;
 
   try {
-    console.log('🤖 Enviando datos a OpenAI para análisis...');
     
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -371,7 +368,6 @@ IMPORTANTE:
       throw new Error('No se recibió respuesta de OpenAI');
     }
 
-    console.log('✅ Análisis completado por OpenAI');
     return JSON.parse(analysisContent);
 
   } catch (error) {
@@ -462,13 +458,11 @@ export async function POST(request: NextRequest) {
     user = authResult.data?.user;
     authError = authResult.error;
     
-    console.log('🔐 Auth attempt 1 (Route Handler):', { 
       user: user ? { id: user.id, email: user.email } : null, 
       authError: authError?.message 
     });
 
     if (authError || !user) {
-      console.log('🔄 Trying alternative auth method...');
       
       const authHeader = request.headers.get('authorization');
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -483,16 +477,13 @@ export async function POST(request: NextRequest) {
           const { data: { user: jwtUser }, error: jwtError } = await supabase.auth.getUser(token);
           if (!jwtError && jwtUser) {
             user = jwtUser;
-            console.log('✅ Auth success with JWT token:', user.email);
           }
         } catch (jwtErr) {
-          console.log('❌ JWT verification failed:', jwtErr);
         }
       }
     }
 
     if (!user && userId) {
-      console.log('🔄 Using service role with userId from body...');
       
       supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -500,7 +491,6 @@ export async function POST(request: NextRequest) {
       );
 
       user = { id: userId };
-      console.log('✅ Using service role for user:', userId);
     }
     
     if (!user) {
@@ -510,11 +500,9 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    console.log(`🔍 Iniciando análisis de rendimiento para usuario ${user.id}, período: ${period}`);
 
     const userData = await collectUserData(supabase, user.id, period);
     
-    console.log(`📊 Datos recopilados:`, {
       calendarEvents: userData.calendarEvents.length,
       timeTrackingSessions: userData.timeTrackingSessions.length,
       budgets: userData.budgetsData.length,
@@ -524,7 +512,6 @@ export async function POST(request: NextRequest) {
     const totalDataPoints = userData.calendarEvents.length + userData.timeTrackingSessions.length + userData.budgetsData.length;
     
     if (totalDataPoints === 0) {
-      console.log('⚠️ No hay datos suficientes para análisis, generando análisis básico');
       
       const basicAnalysis = {
         success: true,
@@ -570,7 +557,6 @@ export async function POST(request: NextRequest) {
 
     const metrics = calculateMetrics(userData);
     
-    console.log(`📈 Métricas calculadas:`, metrics);
 
     const analysis = await analyzePerformanceWithAI(userData, period, metrics);
 

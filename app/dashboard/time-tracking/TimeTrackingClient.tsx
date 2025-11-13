@@ -1,10 +1,12 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { showToast } from '@/utils/toast';
 import {
     Clock,
     Play,
@@ -143,7 +145,7 @@ export default function TimeTrackingClient({ userEmail }: TimeTrackingClientProp
     const startTimer = async () => {
         if (!supabase) return;
         if (!timerFormData.description.trim()) {
-            alert('Por favor añade una descripción');
+            showToast.warning('Por favor añade una descripción');
             return;
         }
 
@@ -243,10 +245,12 @@ export default function TimeTrackingClient({ userEmail }: TimeTrackingClientProp
     }, []);
 
     return (
-        <div className={"min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800"}>
+        <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <main className="flex-1 ml-56 overflow-auto">
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                <div className="flex-1 overflow-auto">
                 <div className="p-6 space-y-6">
                     {/* Header */}
                     <div className="flex items-center justify-between">
@@ -420,7 +424,8 @@ export default function TimeTrackingClient({ userEmail }: TimeTrackingClientProp
                         </CardContent>
                     </Card>
                 </div>
-            </main>
+                </div>
+            </div>
         </div>
     );
 }

@@ -119,7 +119,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 console.error('Error fetching tasks:', error);
                 setTasks([]);
             } else {
-                console.log('✅ Tareas cargadas:', data?.length || 0);
                 setTasks((data || []) as Task[]);
             }
         } catch (error) {
@@ -153,7 +152,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
             if (!error && data) {
                 const activeProjects = data.filter(project => !project.status || project.status === 'active');
                 setProjects(activeProjects as Project[]);
-                console.log('✅ Proyectos cargados:', activeProjects.length);
             } else {
                 console.error('Error fetching projects:', error);
                 setProjects([]);
@@ -197,7 +195,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 return;
             }
 
-            console.log('✅ Tarea creada:', data);
             showToast.success('¡Tarea creada exitosamente!', 'La tarea se ha añadido a tu lista');
             setShowNewTaskModal(false);
             resetNewTaskForm();

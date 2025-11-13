@@ -2,15 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
-    console.log('🔍 [VALIDATE] Starting token validation...');
     
     try {
-        console.log('📥 [VALIDATE] Reading environment variables...');
         
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         
-        console.log('📥 [VALIDATE] Environment check:', {
             url: !!supabaseUrl,
             key: !!supabaseServiceKey
         });
@@ -29,14 +26,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('📥 [VALIDATE] Creating Supabase client...');
         const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
-        console.log('📥 [VALIDATE] Parsing request body...');
         const body = await request.json();
         const { token } = body;
 
-        console.log('🔍 [VALIDATE] Token received:', token?.substring(0, 8) + '...');
 
         if (!token) {
             return NextResponse.json(
@@ -46,11 +40,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Validar token usando la función SQL
-        console.log('🔧 [VALIDATE] Calling validate_client_token RPC...');
         const { data, error } = await supabaseService
             .rpc('validate_client_token', { token_value: token });
 
-        console.log('📋 [VALIDATE] RPC result:', { data, error });
 
         if (error) {
             console.error('❌ [VALIDATE] Error validating token:', error);
@@ -76,7 +68,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('📋 [VALIDATE] Token validation result:', data);
 
         if (!data || data.length === 0) {
             return NextResponse.json(
@@ -87,7 +78,6 @@ export async function POST(request: NextRequest) {
 
         const clientInfo = data[0];
 
-        console.log('✅ [VALIDATE] Validation successful for client:', clientInfo.client_name);
 
         return NextResponse.json({
             success: true,

@@ -39,8 +39,6 @@ export class ClientActivityDetector {
      */
     async detectInactiveClients(userId: string): Promise<InactiveClient[]> {
         try {
-            console.log(`🔍 Detectando clientes inactivos para usuario ${userId}`);
-            console.log(`📅 Umbral: ${this.config.daysThreshold} días`);
 
             // Fecha límite para considerar actividad
             const thresholdDate = new Date();
@@ -60,11 +58,9 @@ export class ClientActivityDetector {
             }
 
             if (!clients || clients.length === 0) {
-                console.log('📝 No hay clientes para analizar');
                 return [];
             }
 
-            console.log(`👥 Analizando ${clients.length} clientes`);
 
             const inactiveClients: InactiveClient[] = [];
 
@@ -86,7 +82,6 @@ export class ClientActivityDetector {
                 }
             }
 
-            console.log(`🎯 Detectados ${inactiveClients.length} clientes inactivos`);
             
             return inactiveClients;
 

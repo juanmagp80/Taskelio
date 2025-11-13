@@ -5,11 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🔄 Iniciando actualización de usuario');
         const supabase = await createServerSupabaseClient();
         
         const body = await request.json();
-        console.log('📦 Datos recibidos:', {
             ...body,
             password: body.password ? '[REDACTED]' : undefined
         });

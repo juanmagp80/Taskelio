@@ -7,7 +7,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🚀 Iniciando envío de email de confirmación personalizado...');
 
         const { userId, email, userName } = await request.json();
 
@@ -22,7 +21,6 @@ export async function POST(request: NextRequest) {
         const confirmationToken = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
 
-        console.log('🔑 Token generado:', confirmationToken.substring(0, 8) + '...');
 
         // Crear cliente Supabase server
         const supabase = await createSupabaseServerClient();
@@ -42,7 +40,6 @@ export async function POST(request: NextRequest) {
             console.error('❌ Error guardando token:', tokenError);
             // Si la tabla no existe, la creamos automáticamente
             if (tokenError.message.includes('relation "email_confirmations" does not exist')) {
-                console.log('📋 Creando tabla email_confirmations...');
 
                 const { error: createTableError } = await supabase.rpc('create_email_confirmations_table');
 
@@ -88,13 +85,11 @@ export async function POST(request: NextRequest) {
 
         const confirmationUrl = `${baseUrl}/auth/confirm?token=${confirmationToken}`;
 
-        console.log('🔗 URL de confirmación generada:', confirmationUrl);
 
         // Generar HTML del email de confirmación
         const emailHtml = generateConfirmationEmail(userName || 'Usuario', confirmationUrl);
 
         // Enviar email usando Resend
-        console.log('📧 Enviando email de confirmación a:', email);
 
         const emailResult = await resend.emails.send({
             from: 'Taskelio <noreply@taskelio.app>',
@@ -111,7 +106,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('✅ Email de confirmación enviado exitosamente:', emailResult.data?.id);
 
         return NextResponse.json({
             success: true,

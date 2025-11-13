@@ -5,7 +5,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('📧 API send-email: Iniciando envío...');
 
         if (!process.env.RESEND_API_KEY) {
             console.error('❌ RESEND_API_KEY no configurada');
@@ -19,7 +18,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { to, subject, html, from, reply_to, userId } = body;
 
-        console.log('📧 API send-email: Datos recibidos:', {
             to,
             subject,
             from,
@@ -54,7 +52,6 @@ export async function POST(request: NextRequest) {
             emailData.reply_to = [reply_to];
         }
 
-        console.log('📧 API send-email: Enviando con Resend...', {
             from: emailData.from,
             to: emailData.to,
             subject: emailData.subject,
@@ -65,7 +62,6 @@ export async function POST(request: NextRequest) {
         const SIMULATION_MODE = process.env.EMAIL_SIMULATION_MODE === 'true';
         
         if (SIMULATION_MODE) {
-            console.log('🎭 MODO SIMULACIÓN: Email no enviado realmente');
             const simulatedId = `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             
             return NextResponse.json({
@@ -84,7 +80,6 @@ export async function POST(request: NextRequest) {
         // Enviar email real con Resend
         const result = await resend.emails.send(emailData);
 
-        console.log('📧 API send-email: Respuesta de Resend:', result);
 
         if (result.error) {
             console.error('❌ Error de Resend:', result.error);
@@ -95,7 +90,6 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
-        console.log('✅ Email enviado exitosamente:', result.data?.id);
 
         return NextResponse.json({
             success: true,

@@ -27,6 +27,7 @@ export interface SpanishInvoiceData {
     // Datos del cliente
     clientName: string;
     clientNIF: string;
+    clientEmail?: string;
     clientAddress?: string;
     clientCity?: string;
     clientPostalCode?: string;

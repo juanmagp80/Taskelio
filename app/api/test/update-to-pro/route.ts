@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('🔄 Actualizando suscripción a PRO para:', userEmail);
 
         const supabase = await createServerSupabaseClient();
         
@@ -32,7 +31,6 @@ export async function POST(request: NextRequest) {
 
         if (existingProfiles && existingProfiles.length > 0) {
             // El perfil existe, actualizarlo
-            console.log('📝 Perfil encontrado, actualizando...');
             const { data, error } = await supabase
                 .from('profiles')
                 .update({
@@ -52,7 +50,6 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            console.log('✅ Suscripción actualizada exitosamente');
             return NextResponse.json({
                 success: true,
                 message: 'Suscripción actualizada a PRO exitosamente',
@@ -60,7 +57,6 @@ export async function POST(request: NextRequest) {
             });
         } else {
             // No hay perfil existente
-            console.log('⚠️ No se encontró perfil para:', userEmail);
             return NextResponse.json(
                 { 
                     error: 'Perfil no encontrado', 

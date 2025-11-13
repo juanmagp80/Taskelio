@@ -167,13 +167,31 @@ export default function CompanyConfig({ onSave }: CompanyConfigProps) {
                 return;
             }
 
+            // IMPORTANTE: También actualizar la tabla profiles para que los PDFs usen los datos correctos
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    company: companyData.companyName,
+                    full_name: companyData.companyName, // Usar el nombre de la empresa como nombre completo
+                    email: companyData.email || user.email,
+                    phone: companyData.phone,
+                    website: companyData.website,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (profileError) {
+                console.error('Error actualizando perfil:', profileError);
+                // No bloqueamos el guardado, solo advertimos
+                toast.warning('Datos guardados, pero hubo un problema al actualizar el perfil');
+            }
+
             // Notificaciones de éxito más visibles
             toast.success('✅ Datos de la empresa guardados correctamente', {
                 duration: 3000
             });
             
             // Feedback adicional visual
-            console.log('✅ Configuración empresarial guardada exitosamente');
             onSave?.(companyData);
 
             // Redirigir al dashboard después de 1.5 segundos

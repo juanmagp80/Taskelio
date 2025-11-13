@@ -47,11 +47,21 @@ type ActiveTask = {
     is_running: boolean;
     total_time_seconds: number;
     last_start?: string;
+    project_id?: string;
     project?: {
+        id: string;
         name: string;
         client?: {
             name: string;
         };
+    };
+};
+
+type Project = {
+    id: string;
+    name: string;
+    client?: {
+        name: string;
     };
 };
 
@@ -65,6 +75,12 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // Estados para los selectores de proyecto y tarea
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+    const [availableTasks, setAvailableTasks] = useState<ActiveTask[]>([]);
+    const [selectedTaskId, setSelectedTaskId] = useState<string>('');
     
     const supabase = createSupabaseClient();
     const router = useRouter();
@@ -133,7 +149,8 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                     is_running,
                     total_time_seconds,
                     last_start,
-                    project:projects(name, client:clients(name))
+                    project_id,
+                    project:projects(id, name, client:clients(name))
                 `)
                 .eq('user_id', user.id)
                 .order('updated_at', { ascending: false });
@@ -148,6 +165,49 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
             console.error('Error:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Función para obtener todos los proyectos
+    const fetchProjects = async () => {
+        try {
+            if (!supabase) return;
+
+            const user = (await supabase.auth.getUser()).data.user;
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('projects')
+                .select(`
+                    id,
+                    name,
+                    client:clients(name)
+                `)
+                .eq('user_id', user.id)
+                .order('name', { ascending: true });
+
+            if (error) {
+                console.error('Error fetching projects:', error);
+                return;
+            }
+
+            setProjects(data || []);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
+    // Función para manejar cambio de proyecto
+    const handleProjectChange = (projectId: string) => {
+        setSelectedProjectId(projectId);
+        setSelectedTaskId(''); // Resetear tarea seleccionada
+        
+        if (projectId) {
+            // Filtrar tareas del proyecto seleccionado
+            const filteredTasks = activeTasks.filter(task => task.project_id === projectId);
+            setAvailableTasks(filteredTasks);
+        } else {
+            setAvailableTasks([]);
         }
     };
 
@@ -185,7 +245,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
             fetchAllTasks();
             fetchTimeEntries();
         } catch (error) {
-            console.error('Error starting task:', error);
+            console.error('❌ Error starting task:', error);
         }
     };
 
@@ -197,14 +257,32 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) return;
 
-            const task = activeTasks.find(t => t.id === taskId);
-            if (!task || !task.last_start) return;
+            // Obtener datos frescos de la tarea directamente de la BD
+            const { data: taskData, error: fetchError } = await supabase
+                .from('tasks')
+                .select(`
+                    id,
+                    title,
+                    is_running,
+                    total_time_seconds,
+                    last_start,
+                    project_id
+                `)
+                .eq('id', taskId)
+                .single();
+
+            if (fetchError || !taskData || !taskData.last_start) {
+                return;
+            }
 
             const now = new Date().toISOString();
-            const startTime = new Date(task.last_start);
+            // Asegurarnos de que last_start se interprete como UTC añadiendo 'Z' si no la tiene
+            const lastStartString = taskData.last_start.endsWith('Z') ? taskData.last_start : taskData.last_start + 'Z';
+            const startTime = new Date(lastStartString);
             const endTime = new Date();
+            
             const sessionDuration = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
-            const newTotalTime = (task.total_time_seconds || 0) + sessionDuration;
+            const newTotalTime = (taskData.total_time_seconds || 0) + sessionDuration;
 
             // Actualizar la tarea
             const { error: taskError } = await supabase
@@ -222,13 +300,14 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
             }
 
             // Crear entrada de tiempo
+
             const { error: timeError } = await supabase
                 .from('time_entries')
                 .insert({
                     task_id: taskId,
-                    project_id: task.project ? activeTasks.find(t => t.id === taskId)?.project?.name : '',
+                    project_id: taskData.project_id || null,
                     user_id: user.id,
-                    start_time: task.last_start,
+                    start_time: taskData.last_start,
                     end_time: now,
                     duration_seconds: sessionDuration
                 });
@@ -261,23 +340,41 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
         }
     };
 
-    // Hook personalizado para formatear duración en tiempo real
-    const useLiveTime = (startTime: string) => {
-        const [time, setTime] = useState(0);
+    // Componente para mostrar cronómetro en tiempo real
+    const LiveSessionTimer = ({ startTime, className = "text-sm text-orange-600" }: { startTime: string; className?: string }) => {
+        const [elapsed, setElapsed] = useState(0);
         
         useEffect(() => {
-            const interval = setInterval(() => {
-                const start = new Date(startTime);
+            // Corregir la zona horaria añadiendo 'Z' si no la tiene
+            const startTimeString = startTime.endsWith('Z') ? startTime : startTime + 'Z';
+            
+            const calculateElapsed = () => {
+                const start = new Date(startTimeString);
                 const now = new Date();
                 const diff = Math.floor((now.getTime() - start.getTime()) / 1000);
-                setTime(diff);
-            }, 1000);
+                setElapsed(diff);
+            };
+            
+            // Calcular inmediatamente
+            calculateElapsed();
+            
+            // Actualizar cada segundo
+            const interval = setInterval(calculateElapsed, 1000);
 
             return () => clearInterval(interval);
         }, [startTime]);
 
-        return formatTime(time);
+        return (
+            <span className={className}>
+                Sesión actual: {formatTime(elapsed)}
+            </span>
+        );
     };
+
+    // Cargar proyectos al montar (solo una vez)
+    useEffect(() => {
+        fetchProjects();
+    }, []);
 
     // Cargar datos al montar y cambiar fecha
     useEffect(() => {
@@ -378,11 +475,114 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                         </div>
                     </div>
 
-                    {/* Todas las tareas con cronómetros */}
+                    {/* Control de Cronómetros con Selectores */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Control de Cronómetros</h3>
-                        <div className="space-y-3">
-                            {activeTasks.filter(task => task.total_time_seconds > 0 || task.is_running).map((task) => (
+                        <h3 className="text-lg font-medium text-gray-900 mb-6">Control de Cronómetros</h3>
+                        
+                        {/* Selectores de Proyecto y Tarea */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-200">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Seleccionar Proyecto
+                                </label>
+                                <select
+                                    value={selectedProjectId}
+                                    onChange={(e) => handleProjectChange(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                >
+                                    <option value="">-- Selecciona un proyecto --</option>
+                                    {projects.map((project) => (
+                                        <option key={project.id} value={project.id}>
+                                            {project.name} {project.client?.name && `(${project.client.name})`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Seleccionar Tarea
+                                </label>
+                                <select
+                                    value={selectedTaskId}
+                                    onChange={(e) => setSelectedTaskId(e.target.value)}
+                                    disabled={!selectedProjectId}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                >
+                                    <option value="">
+                                        {selectedProjectId ? '-- Selecciona una tarea --' : '-- Primero selecciona un proyecto --'}
+                                    </option>
+                                    {availableTasks.map((task) => (
+                                        <option key={task.id} value={task.id}>
+                                            {task.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Tarea seleccionada con control */}
+                        {selectedTaskId && (() => {
+                            const selectedTask = activeTasks.find(t => t.id === selectedTaskId);
+                            if (!selectedTask) return null;
+                            
+                            return (
+                                <div className={`border rounded-lg p-6 mb-6 ${
+                                    selectedTask.is_running ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'
+                                }`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <h4 className="text-lg font-semibold text-gray-900">{selectedTask.title}</h4>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                {selectedTask.project?.name} 
+                                                {selectedTask.project?.client?.name && ` - ${selectedTask.project.client.name}`}
+                                            </p>
+                                            <div className="flex items-center gap-4 mt-3">
+                                                <span className={`text-sm font-medium ${
+                                                    selectedTask.is_running ? 'text-green-700' : 'text-blue-700'
+                                                }`}>
+                                                    Tiempo Total: {formatTime(selectedTask.total_time_seconds || 0)}
+                                                </span>
+                                                {selectedTask.is_running && selectedTask.last_start && (
+                                                    <LiveSessionTimer startTime={selectedTask.last_start} className="text-sm text-orange-600 font-medium" />
+                                                )}
+                                                {selectedTask.is_running && (
+                                                    <span className="flex items-center gap-2 text-green-600 font-medium animate-pulse">
+                                                        <span className="w-2 h-2 bg-green-600 rounded-full"></span>
+                                                        En ejecución
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {selectedTask.is_running ? (
+                                            <button
+                                                onClick={() => stopTask(selectedTask.id)}
+                                                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors font-medium"
+                                                title="Parar cronómetro"
+                                            >
+                                                <Pause className="w-5 h-5" />
+                                                Parar
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => startTask(selectedTask.id)}
+                                                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors font-medium"
+                                                title="Iniciar cronómetro"
+                                            >
+                                                <Play className="w-5 h-5" />
+                                                Iniciar
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {/* Todas las tareas con tiempo (lista de resumen) */}
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-3">Todas las tareas con tiempo</h4>
+                            <div className="space-y-2">
+                                {activeTasks.filter(task => task.total_time_seconds > 0 || task.is_running).map((task) => (
                                 <div key={task.id} className={`border rounded-lg p-4 ${
                                     task.is_running ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
                                 }`}>
@@ -399,27 +599,7 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                                                     Total: {formatTime(task.total_time_seconds || 0)}
                                                 </span>
                                                 {task.is_running && task.last_start && (
-                                                    <span className="text-sm text-orange-600">
-                                                        Sesión actual: {(() => {
-                                                            const LiveTimer = () => {
-                                                                const [elapsed, setElapsed] = useState(0);
-                                                                
-                                                                useEffect(() => {
-                                                                    const interval = setInterval(() => {
-                                                                        const start = new Date(task.last_start!);
-                                                                        const now = new Date();
-                                                                        const diff = Math.floor((now.getTime() - start.getTime()) / 1000);
-                                                                        setElapsed(diff);
-                                                                    }, 1000);
-
-                                                                    return () => clearInterval(interval);
-                                                                }, []);
-
-                                                                return <>{formatTime(elapsed)}</>;
-                                                            };
-                                                            return <LiveTimer />;
-                                                        })()}
-                                                    </span>
+                                                    <LiveSessionTimer startTime={task.last_start} />
                                                 )}
                                                 {task.is_running && (
                                                     <span className="text-green-500 animate-pulse">● En ejecución</span>
@@ -445,14 +625,15 @@ export default function TimeTrackingPage({ userEmail }: TimeTrackingPageProps) {
                                         )}
                                     </div>
                                 </div>
-                            ))}
-                            {activeTasks.filter(task => task.total_time_seconds > 0 || task.is_running).length === 0 && (
-                                <div className="text-center py-8">
-                                    <Timer className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                    <p className="text-sm text-gray-600">No hay tareas con tiempo registrado</p>
-                                    <p className="text-xs text-gray-500 mt-1">Inicia un cronómetro desde la página de proyectos</p>
-                                </div>
-                            )}
+                                ))}
+                                {activeTasks.filter(task => task.total_time_seconds > 0 || task.is_running).length === 0 && (
+                                    <div className="text-center py-8">
+                                        <Timer className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                                        <p className="text-sm text-gray-600">No hay tareas con tiempo registrado</p>
+                                        <p className="text-xs text-gray-500 mt-1">Selecciona un proyecto y tarea para iniciar el cronómetro</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 

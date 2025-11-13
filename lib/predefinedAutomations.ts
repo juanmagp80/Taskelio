@@ -76,9 +76,9 @@ export const predefinedAutomations: PredefinedAutomation[] = [
   },
   {
     name: "Facturación automática",
-    description: "Genera y envía factura al completar un hito de proyecto",
+    description: "⚠️ FUNCIONALIDAD AVANZADA: Genera y envía factura al completar un hito de proyecto. Requiere configuración adicional en el módulo de facturación.",
     trigger_type: "auto_invoice_generation",
-    is_public: true,
+    is_public: false, // Deshabilitada temporalmente hasta implementar generación real de facturas
   },
   
   // === AUTOMACIONES DE TIEMPO Y TAREAS ===

@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
         const access_token = tokens?.access_token;
 
         if (access_token) {
-            console.log('✅ Token obtenido exitosamente');
 
             // Aquí guardarías el token en tu base de datos normalmente
             // Por ahora, lo pasamos como parámetro de URL (solo para desarrollo)

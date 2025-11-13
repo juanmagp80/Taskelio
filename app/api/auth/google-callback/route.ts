@@ -39,13 +39,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect('/dashboard/google-calendar?error=invalid_state');
     }
 
-    console.log('🔑 Intercambiando código por tokens...');
 
     // Intercambiar código por tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    console.log('✅ Tokens obtenidos exitosamente');
 
     // Obtener información del usuario
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
@@ -62,7 +60,6 @@ export async function GET(request: NextRequest) {
       connected_at: new Date().toISOString()
     };
 
-    console.log('👤 Usuario Google autenticado:', googleUser.email);
 
     // TODO: En una implementación completa, aquí guardarías los tokens en Supabase
     // asociados al usuario actual de la sesión
@@ -85,7 +82,6 @@ export async function GET(request: NextRequest) {
       console.error('❌ Error guardando tokens:', dbError);
       // Continuamos sin fallar, solo loggeamos el error
     } else {
-      console.log('✅ Tokens guardados en base de datos');
     }
 
     // Redirigir de vuelta al dashboard con éxito

@@ -55,7 +55,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
     // Funciones para ejecutar automatizaciones IA
     const handleAutomationExecution = async (automation: AIAutomation) => {
-        console.log('🤖 Executing AI automation:', automation.name);
 
         // Dependiendo del tipo de automatización, ejecutar la función correspondiente
         switch (automation.type) {

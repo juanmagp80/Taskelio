@@ -28,18 +28,14 @@ export async function POST(request: NextRequest) {
         const { data: { user: jwtUser }, error: jwtError } = await supabase.auth.getUser(token);
         if (!jwtError && jwtUser) {
           user = jwtUser;
-          console.log('✅ Auth success with JWT token:', user.email);
         }
       } catch (jwtErr) {
-        console.log('❌ JWT verification failed:', jwtErr);
       }
     }
 
     // Si no hay usuario por JWT, usar userId del body si está disponible
     if (!user && userId) {
-      console.log('🔄 Using service role with userId from body...');
       user = { id: userId };
-      console.log('✅ Using service role for user:', userId);
     }
     
     if (!user) {
@@ -49,7 +45,6 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    console.log('🔐 Usuario autenticado:', { 
       user: user ? { id: user.id, email: user.email || 'email no disponible' } : null
     });
 

@@ -6,8 +6,6 @@ interface CreateSpanishInvoiceProps {
 }
 
 export default function CreateSpanishInvoice({ userEmail }: CreateSpanishInvoiceProps) {
-    console.log('🚀 CreateSpanishInvoice component loaded!');
-    console.log('📧 User email:', userEmail);
 
     return (
         <div className="p-8">

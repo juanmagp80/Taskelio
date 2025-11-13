@@ -26,7 +26,6 @@ export async function GET(req: Request) {
     
     const user_id = 'e7ed7c8d-229a-42d1-8a44-37bcc64c440c';
     
-    console.log('🔍 ANÁLISIS CON SERVICE KEY - Usuario:', user_id);
 
     // Intentar obtener eventos con service key (bypassa RLS)
     const { data: allEvents, error: allEventsError } = await supabase
@@ -34,11 +33,8 @@ export async function GET(req: Request) {
       .select('id, start_time, end_time, time_tracked, is_billable, productivity_score, actual_revenue, title, user_id')
       .limit(10);
 
-    console.log('📊 Eventos encontrados con service key:', allEvents?.length || 0);
     
     if (allEvents && allEvents.length > 0) {
-      console.log('📋 Primer evento:', allEvents[0]);
-      console.log('📋 User IDs únicos:', [...new Set(allEvents.map(e => e.user_id))]);
     }
 
     // Intentar obtener eventos para tu user_id específico
@@ -48,7 +44,6 @@ export async function GET(req: Request) {
       .eq('user_id', user_id)
       .limit(10);
 
-    console.log('👤 Eventos para tu user_id con service key:', userEvents?.length || 0);
 
     // También probar otras tablas
     const { data: profiles, error: profilesError } = await supabase
@@ -57,7 +52,6 @@ export async function GET(req: Request) {
       .eq('id', user_id)
       .limit(1);
 
-    console.log('👤 Profile encontrado:', profiles?.length || 0);
 
     if (userEvents && userEvents.length > 0) {
       // Calcular métricas reales

@@ -17,7 +17,9 @@ import {
   CheckSquare,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   Clock,
+  CreditCard,
   FileText,
   Home,
   LogOut,
@@ -31,7 +33,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface SidebarProps {
   userEmail?: string;
@@ -84,19 +86,9 @@ const navigation: NavigationItem[] = [
     icon: Zap,
   },
   {
-    name: 'Automaciones',
-    href: '/dashboard/automations',
-    icon: Bot,
-  },
-  {
     name: 'Automaciones IA',
     href: '/dashboard/ai-automations',
     icon: Brain,
-  },
-  {
-    name: 'Propuestas',
-    href: '/dashboard/proposals',
-    icon: Presentation,
   },
   {
     name: 'Tareas',
@@ -119,11 +111,6 @@ const navigation: NavigationItem[] = [
     icon: Calendar,
   },
   {
-    name: 'Google Calendar',
-    href: '/dashboard/google-calendar',
-    icon: Calendar,
-  },
-  {
     name: 'Reportes',
     href: '/dashboard/reports',
     icon: BarChart3,
@@ -134,27 +121,17 @@ const navigation: NavigationItem[] = [
     icon: MessageCircle,
   },
   {
-    name: 'Configuración',
-    href: '/dashboard/settings',
-    icon: Settings,
-    submenu: [
-      {
-        name: 'General',
-        href: '/dashboard/settings',
-      },
-      {
-        name: 'Datos Fiscales 🏢',
-        href: '/dashboard/settings/company',
-        icon: Building2,
-        highlight: true,
-      }
-    ]
+    name: 'Facturación',
+    href: '/dashboard/billing',
+    icon: CreditCard,
   },
 ];
 
 export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
   const pathname = usePathname();
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const { trialInfo, canUseFeatures } = useTrialStatus(userEmail || '');
 
   const toggleMenu = (menuName: string) => {
@@ -164,6 +141,23 @@ export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
         : [...prev, menuName]
     );
   };
+
+  // Click outside handler para cerrar el menú de usuario
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   // Verificar si el usuario es PRO (tiene suscripción activa o plan pro)
   const isProUser = trialInfo?.plan === 'pro' && canUseFeatures;
@@ -326,51 +320,78 @@ export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
           <SubscriptionStatus userEmail={userEmail} />
         </div>
 
-        {/* Información del usuario */}
-        <div className="flex items-center mb-1.5 lg:mb-2 xl:mb-3 p-1 lg:p-1.5 xl:p-2 rounded-lg bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-md shadow-slate-900/3 dark:shadow-black/10 transition-all duration-300">
-          <div className="flex-shrink-0">
-            <div className="h-6 lg:h-7 xl:h-8 w-6 lg:w-7 xl:w-8 rounded-lg bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 dark:shadow-indigo-400/30">
-              <span className="text-xs font-bold text-white">
-                {userEmail?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            </div>
-          </div>
-          <div className="ml-1 lg:ml-1.5 xl:ml-2 flex-1 min-w-0">
-            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate transition-colors duration-300">
-              {userEmail?.split('@')[0] || 'Usuario'}
-            </p>
-            <p className="text-xs text-slate-600 dark:text-slate-400 truncate font-medium transition-colors duration-300 hidden xl:block">
-              {userEmail || 'Sin email'}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-1 mb-1">
-            <Link href="/dashboard/settings" className="flex-1">
-              <Button variant="ghost" className="w-full justify-start text-slate-700 dark:text-slate-300 hover:text-indigo-900 dark:hover:text-indigo-400 hover:bg-slate-100/80 dark:hover:bg-slate-700/60 rounded-lg font-semibold transition-all duration-300 hover:shadow-md hover:shadow-slate-900/3" size="sm">
-                <Settings className="mr-1 lg:mr-1.5 xl:mr-2 h-3 w-3 lg:h-3.5 lg:w-3.5" />
-                <span className="text-xs">Configuración</span>
-              </Button>
-            </Link>
-          </div>
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50/80 dark:hover:bg-red-900/20 rounded-lg font-semibold transition-all duration-300 hover:shadow-md hover:shadow-red-500/10"
-            size="sm"
-            onClick={(e) => {
-              console.log('🔧 Logout button clicked', e); // Debug log
-              if (onLogout) {
-                console.log('🔧 Calling onLogout function'); // Debug log
-                onLogout();
-              } else {
-                console.error('🔧 onLogout function not provided'); // Debug log
-              }
-            }}
+        {/* Información del usuario con menú desplegable */}
+        <div className="relative" ref={userMenuRef}>
+          <button
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            className="flex items-center w-full mb-1.5 lg:mb-2 xl:mb-3 p-1 lg:p-1.5 xl:p-2 rounded-lg bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-md shadow-slate-900/3 dark:shadow-black/10 transition-all duration-300 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 hover:shadow-lg"
           >
-            <LogOut className="mr-1 lg:mr-1.5 xl:mr-2 h-3 w-3 lg:h-3.5 lg:w-3.5" />
-            <span className="text-xs">Cerrar sesión</span>
-          </Button>
+            <div className="flex-shrink-0">
+              <div className="h-6 lg:h-7 xl:h-8 w-6 lg:w-7 xl:w-8 rounded-lg bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 dark:shadow-indigo-400/30">
+                <span className="text-xs font-bold text-white">
+                  {userEmail?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+            </div>
+            <div className="ml-1 lg:ml-1.5 xl:ml-2 flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate transition-colors duration-300">
+                {userEmail?.split('@')[0] || 'Usuario'}
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 truncate font-medium transition-colors duration-300 hidden xl:block">
+                {userEmail || 'Sin email'}
+              </p>
+            </div>
+            <ChevronUp 
+              className={cn(
+                "h-4 w-4 text-slate-600 dark:text-slate-400 transition-transform duration-200",
+                isUserMenuOpen && "rotate-180"
+              )}
+            />
+          </button>
+
+          {/* Menú desplegable hacia arriba */}
+          {isUserMenuOpen && (
+            <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50">
+              {/* Email header */}
+              <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                  {userEmail}
+                </p>
+              </div>
+
+              {/* Opciones del menú */}
+              <div className="py-1">
+                <Link
+                  href="/dashboard/settings"
+                  className="flex items-center px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configuración
+                </Link>
+                
+                <Link
+                  href="/dashboard/billing"
+                  className="flex items-center px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Facturación
+                </Link>
+
+                <button
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    onLogout();
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

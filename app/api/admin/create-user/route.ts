@@ -15,7 +15,6 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔧 Creating real user with admin client...');
 
     const body = await request.json();
     const { userEmail, userId } = body;
@@ -30,7 +29,6 @@ export async function POST(request: NextRequest) {
     // Generar un UUID si no se proporciona
     const finalUserId = userId || crypto.randomUUID();
 
-    console.log('👤 Creating profile for:', { email: userEmail, id: finalUserId });
 
     const profileData = {
       id: finalUserId,
@@ -55,7 +53,6 @@ export async function POST(request: NextRequest) {
 
     let result;
     if (existingProfile) {
-      console.log('🔄 Updating existing profile...');
       const { data, error } = await supabaseAdmin
         .from('profiles')
         .update({
@@ -72,7 +69,6 @@ export async function POST(request: NextRequest) {
 
       result = { data, error };
     } else {
-      console.log('✨ Creating new profile...');
       const { data, error } = await supabaseAdmin
         .from('profiles')
         .insert([profileData])
@@ -90,7 +86,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Profile saved successfully:', result.data);
     
     return NextResponse.json({
       success: true,

@@ -5,7 +5,6 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createSupabaseAdmin();
     
-    console.log('🔄 Configurando trial expirado para amazonjgp80@gmail.com...');
     
     // Fecha de hace 20 días (trial expirado)
     const expiredTrialStartDate = new Date();
@@ -41,8 +40,6 @@ export async function POST(request: NextRequest) {
     const trialDuration = Math.floor((expiredTrialEndDate.getTime() - expiredTrialStartDate.getTime()) / (1000 * 60 * 60 * 24));
     const isExpired = daysAfterTrialEnd > 0;
     
-    console.log('✅ Usuario configurado con trial expirado');
-    console.log('📊 Estado:', {
       email: 'amazonjgp80@gmail.com',
       trialStartDate: expiredTrialStartDate.toISOString(),
       trialEndDate: expiredTrialEndDate.toISOString(),

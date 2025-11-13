@@ -27,7 +27,6 @@ export default function CreateTestDataSimplePage() {
             }
             
             setUser(currentUser);
-            console.log('👤 Usuario autenticado:', currentUser.id);
 
             const results: {
                 user_id: string;
@@ -44,7 +43,6 @@ export default function CreateTestDataSimplePage() {
             };
 
             // 1. CREAR CLIENTES
-            console.log('👥 Creando clientes de prueba...');
             
             const clientsData = [
                 {
@@ -102,16 +100,13 @@ export default function CreateTestDataSimplePage() {
 
                 if (!basicError && basicClients) {
                     results.clients = basicClients;
-                    console.log('✅ Clientes creados (versión básica):', basicClients.length);
                 }
             } else if (clients) {
                 results.clients = clients;
-                console.log('✅ Clientes creados:', clients.length);
             }
 
             // 2. CREAR PROYECTOS (si tenemos clientes)
             if (results.clients.length > 0) {
-                console.log('📋 Creando proyectos...');
                 
                 const projectsData = [
                     {
@@ -144,13 +139,11 @@ export default function CreateTestDataSimplePage() {
                     results.errors.push({ table: 'projects', error: projectsError.message });
                 } else if (projects) {
                     results.projects = projects;
-                    console.log('✅ Proyectos creados:', projects.length);
                 }
             }
 
             // 3. CREAR FACTURAS
             if (results.clients.length > 0) {
-                console.log('💰 Creando facturas...');
                 
                 const today = new Date();
                 const futureDate = new Date(today.getTime() + 15 * 24 * 60 * 60 * 1000);
@@ -190,7 +183,6 @@ export default function CreateTestDataSimplePage() {
                     results.errors.push({ table: 'invoices', error: invoicesError.message });
                 } else if (invoices) {
                     results.invoices = invoices;
-                    console.log('✅ Facturas creadas:', invoices.length);
                 }
             }
 
@@ -207,7 +199,6 @@ export default function CreateTestDataSimplePage() {
             };
 
             setResult(summary);
-            console.log('📊 Proceso completado:', summary);
 
         } catch (error) {
             console.error('❌ Error general:', error);

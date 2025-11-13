@@ -5,13 +5,13 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Zap, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { showToast } from '@/utils/toast';
 
 interface SubscriptionStatusProps {
     userEmail?: string;
 }
 
 export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProps) {
-    console.log('🚀 SubscriptionStatus component mounted with userEmail:', userEmail);
     
     const [status, setStatus] = useState({
         is_subscribed: false,
@@ -24,15 +24,12 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
     const supabase = createClientComponentClient();
 
     useEffect(() => {
-        console.log('🔄 SubscriptionStatus useEffect triggered');
         let unsubAuth: (() => void) | undefined;
         const channel: ReturnType<typeof supabase.channel> | null = null;
 
         async function fetchProfile(userId: string, email: string) {
-            console.log('🔍 fetchProfile called with:', { userId, email });
             
             try {
-                console.log('📡 Making API call to /api/user/profile...');
                 // Usar el nuevo endpoint que maneja la autenticación correctamente
                 const response = await fetch('/api/user/profile', {
                     method: 'GET',
@@ -40,7 +37,6 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 });
 
                 const result = await response.json();
-                console.log('📊 Profile API result:', result);
 
                 if (!response.ok) {
                     console.error('❌ Error from profile API:', result);
@@ -57,11 +53,12 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 if (result.success && result.profile) {
                     const profile = result.profile;
                     const plan = (profile.subscription_plan || '').toLowerCase();
-                    console.log('✅ Setting status from real profile:', { 
                         plan, 
                         status: profile.subscription_status,
                         email: profile.email,
-                        stripe_id: profile.stripe_subscription_id 
+                        stripe_id: profile.stripe_subscription_id,
+                        trial_ends_at: profile.trial_ends_at,
+                        trial_started_at: profile.trial_started_at
                     });
                     
                     setStatus({
@@ -93,19 +90,16 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
 
         async function init() {
             try {
-                console.log('🔧 SubscriptionStatus: Starting initialization...');
                 setLoading(true);
                 
                 // Si tenemos userEmail, consultamos directamente el perfil por email
                 if (userEmail) {
-                    console.log('📧 SubscriptionStatus: Tenemos userEmail, consultando directamente:', userEmail);
                     setCurrentUserEmail(userEmail);
                     await fetchProfileByEmail(userEmail);
                     return;
                 }
                 
                 // Fallback: intentar obtener usuario autenticado
-                console.log('🔐 Getting user authentication...');
                 const timeoutPromise = new Promise((_, reject) => 
                     setTimeout(() => reject(new Error('Auth timeout')), 5000)
                 );
@@ -114,16 +108,13 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 const result = await Promise.race([authPromise, timeoutPromise]);
                 const { data: { user }, error: authError } = result as any;
                 
-                console.log('👤 SubscriptionStatus Auth result:', { 
                     hasUser: !!user, 
                     email: user?.email, 
                     error: authError?.message || 'none' 
                 });
                 
                 if (!user || authError) {
-                    console.log('⚠️ SubscriptionStatus: No user found, waiting for auth state change...');
                     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-                        console.log('🔄 SubscriptionStatus Auth state changed:', event, !!session?.user);
                         if (session?.user) {
                             setCurrentUserEmail(session.user.email || '');
                             fetchProfile(session.user.id, session.user.email || '');
@@ -135,10 +126,8 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
 
                 // Establecer el email del usuario
                 const email = user.email || '';
-                console.log('📧 SubscriptionStatus Using email from auth:', email);
                 setCurrentUserEmail(email);
                 
-                console.log('🚀 SubscriptionStatus: About to call fetchProfile...');
                 await fetchProfile(user.id, email);
 
             } catch (error) {
@@ -151,24 +140,20 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                     plan_type: 'free'
                 });
             } finally {
-                console.log('🏁 SubscriptionStatus: Init completed, setting loading to false');
                 setLoading(false);
             }
         }
 
         // Nueva función para consultar perfil por email directamente
         async function fetchProfileByEmail(email: string) {
-            console.log('🎯 fetchProfileByEmail called with email:', email);
             
             try {
-                console.log('📡 Making API call to /api/user/profile with email...');
                 const response = await fetch(`/api/user/profile?email=${encodeURIComponent(email)}`, {
                     method: 'GET',
                     credentials: 'include',
                 });
 
                 const result = await response.json();
-                console.log('📊 Profile API result (by email):', result);
 
                 if (!response.ok) {
                     console.error('❌ Error from profile API:', result);
@@ -184,11 +169,12 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 if (result.success && result.profile) {
                     const profile = result.profile;
                     const plan = (profile.subscription_plan || '').toLowerCase();
-                    console.log('✅ Setting status from real profile (by email):', { 
                         plan, 
                         status: profile.subscription_status,
                         email: profile.email,
-                        stripe_id: profile.stripe_subscription_id 
+                        stripe_id: profile.stripe_subscription_id,
+                        trial_ends_at: profile.trial_ends_at,
+                        trial_started_at: profile.trial_started_at
                     });
                     
                     setStatus({
@@ -226,6 +212,29 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
         };
     }, [userEmail]); // Agregar userEmail como dependencia para que se re-ejecute cuando cambie
 
+    // Verificación automática periódica para detectar pagos
+    useEffect(() => {
+        if (loading || status.plan_type === 'pro') return; // No verificar si ya es PRO o está cargando
+
+        
+        // Verificar inmediatamente al cargar
+        const timer = setTimeout(() => {
+            checkForActiveSubscription();
+        }, 1000); // Reducido a 1 segundo para más rapidez
+
+        // Verificar cada 15 segundos para ser más agresivo
+        const interval = setInterval(() => {
+            if (status.plan_type !== 'pro') { // Solo verificar si no es PRO
+                checkForActiveSubscription();
+            }
+        }, 15000);
+
+        return () => {
+            clearTimeout(timer);
+            clearInterval(interval);
+        };
+    }, [status.plan_type, loading]);
+
     if (loading) {
         return (
             <div className="p-3 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg animate-pulse">
@@ -236,16 +245,32 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
 
     const isSubscribed = status.is_subscribed;
     const isPro = isSubscribed || (status.plan_type || '').toLowerCase() === 'pro';
+    
+    // Calcular días restantes del trial (usando días naturales)
+    const calculateDaysRemaining = () => {
+        if (!status.trial_end) return 0;
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // Resetear a medianoche del día actual
+        const endDate = new Date(status.trial_end);
+        endDate.setHours(0, 0, 0, 0); // Resetear a medianoche del día final
+        const diffTime = endDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return Math.max(0, diffDays);
+    };
+    
+    const daysRemaining = calculateDaysRemaining();
     const isTrialActive = !isPro && status.trial_end && new Date(status.trial_end) > new Date();
+    
+        isPro,
+        isTrialActive,
+        daysRemaining,
+        trial_end: status.trial_end,
+        plan_type: status.plan_type,
+        is_subscribed: status.is_subscribed
+    });
 
     const handleSubscribe = async () => {
         try {
-            const emailToUse = currentUserEmail || userEmail;
-            console.log('Iniciando suscripción con userEmail:', emailToUse);
-            
-            if (!emailToUse) {
-                throw new Error('No se pudo obtener el email del usuario');
-            }
             
             const response = await fetch('/api/stripe/create-checkout-session', {
                 method: 'POST',
@@ -254,28 +279,38 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 },
                 body: JSON.stringify({
                     priceId: 'price_1RyeBiHFKglWYpZiSeo70KYD', // ID real de tu producto en Stripe
-                    userEmail: emailToUse,
                     successUrl: `${window.location.origin}/dashboard?success=true`,
                     cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
                 }),
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
 
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (!response.ok) {
                 throw new Error(data.error || `Error HTTP: ${response.status}`);
             }
 
-            if (data.url) {
-                console.log('Redirigiendo a:', data.url);
-                window.location.href = data.url;
+            if (data.sessionId) {
+                
+                // Usar el sistema de redirección de Stripe
+                const { getStripe } = await import('@/lib/stripe-client');
+                const stripe = await getStripe();
+                
+                if (stripe) {
+                    const { error } = await stripe.redirectToCheckout({
+                        sessionId: data.sessionId
+                    });
+                    
+                    if (error) {
+                        throw new Error('Error redirigiendo a Stripe: ' + error.message);
+                    }
+                } else {
+                    throw new Error('Stripe no está configurado correctamente');
+                }
             } else {
-                console.error('Respuesta sin URL:', data);
-                throw new Error('No se pudo obtener la URL de pago');
+                console.error('Respuesta sin sessionId:', data);
+                throw new Error('No se pudo obtener la sesión de pago');
             }
         } catch (error: any) {
             console.error('Error al iniciar suscripción:', error);
@@ -283,13 +318,51 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
         }
     };
 
+    // Función para verificar automáticamente si el usuario pagó
+    const checkForActiveSubscription = async () => {
+        try {
+
+            const response = await fetch('/api/stripe/sync-subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    userEmail: currentUserEmail 
+                }),
+            });
+
+            if (!response.ok) {
+                return; // Silencioso si hay error
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.hasActiveSubscription) {
+                
+                // Actualizar estado local
+                setStatus(prevStatus => ({
+                    ...prevStatus,
+                    is_subscribed: true,
+                    plan_type: 'pro',
+                    subscription_end: data.subscription.current_period_end
+                }));
+                
+                // Mostrar notificación de éxito
+                toast.success('¡Suscripción PRO detectada automáticamente! 🎉');
+            }
+        } catch (error) {
+            // Silencioso, no molestar al usuario
+        }
+    };
+
     const handleCancelSubscription = async () => {
-        if (!confirm('¿Estás seguro de que quieres cancelar tu suscripción?')) {
+        const confirmed = await showToast.confirm('¿Estás seguro de que quieres cancelar tu suscripción?');
+        if (!confirmed) {
             return;
         }
 
         try {
-            console.log('🔴 Cancelling subscription...');
             
             // Actualizar estado local
             const newStatus = {
@@ -322,12 +395,9 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 });
 
                 if (response.ok) {
-                    console.log('✅ También cancelado en servidor');
                 } else {
-                    console.log('⚠️ Servidor no disponible, usando cancelación local');
                 }
             } catch (serverError) {
-                console.log('⚠️ Servidor no disponible, usando cancelación local');
             }
 
         } catch (error: any) {
@@ -349,11 +419,19 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 </div>
             </div>
             
-            {isTrialActive && status.trial_end && (
+            {isTrialActive && (
                 <>
-                    <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 mb-2">
-                        Finaliza el {new Date(status.trial_end).toLocaleDateString()}
-                    </p>
+                    <div className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 text-center">
+                            {daysRemaining} {daysRemaining === 1 ? 'día restante' : 'días restantes'}
+                        </p>
+                        <p className="text-[10px] text-blue-700 dark:text-blue-300 text-center mt-0.5">
+                            Finaliza el {status.trial_end ? new Date(status.trial_end).toLocaleDateString('es-ES', { 
+                                day: 'numeric', 
+                                month: 'long' 
+                            }) : 'N/A'}
+                        </p>
+                    </div>
                     <Button 
                         onClick={handleSubscribe}
                         className="w-full text-[11px] h-7 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"

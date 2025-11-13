@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🧪 Simulando pago exitoso de Stripe para:', userEmail);
 
     const supabase = createSupabaseAdmin();
 
@@ -39,7 +38,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Pago simulado exitosamente para:', userEmail);
 
     return NextResponse.json({
       success: true,

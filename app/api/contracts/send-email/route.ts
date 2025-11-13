@@ -7,7 +7,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
     try {
-        console.log('🚀 Iniciando proceso de envío de contrato...');
 
         const { contractId } = await request.json();
 
@@ -32,7 +31,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('👤 Perfil usuario:', user.email);
 
         // Obtener datos del perfil
         const { data: profile, error: profileError } = await supabase
@@ -45,7 +43,6 @@ export async function POST(request: NextRequest) {
             console.error('❌ Error obteniendo perfil:', profileError);
         }
 
-        console.log('🏢 Empresa:', profile?.company_name || 'No configurada');
 
         // Validar configuración de email
         if (!process.env.RESEND_API_KEY) {
@@ -56,9 +53,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('🔑 Verificando configuración de Resend...');
-        console.log('🔑 RESEND_API_KEY presente:', !!process.env.RESEND_API_KEY);
-        console.log('🔑 FROM_EMAIL:', process.env.FROM_EMAIL || 'noreply@taskelio.app');
 
         // Obtener contrato
         const { data: contract, error: contractError } = await supabase
@@ -103,9 +97,7 @@ export async function POST(request: NextRequest) {
 
         if (!companyError && company) {
             companyData = company;
-            console.log('🏢 Datos de empresa obtenidos:', company);
         } else {
-            console.log('⚠️ No se encontró empresa para user_id:', user.id, 'Error:', companyError);
         }
 
         if (contractError) {
@@ -124,12 +116,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('📧 Enviando email a:', contract.clients.email);
 
         try {
-            console.log('📄 Generando PDF del contrato...');
             const pdfBuffer = await generateContractPDF(contract, profile, companyData);
-            console.log('✅ PDF generado correctamente, tamaño:', pdfBuffer.length, 'bytes');
 
             // Generar HTML del email
             const emailHtml = generateEmailHtml(contract, profile, user, companyData);
@@ -151,7 +140,6 @@ export async function POST(request: NextRequest) {
                 ]
             };
 
-            console.log('📧 Enviando email con PDF adjunto...');
             const emailResult = await resend.emails.send(emailData);
 
             if (emailResult.error) {
@@ -162,7 +150,6 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            console.log('✅ Email enviado exitosamente:', emailResult.data?.id);
 
             // Actualizar el contrato como enviado
             const { error: updateError } = await supabase
@@ -213,12 +200,6 @@ function generateEmailHtml(contract: any, profile: any, user: any, companyData: 
     const userName = profile?.full_name ||
         (user?.email ? extractNameFromEmail(user.email) : 'Freelancer');
 
-    console.log('📝 Datos para el email:');
-    console.log('   - companyData:', companyData);
-    console.log('   - profile.company_name:', profile?.company_name);
-    console.log('   - profile.full_name:', profile?.full_name);
-    console.log('   - user.email:', user?.email);
-    console.log('   - companyName final:', companyName);
 
     return `
     <!DOCTYPE html>
@@ -434,7 +415,9 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
         const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
-            format: 'a4'
+            format: 'a4',
+            putOnlyUsedFonts: true,
+            compress: true
         });
 
         // Configuración
@@ -443,25 +426,29 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
         const pageWidth = 210; // A4 width in mm
         const contentWidth = pageWidth - (marginLeft * 2);
 
-        // Función para limpiar texto para jsPDF - Versión mejorada
+        // Función para limpiar texto y convertir a caracteres seguros para jsPDF
         const cleanText = (text: string) => {
             if (!text) return '';
 
             return text
-                // Reemplazos específicos de caracteres acentuados problemáticos
-                .replace(/[áàäâāăą]/g, 'a').replace(/[ÁÀÄÂĀĂĄ]/g, 'A')
-                .replace(/[éèëêēėę]/g, 'e').replace(/[ÉÈËÊĒĖĘ]/g, 'E')
-                .replace(/[íìïîīį]/g, 'i').replace(/[ÍÌÏÎĪĮ]/g, 'I')
-                .replace(/[óòöôōőø]/g, 'o').replace(/[ÓÒÖÔŌŐØ]/g, 'O')
-                .replace(/[úùüûūų]/g, 'u').replace(/[ÚÙÜÛŪŲ]/g, 'U')
-                .replace(/[çć]/g, 'c').replace(/[ÇĆ]/g, 'C')
-                .replace(/ß/g, 'ss')
-
-                // Mantener ñ y caracteres básicos españoles + ASCII + saltos de línea
-                .replace(/[^\x20-\x7EñÑ\n\r]/g, '') // ASCII + ñ + saltos de línea
-
-                // Limpiar caracteres especiales restantes
-                .replace(/"/g, "'")
+                // Normalizar caracteres Unicode primero
+                .normalize('NFD')
+                // Remover marcas diacríticas (acentos) excepto ñ
+                .replace(/[\u0300-\u036f]/g, '')
+                // Normalizar de vuelta
+                .normalize('NFC')
+                // Reemplazos específicos para caracteres españoles
+                .replace(/á/g, 'a').replace(/Á/g, 'A')
+                .replace(/é/g, 'e').replace(/É/g, 'E')
+                .replace(/í/g, 'i').replace(/Í/g, 'I')
+                .replace(/ó/g, 'o').replace(/Ó/g, 'O')
+                .replace(/ú/g, 'u').replace(/Ú/g, 'U')
+                .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+                // Mantener ñ y Ñ
+                // Remover caracteres no imprimibles y especiales problemáticos
+                .replace(/[^\x20-\x7E\nñÑ¿¡€]/g, '')
+                // Limpiar comillas y llaves
+                .replace(/["''""]/g, "'")
                 .replace(/[{}]/g, "")
                 .trim();
         };
@@ -471,7 +458,7 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
         // Header principal
         doc.setFontSize(20);
         doc.setTextColor(37, 99, 235);
-        const title = 'CONTRATO DE SERVICIOS PROFESIONALES';
+        const title = cleanText('CONTRATO DE SERVICIOS PROFESIONALES');
         const titleWidth = doc.getTextWidth(title);
         const titleX = (pageWidth - titleWidth) / 2;
         doc.text(title, titleX, currentY);
@@ -479,7 +466,7 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
 
         doc.setFontSize(14);
         doc.setTextColor(100, 100, 100);
-        const subtitle = 'DOCUMENTO OFICIAL';
+        const subtitle = cleanText('DOCUMENTO OFICIAL');
         const subtitleWidth = doc.getTextWidth(subtitle);
         const subtitleX = (pageWidth - subtitleWidth) / 2;
         doc.text(subtitle, subtitleX, currentY);
@@ -487,7 +474,7 @@ async function generateContractPDF(contract: any, profile: any, companyData: any
 
         // Número de contrato
         doc.setFontSize(12);
-        const contractNumber = `Numero de Contrato: CONT-2025-${contract.id?.substring(0, 4) || '0000'}`;
+        const contractNumber = cleanText(`Numero de Contrato: CONT-2025-${contract.id?.substring(0, 4) || '0000'}`);
         const contractNumberWidth = doc.getTextWidth(contractNumber);
         const contractNumberX = (pageWidth - contractNumberWidth) / 2;
         doc.text(contractNumber, contractNumberX, currentY);
@@ -673,15 +660,10 @@ function generateContractContent(serviceType: string, contract: any, profile: an
     const addressClient = contract.clients?.address || '[Dirección del Cliente]';
     const dniClient = contract.clients?.nif || '[DNI/NIF del Cliente]';
 
-    console.log('🔍 Debug datos de empresa en email:');
-    console.log('- companyData:', companyData);
-    console.log('- dniProvider:', dniProvider);
-    console.log('- dniClient:', dniClient);
 
     // Detectar el tipo de servicio del contrato
     const detectedServiceType = serviceType?.toLowerCase() || detectServiceTypeForEmail(contract.title, contract.description || '');
 
-    console.log('🔍 Email - Tipo de servicio:', detectedServiceType, 'para contrato:', contract.title);
 
     const templates = {
         desarrollo: generateDesarrolloContentEmail(contract, companyName, clientName, addressProvider, addressClient, dniProvider, dniClient),

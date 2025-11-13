@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Zap, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { showToast } from '@/utils/toast';
 
 interface SimpleSubscriptionStatusProps {
     userEmail?: string;
@@ -15,7 +16,8 @@ export default function SimpleSubscriptionStatus({ userEmail }: SimpleSubscripti
     const [subscriptionEnd] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
 
     const handleCancelSubscription = async () => {
-        if (!confirm('¿Estás seguro de que quieres cancelar tu suscripción?')) {
+        const confirmed = await showToast.confirm('¿Estás seguro de que quieres cancelar tu suscripción?');
+        if (!confirmed) {
             return;
         }
 
@@ -53,9 +55,7 @@ export default function SimpleSubscriptionStatus({ userEmail }: SimpleSubscripti
     };
 
     const handleSubscribe = async () => {
-        try {
-            const emailToUse = userEmail || 'amazonjgp80@gmail.com';
-            
+        try {            
             const response = await fetch('/api/stripe/create-checkout-session', {
                 method: 'POST',
                 headers: {
@@ -63,7 +63,6 @@ export default function SimpleSubscriptionStatus({ userEmail }: SimpleSubscripti
                 },
                 body: JSON.stringify({
                     priceId: 'price_1RyeBiHFKglWYpZiSeo70KYD',
-                    userEmail: emailToUse,
                     successUrl: `${window.location.origin}/dashboard?success=true`,
                     cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
                 }),

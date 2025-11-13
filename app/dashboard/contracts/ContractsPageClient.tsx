@@ -1,6 +1,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import TrialBanner from '@/components/TrialBanner';
 import { Button } from '@/components/ui/Button';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
@@ -137,10 +138,10 @@ export default function ContractsPageClient({ userEmail }: ContractsPageClientPr
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
             <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <div className="flex-1 flex flex-col overflow-hidden ml-56">
+            <div className="flex-1 flex flex-col ml-56">
                 <TrialBanner userEmail={userEmail} />
-
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                <Header userEmail={userEmail} onLogout={handleLogout} />
+                <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
                     <div className="h-full px-6 py-8">
                         {/* Header */}
                         <div className="mb-8">
@@ -401,7 +402,7 @@ export default function ContractsPageClient({ userEmail }: ContractsPageClientPr
                             )}
                         </div>
                     </div>
-                </main>
+                </div>
             </div>
         </div>
     );

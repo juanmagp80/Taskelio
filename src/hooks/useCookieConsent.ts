@@ -118,7 +118,6 @@ export function useCookieConsent() {
     // Funcionales
     if (preferences.functional) {
       // Aquí puedes agregar herramientas como Hotjar, Intercom, etc.
-      console.log('🍪 Functional cookies activated');
     }
   };
 

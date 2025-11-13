@@ -13,7 +13,6 @@ if (isServer) {
     openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    console.log('✅ OpenAI client initialized successfully');
   }
 }
 

@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Zap, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { showToast } from '@/utils/toast';
 
 interface SubscriptionStatusProps {
     userEmail?: string;
@@ -23,13 +24,11 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
 
     async function checkSubscription() {
         try {
-            console.log('🔍 Checking subscription...');
             
             // Intentar obtener el usuario
             const { data: { user }, error: authError } = await supabase.auth.getUser();
             
             if (authError || !user) {
-                console.log('❌ No auth user, defaulting to PRO for testing');
                 // Para testing, forzar PRO si no hay autenticación
                 setIsPro(true);
                 setSubscriptionEnd(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
@@ -37,7 +36,6 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
                 return;
             }
 
-            console.log('✅ User found:', user.email);
 
             // Verificar si existe perfil
             const { data: profile, error: profileError } = await supabase
@@ -47,7 +45,6 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
                 .single();
 
             if (profileError && profileError.code === 'PGRST116') {
-                console.log('📝 Creating new PRO profile...');
                 // Crear perfil PRO
                 const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
                 const { error: insertError } = await supabase
@@ -68,18 +65,15 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
                     setIsPro(true);
                     setSubscriptionEnd(futureDate);
                 } else {
-                    console.log('✅ Profile created successfully');
                     setIsPro(true);
                     setSubscriptionEnd(futureDate);
                 }
             } else if (profile) {
-                console.log('📊 Profile found:', profile);
                 const isActive = profile.subscription_status === 'active';
                 const isPlan = (profile.subscription_plan || '').toLowerCase() === 'pro';
                 setIsPro(isActive || isPlan);
                 setSubscriptionEnd(profile.subscription_current_period_end);
             } else {
-                console.log('⚠️ Unknown profile state, defaulting to PRO');
                 // Fallback: forzar PRO
                 setIsPro(true);
                 setSubscriptionEnd(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
@@ -102,7 +96,6 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     priceId: 'price_1RyeBiHFKglWYpZiSeo70KYD',
-                    userEmail: userEmail,
                     successUrl: `${window.location.origin}/dashboard?success=true`,
                     cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
                 }),
@@ -121,11 +114,12 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
     };
 
     const handleCancelSubscription = async () => {
-        if (!confirm('¿Estás seguro de que quieres cancelar tu suscripción?')) {
+        const confirmed = await showToast.confirm('¿Estás seguro de que quieres cancelar tu suscripción?');
+        if (!confirmed) {
             return;
         }
 
-        try {
+        try{
             const response = await fetch('/api/stripe/cancel-subscription', {
                 method: 'POST',
             });

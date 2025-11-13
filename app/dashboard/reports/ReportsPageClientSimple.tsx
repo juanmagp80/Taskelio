@@ -1,49 +1,39 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
 import { showToast } from '@/utils/toast';
 import {
-    BarChart3,
-    Calendar,
-    Download,
-    Filter,
-    PieChart,
-    TrendingUp,
-    Euro,
-    Clock,
-    Users,
-    Briefcase,
-    Target,
-    FileText,
-    Share2,
-    Mail,
-    Eye,
-    Settings,
-    Zap,
-    Brain,
-    ChevronDown,
-    ArrowUp,
+    AlertCircle,
+    AlertTriangle,
     ArrowDown,
     ArrowRight,
-    Minus,
-    AlertCircle,
+    ArrowUp,
+    BarChart3,
+    Brain,
+    Briefcase,
+    Calendar,
     CheckCircle,
-    Calendar as CalendarIcon,
-    RefreshCw,
-    AlertTriangle,
-    Award,
-    Activity,
+    ChevronDown,
+    Clock,
+    Download,
+    Euro,
+    FileText,
     Lightbulb,
-    Shield,
-    Star,
-    Sparkles
+    Minus,
+    PieChart,
+    RefreshCw,
+    Share2,
+    Sparkles,
+    Target,
+    TrendingUp,
+    Users
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 interface ReportsPageClientProps {
     userEmail: string;
@@ -116,7 +106,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
     const router = useRouter();
     const supabase = createSupabaseClient();
     const reportRef = useRef<HTMLDivElement>(null);
-    
+
     // Estados principales
     const [loading, setLoading] = useState(true);
     const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
@@ -124,7 +114,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
         end: new Date().toISOString().split('T')[0],
         label: 'Últimos 30 días'
     });
-    
+
     // Estados de datos
     const [metrics, setMetrics] = useState<ReportMetrics | null>(null);
     const [revenueData, setRevenueData] = useState<ChartData | null>(null);
@@ -133,13 +123,13 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
     const [projectData, setProjectData] = useState<ChartData | null>(null);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-    
+
     // Estados de UI
     const [selectedReport, setSelectedReport] = useState('overview');
     const [showFilters, setShowFilters] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
     const [selectedKPI, setSelectedKPI] = useState<string | null>(null);
-    
+
     const timeRanges = [
         {
             start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
@@ -221,25 +211,25 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
 
             // Calcular métricas reales
             const totalRevenue = invoicesData?.filter((inv: any) => inv.status === 'paid')
-                .reduce((sum: number, inv: any) => sum + inv.total_amount, 0) || 0;
-            
-            const totalHours = timeEntriesData?.reduce((sum: number, entry: any) => sum + (entry.duration_minutes / 60), 0) || 0;
-            
-            const billableHours = timeEntriesData?.filter((entry: any) => entry.is_billable)
-                .reduce((sum: number, entry: any) => sum + (entry.duration_minutes / 60), 0) || 0;
-            
+                .reduce((sum: number, inv: any) => sum + (inv.total_amount || inv.amount || 0), 0) || 0;
+
+            const totalHours = timeEntriesData?.reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 3600), 0) || 0;
+
+            const billableHours = timeEntriesData?.filter((entry: any) => entry.is_billable !== false)
+                .reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 3600), 0) || 0;
+
             const nonBillableHours = totalHours - billableHours;
-            
-            const avgHourlyRate = (timeEntriesData?.length || 0) > 0 
-                ? (timeEntriesData || []).reduce((sum: number, entry: any) => sum + (entry.hourly_rate || 0), 0) / (timeEntriesData?.length || 1)
+
+            const avgHourlyRate = totalRevenue > 0 && totalHours > 0
+                ? totalRevenue / totalHours
                 : 0;
-            
+
             const totalProjects = projectsData?.length || 0;
             const completedProjects = projectsData?.filter((p: any) => p.status === 'completed').length || 0;
             const activeClients = clientsData?.length || 0;
-            
+
             const pendingInvoices = invoicesData?.filter((inv: any) => inv.status === 'sent' || inv.status === 'draft').length || 0;
-            
+
             // Para datos del período anterior, usamos un cálculo aproximado
             const previousMetrics = {
                 totalRevenue: totalRevenue * 0.85, // Simulamos 15% menos el período anterior
@@ -253,7 +243,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                 pendingInvoices: pendingInvoices + 2,
                 overdueTasks: 4
             };
-            
+
             const currentMetrics: ReportMetrics = {
                 totalRevenue,
                 totalHours: Math.round(totalHours),
@@ -267,7 +257,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                 overdueTasks: 0, // Este campo requeriría una tabla de tareas
                 previousMetrics
             };
-            
+
             setMetrics(currentMetrics);
         } catch (error) {
             console.error('Error loading metrics:', error);
@@ -291,11 +281,11 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
             const monthlyRevenue = invoicesData.reduce((acc: { [key: string]: number }, invoice: any) => {
                 const date = new Date(invoice.issue_date);
                 const monthKey = date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
-                
+
                 if (invoice.status === 'paid') {
                     acc[monthKey] = (acc[monthKey] || 0) + invoice.total_amount;
                 }
-                
+
                 return acc;
             }, {});
 
@@ -335,22 +325,22 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
 
             // Agrupar por día de la semana
             const weeklyData = timeEntriesData.reduce((acc: any, entry: any) => {
-                const date = new Date(entry.date);
+                const date = new Date(entry.start_time);
                 const dayOfWeek = date.getDay(); // 0 = domingo, 1 = lunes, etc.
                 const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                 const dayName = dayNames[dayOfWeek];
-                
+
                 if (!acc[dayName]) {
                     acc[dayName] = { billable: 0, nonBillable: 0 };
                 }
-                
-                const hours = entry.duration_minutes / 60;
-                if (entry.is_billable) {
+
+                const hours = entry.duration_seconds / 3600;
+                if (entry.is_billable !== false) {
                     acc[dayName].billable += hours;
                 } else {
                     acc[dayName].nonBillable += hours;
                 }
-                
+
                 return acc;
             }, {});
 
@@ -400,14 +390,14 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
             // Calcular ingresos por cliente
             const clientRevenue = clientsData.map((client: any) => {
                 const clientInvoices = invoicesData.filter((inv: any) => inv.client_id === client.id);
-                const totalRevenue = clientInvoices.reduce((sum: number, inv: any) => sum + inv.total_amount, 0);
+                const totalRevenue = clientInvoices.reduce((sum: number, inv: any) => sum + (inv.total_amount || inv.amount || 0), 0);
                 return {
                     name: client.name,
                     revenue: totalRevenue
                 };
             }).filter((client: any) => client.revenue > 0)
-              .sort((a: any, b: any) => b.revenue - a.revenue)
-              .slice(0, 6); // Top 6 clientes
+                .sort((a: any, b: any) => b.revenue - a.revenue)
+                .slice(0, 6); // Top 6 clientes
 
             const colors = ['#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#6366F1'];
 
@@ -616,20 +606,20 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                                 const nonBillableHours = productivityData.datasets[1].data[index];
                                                 const totalHours = billableHours + nonBillableHours;
                                                 const billablePercent = totalHours > 0 ? (billableHours / totalHours) * 100 : 0;
-                                                
+
                                                 return (
                                                     <div key={day} className="flex items-center gap-3">
                                                         <span className="text-sm font-medium text-slate-700 w-12">{day}</span>
                                                         <div className="flex-1 bg-slate-100 rounded-full h-6 relative overflow-hidden">
-                                                            <div 
+                                                            <div
                                                                 className="bg-gradient-to-r from-emerald-500 to-green-400 h-full rounded-full transition-all duration-500"
                                                                 style={{ width: `${billablePercent}%` }}
                                                             />
-                                                            <div 
+                                                            <div
                                                                 className="bg-gradient-to-r from-amber-400 to-orange-400 h-full absolute top-0 transition-all duration-500"
-                                                                style={{ 
-                                                                    left: `${billablePercent}%`, 
-                                                                    width: `${100 - billablePercent}%` 
+                                                                style={{
+                                                                    left: `${billablePercent}%`,
+                                                                    width: `${100 - billablePercent}%`
                                                                 }}
                                                             />
                                                         </div>
@@ -681,7 +671,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                         const value = clientData.datasets[0].data[index];
                                         const total = clientData.datasets[0].data.reduce((a, b) => a + b, 0);
                                         const percentage = Math.round((value / total) * 100);
-                                        
+
                                         return (
                                             <div key={client} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                                 <div className="flex items-center justify-between mb-3">
@@ -695,7 +685,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                                     </div>
                                                 </div>
                                                 <div className="w-full bg-slate-100 rounded-full h-2">
-                                                    <div 
+                                                    <div
                                                         className={`h-2 rounded-full ${colors[index]} transition-all duration-500`}
                                                         style={{ width: `${percentage}%` }}
                                                     />
@@ -743,7 +733,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                         const value = projectData.datasets[0].data[index];
                                         const total = projectData.datasets[0].data.reduce((a, b) => a + b, 0);
                                         const percentage = Math.round((value / total) * 100);
-                                        
+
                                         return (
                                             <div key={status} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
                                                 <div className="flex items-center gap-3">
@@ -806,20 +796,25 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                         risk: AlertTriangle
                                     };
                                     const impactColors = {
-                                        high: 'bg-red-50 border-red-200 text-red-800',
-                                        medium: 'bg-amber-50 border-amber-200 text-amber-800',
-                                        low: 'bg-green-50 border-green-200 text-green-800'
+                                        Alto: 'bg-red-50 border-red-200 text-red-800',
+                                        Medio: 'bg-amber-50 border-amber-200 text-amber-800',
+                                        Bajo: 'bg-green-50 border-green-200 text-green-800'
                                     };
-                                    const effortColors = {
+                                    const effortColors: Record<string, string> = {
                                         low: 'bg-green-100 text-green-700',
                                         medium: 'bg-amber-100 text-amber-700',
                                         high: 'bg-red-100 text-red-700'
                                     };
-                                    
+                                    const impactColorsMap: Record<string, string> = {
+                                        low: 'bg-blue-50 border-blue-200 text-blue-800',
+                                        medium: 'bg-amber-50 border-amber-200 text-amber-800',
+                                        high: 'bg-green-50 border-green-200 text-green-800'
+                                    };
+
                                     const IconComponent = typeIcons[rec.type];
-                                    
+
                                     return (
-                                        <div key={rec.id} className={`border rounded-xl p-6 ${impactColors[rec.impact]}`}>
+                                        <div key={rec.id} className={`border rounded-xl p-6 ${impactColorsMap[rec.impact]}`}>
                                             <div className="flex items-start gap-4">
                                                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
                                                     <IconComponent className="w-6 h-6 text-indigo-600" />
@@ -828,18 +823,18 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <h4 className="font-semibold text-lg">{rec.title}</h4>
                                                         <span className={`text-xs px-2 py-1 rounded-full ${effortColors[rec.effort]}`}>
-                                                            Esfuerzo: {rec.effort}
+                                                            Esfuerzo: {rec.effort === 'low' ? 'Bajo' : rec.effort === 'medium' ? 'Medio' : 'Alto'}
                                                         </span>
                                                     </div>
                                                     <p className="text-sm opacity-90 mb-3">{rec.description}</p>
                                                     <div className="flex items-center gap-3 text-xs">
                                                         <span className="flex items-center gap-1">
                                                             <TrendingUp className="w-3 h-3" />
-                                                            Impacto: {rec.impact}
+                                                            Impacto: {rec.impact === 'low' ? 'Bajo' : rec.impact === 'medium' ? 'Medio' : 'Alto'}
                                                         </span>
                                                         <span className="flex items-center gap-1">
                                                             <Target className="w-3 h-3" />
-                                                            Tipo: {rec.type}
+                                                            Tipo: {rec.type === 'revenue' ? 'Ingresos' : rec.type === 'productivity' ? 'Productividad' : rec.type === 'client' ? 'Cliente' : 'Proyecto'}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -923,7 +918,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                 const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
                 return createdDate > weekAgo;
             }) || [];
-            
+
             if (recentClients.length > 0) {
                 alerts.push({
                     id: 'new-clients',
@@ -968,41 +963,87 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
 
     const loadRecommendations = async (userId: string) => {
         try {
-            const mockRecommendations: Recommendation[] = [
-                {
-                    id: '1',
-                    type: 'revenue',
-                    title: 'Aumentar Tarifa Horaria',
-                    description: 'Basado en tu experiencia y resultados, podrías aumentar tu tarifa a €75/hora. Esto generaría €2,400 adicionales al mes.',
-                    impact: 'high',
-                    effort: 'low'
-                },
-                {
-                    id: '2',
+            if (!supabase) return;
+
+            // Obtener datos reales para generar recomendaciones inteligentes
+            const [
+                { data: clientsData },
+                { data: invoicesData },
+                { data: timeEntriesData }
+            ] = await Promise.all([
+                supabase.from('clients').select('*').eq('user_id', userId),
+                supabase.from('invoices').select('*').eq('user_id', userId).eq('status', 'paid'),
+                supabase.from('time_entries').select('*').eq('user_id', userId)
+            ]);
+
+            const realRecommendations: Recommendation[] = [];
+
+            // 1. Análisis de cliente más rentable
+            if (clientsData && clientsData.length > 0 && invoicesData && invoicesData.length > 0) {
+                const clientRevenue = clientsData.map((client: any) => {
+                    const revenue = invoicesData
+                        .filter((inv: any) => inv.client_id === client.id)
+                        .reduce((sum: number, inv: any) => sum + (inv.total_amount || inv.amount || 0), 0);
+                    return { client, revenue };
+                }).filter((c: any) => c.revenue > 0).sort((a: any, b: any) => b.revenue - a.revenue);
+
+                if (clientRevenue.length > 0) {
+                    const topClient = clientRevenue[0];
+                    realRecommendations.push({
+                        id: '1',
+                        type: 'client',
+                        title: `Retainer con ${topClient.client.name}`,
+                        description: `${topClient.client.name} es tu cliente más rentable (€${Math.round(topClient.revenue).toLocaleString()}). Propón un contrato retainer para asegurar ingresos recurrentes.`,
+                        impact: 'high',
+                        effort: 'medium'
+                    });
+                }
+            }
+
+            // 2. Análisis de tarifa horaria
+            if (timeEntriesData && timeEntriesData.length > 0 && invoicesData && invoicesData.length > 0) {
+                const totalRevenue = invoicesData.reduce((sum: number, inv: any) => sum + (inv.total_amount || inv.amount || 0), 0);
+                const totalHours = timeEntriesData.reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 3600), 0);
+                const currentRate = totalHours > 0 ? totalRevenue / totalHours : 0;
+
+                if (currentRate > 0) {
+                    const suggestedRate = Math.round(currentRate * 1.15); // Sugerir 15% más
+                    const potentialIncrease = Math.round((suggestedRate - currentRate) * totalHours);
+
+                    realRecommendations.push({
+                        id: '2',
+                        type: 'revenue',
+                        title: 'Aumentar Tarifa Horaria',
+                        description: `Tu tarifa actual es €${Math.round(currentRate)}/hora. Podrías aumentar a €${suggestedRate}/hora, generando €${potentialIncrease.toLocaleString()} adicionales con el mismo volumen.`,
+                        impact: 'high',
+                        effort: 'low'
+                    });
+                }
+            }
+
+            // 3. Optimización de horarios (basado en horas registradas)
+            if (timeEntriesData && timeEntriesData.length > 0) {
+                realRecommendations.push({
+                    id: '3',
                     type: 'productivity',
                     title: 'Optimizar Horarios',
-                    description: 'Tus horas más productivas son entre 9-11 AM. Agenda las tareas complejas en este período.',
+                    description: 'Analiza tus horas más productivas y agenda las tareas complejas en esos períodos para maximizar tu eficiencia.',
                     impact: 'medium',
                     effort: 'low'
-                },
-                {
-                    id: '3',
-                    type: 'client',
-                    title: 'Retainer con TechStart',
-                    description: 'TechStart es tu cliente más rentable. Propón un contrato retainer para asegurar ingresos recurrentes.',
-                    impact: 'high',
-                    effort: 'medium'
-                },
-                {
-                    id: '4',
-                    type: 'project',
-                    title: 'Automatizar Procesos',
-                    description: 'Identifica tareas repetitivas en tus proyectos. La automatización podría ahorrarte 5 horas semanales.',
-                    impact: 'medium',
-                    effort: 'high'
-                }
-            ];
-            setRecommendations(mockRecommendations);
+                });
+            }
+
+            // 4. Automatización
+            realRecommendations.push({
+                id: '4',
+                type: 'project',
+                title: 'Automatizar Procesos',
+                description: 'Identifica tareas repetitivas en tus proyectos. La automatización podría ahorrarte tiempo valioso.',
+                impact: 'medium',
+                effort: 'high'
+            });
+
+            setRecommendations(realRecommendations);
         } catch (error) {
             console.error('Error loading recommendations:', error);
         }
@@ -1011,55 +1052,188 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
     const exportReport = async (format: 'pdf' | 'excel') => {
         setExportLoading(true);
         try {
-            // Simular proceso de exportación con múltiples pasos
-            const steps = [
-                'Recopilando datos...',
-                'Generando gráficos...',
-                'Aplicando formato...',
-                'Optimizando archivo...',
-                'Finalizando exportación...'
-            ];
-            
-            for (let i = 0; i < steps.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 400));
-                // En una implementación real, aquí actualizaríamos el progreso
+            // Validar que existan métricas
+            if (!metrics) {
+                showToast.error('No hay datos disponibles para exportar');
+                return;
             }
+
+            const fileName = `Reporte_Taskelio_${selectedTimeRange.label.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}`;
             
-            // Simular descarga de archivo
-            const reportData = {
-                title: `Reporte_Taskelio_${selectedTimeRange.label.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}`,
-                period: selectedTimeRange.label,
-                generatedAt: new Date().toLocaleString('es-ES'),
-                metrics: metrics,
-                insights: recommendations.slice(0, 3), // Top 3 recomendaciones
-                format: format.toUpperCase()
-            };
-            
-            // Crear blob simulado (en implementación real sería el archivo generado)
-            const content = format === 'pdf' 
-                ? `Reporte PDF generado para ${reportData.title}`
-                : `Datos Excel exportados para ${reportData.title}`;
-            
-            const blob = new Blob([content], { 
-                type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-            });
-            
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `${reportData.title}.${format}`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            // Mostrar notificación de éxito
-            showToast.error(`✅ Reporte exportado exitosamente en formato ${format.toUpperCase()}!\n\nArchivo: ${reportData.title}.${format}\nPeríodo: ${reportData.period}\nGenerado: ${reportData.generatedAt}`);
-            
+            if (format === 'pdf') {
+                // Importar jsPDF dinámicamente
+                const jsPDFModule = await import('jspdf');
+                const jsPDF = jsPDFModule.default || jsPDFModule;
+                const doc = new jsPDF();
+                
+                // Configuración
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 20;
+                let yPosition = margin;
+                
+                // Función helper para añadir texto con wrap
+                const addText = (text: string, size: number, isBold = false, color: [number, number, number] = [0, 0, 0]) => {
+                    doc.setFontSize(size);
+                    doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+                    doc.setTextColor(color[0], color[1], color[2]);
+                    doc.text(text, margin, yPosition);
+                    yPosition += size * 0.5;
+                };
+                
+                const addLine = () => {
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+                    yPosition += 10;
+                };
+                
+                // Header
+                doc.setFillColor(99, 102, 241); // Indigo
+                doc.rect(0, 0, pageWidth, 40, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(24);
+                doc.setFont('helvetica', 'bold');
+                doc.text('REPORTE TASKELIO', margin, 25);
+                
+                yPosition = 50;
+                
+                // Información del reporte
+                addText(`Período: ${selectedTimeRange.label}`, 12, false, [100, 100, 100]);
+                addText(`Generado: ${new Date().toLocaleDateString('es-ES', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}`, 10, false, [100, 100, 100]);
+                
+                yPosition += 10;
+                addLine();
+                
+                // Métricas principales
+                addText('MÉTRICAS PRINCIPALES', 16, true, [0, 0, 0]);
+                yPosition += 5;
+                
+                const metricsData = [
+                    { label: 'Ingresos Totales', value: `€${metrics.totalRevenue.toLocaleString('es-ES')}` },
+                    { label: 'Horas Trabajadas', value: `${metrics.totalHours.toFixed(1)}h` },
+                    { label: 'Tarifa Promedio', value: `€${metrics.avgHourlyRate.toFixed(2)}/h` },
+                    { label: 'Proyectos Completados', value: metrics.completedProjects.toString() },
+                    { label: 'Clientes Activos', value: metrics.activeClients.toString() },
+                    { label: 'Facturas Pendientes', value: metrics.pendingInvoices.toString() }
+                ];
+                
+                metricsData.forEach((metric, index) => {
+                    if (yPosition > pageHeight - 40) {
+                        doc.addPage();
+                        yPosition = margin;
+                    }
+                    
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(60, 60, 60);
+                    doc.text(metric.label, margin, yPosition);
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(99, 102, 241);
+                    doc.text(metric.value, pageWidth - margin - 50, yPosition, { align: 'right' });
+                    
+                    yPosition += 8;
+                });
+                
+                yPosition += 5;
+                addLine();
+                
+                // Recomendaciones
+                if (recommendations.length > 0) {
+                    addText('RECOMENDACIONES PRINCIPALES', 16, true, [0, 0, 0]);
+                    yPosition += 5;
+                    
+                    recommendations.slice(0, 3).forEach((rec, index) => {
+                        if (yPosition > pageHeight - 60) {
+                            doc.addPage();
+                            yPosition = margin;
+                        }
+                        
+                        doc.setFontSize(12);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`${index + 1}. ${rec.title}`, margin, yPosition);
+                        yPosition += 6;
+                        
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(80, 80, 80);
+                        const lines = doc.splitTextToSize(rec.description, pageWidth - 2 * margin);
+                        doc.text(lines, margin + 5, yPosition);
+                        yPosition += lines.length * 5 + 10;
+                    });
+                }
+                
+                // Footer en todas las páginas
+                const totalPages = doc.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(
+                        `Página ${i} de ${totalPages}`,
+                        pageWidth / 2,
+                        pageHeight - 10,
+                        { align: 'center' }
+                    );
+                    doc.text(
+                        'Generado con Taskelio - Tu asistente freelance',
+                        pageWidth / 2,
+                        pageHeight - 5,
+                        { align: 'center' }
+                    );
+                }
+                
+                // Guardar PDF
+                doc.save(`${fileName}.pdf`);
+                
+                showToast.success('Reporte PDF exportado exitosamente', 
+                    `Archivo: ${fileName}.pdf\nPeríodo: ${selectedTimeRange.label}`
+                );
+            } else {
+                // Exportar CSV para Excel
+                const csvData = [
+                    ['Métrica', 'Valor'],
+                    ['Ingresos Totales', `€${metrics.totalRevenue}`],
+                    ['Horas Trabajadas', `${metrics.totalHours.toFixed(1)}h`],
+                    ['Tarifa Promedio', `€${metrics.avgHourlyRate.toFixed(2)}/h`],
+                    ['Proyectos Completados', metrics.completedProjects.toString()],
+                    ['Clientes Activos', metrics.activeClients.toString()],
+                    ['Facturas Pendientes', metrics.pendingInvoices.toString()],
+                    [''],
+                    ['Recomendaciones'],
+                    ...recommendations.slice(0, 3).map((rec, i) => [
+                        `${i + 1}. ${rec.title}`,
+                        rec.description
+                    ])
+                ];
+                
+                const csvContent = csvData.map(row => row.join(',')).join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${fileName}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast.success('Reporte CSV exportado exitosamente', 
+                    `Archivo: ${fileName}.csv`
+                );
+            }
+
         } catch (error) {
             console.error('Error exporting report:', error);
-            showToast.error('❌ Error al exportar el reporte. Inténtalo de nuevo.');
+            showToast.error('Error al exportar el reporte. Inténtalo de nuevo.');
         } finally {
             setExportLoading(false);
         }
@@ -1076,7 +1250,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
             } else {
                 // Fallback: copiar al portapapeles
                 await navigator.clipboard.writeText(window.location.href);
-                showToast.error('🔗 Enlace copiado al portapapeles');
+                showToast.success('Enlace copiado al portapapeles');
             }
         } catch (error) {
             console.error('Error sharing report:', error);
@@ -1090,28 +1264,28 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
 
     const getChangeIndicator = (current: number, previous: number) => {
         if (previous === 0) return { icon: Minus, color: 'text-gray-600', value: '0%' };
-        
+
         const change = ((current - previous) / previous) * 100;
         if (change > 0) {
-            return { 
-                icon: ArrowUp, 
-                color: 'text-emerald-600', 
+            return {
+                icon: ArrowUp,
+                color: 'text-emerald-600',
                 value: `+${change.toFixed(1)}%`,
                 bgColor: 'bg-emerald-50',
                 isPositive: true
             };
         } else if (change < 0) {
-            return { 
-                icon: ArrowDown, 
-                color: 'text-red-600', 
+            return {
+                icon: ArrowDown,
+                color: 'text-red-600',
                 value: `${change.toFixed(1)}%`,
                 bgColor: 'bg-red-50',
                 isPositive: false
             };
         } else {
-            return { 
-                icon: Minus, 
-                color: 'text-slate-600', 
+            return {
+                icon: Minus,
+                color: 'text-slate-600',
                 value: '0%',
                 bgColor: 'bg-slate-50',
                 isPositive: null
@@ -1133,7 +1307,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 text-slate-900 relative overflow-hidden">
+        <div className="flex h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 text-slate-900 relative overflow-hidden">
             {/* Premium Background */}
             <div className="fixed inset-0 z-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50" />
@@ -1142,10 +1316,12 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                 <div className="absolute inset-0 bg-grid-slate-900/[0.02] bg-[size:32px_32px]" />
             </div>
 
-            <div className="relative z-10 flex">
-                <Sidebar userEmail={userEmail} onLogout={handleLogout} />
+            <Sidebar userEmail={userEmail} onLogout={handleLogout} />
+
+            <div className="flex-1 flex flex-col overflow-hidden relative z-10 ml-56">
+                <Header userEmail={userEmail} onLogout={handleLogout} />
                 
-                <main className="flex-1 ml-56 overflow-auto">
+                <main className="flex-1 overflow-auto">
                     <div ref={reportRef} className="p-6">
                         {/* Header */}
                         <div className="bg-white/95 backdrop-blur-2xl border border-slate-200/60 rounded-xl p-6 shadow-xl shadow-slate-900/5 mb-6">
@@ -1174,7 +1350,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                             {selectedTimeRange.label}
                                             <ChevronDown className="w-4 h-4" />
                                         </Button>
-                                        
+
                                         {showFilters && (
                                             <div className="absolute top-12 right-0 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[200px]">
                                                 {timeRanges.map((range) => (
@@ -1213,7 +1389,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                         <FileText className="w-4 h-4" />
                                         PDF
                                     </Button>
-                                    
+
                                     <Button
                                         variant="outline"
                                         onClick={() => exportReport('excel')}
@@ -1258,11 +1434,10 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                             <button
                                                 key={report.id}
                                                 onClick={() => setSelectedReport(report.id)}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${
-                                                    isActive 
-                                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-lg shadow-indigo-500/25' 
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${isActive
+                                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-lg shadow-indigo-500/25'
                                                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
-                                                }`}
+                                                    }`}
                                             >
                                                 <IconComponent className="w-4 h-4" />
                                                 <div className="text-left">
@@ -1283,7 +1458,7 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                                 {/* Revenue Total */}
                                 <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
-                                      onClick={() => setSelectedKPI(selectedKPI === 'revenue' ? null : 'revenue')}>
+                                    onClick={() => setSelectedKPI(selectedKPI === 'revenue' ? null : 'revenue')}>
                                     <CardContent className="p-6">
                                         <div className="flex items-center justify-between">
                                             <div>
@@ -1436,73 +1611,72 @@ export default function ReportsPageClient({ userEmail }: ReportsPageClientProps)
                                             </div>
                                         ) : (
                                             alerts.map((alert) => {
-                                            const alertIcons = {
-                                                success: CheckCircle,
-                                                warning: AlertTriangle,
-                                                error: AlertCircle,
-                                                info: Lightbulb
-                                            };
-                                            const alertColors = {
-                                                success: 'bg-green-50 border-green-200 text-green-800',
-                                                warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-                                                error: 'bg-red-50 border-red-200 text-red-800',
-                                                info: 'bg-blue-50 border-blue-200 text-blue-800'
-                                            };
-                                            const iconColors = {
-                                                success: 'text-green-600',
-                                                warning: 'text-yellow-600',
-                                                error: 'text-red-600',
-                                                info: 'text-blue-600'
-                                            };
-                                            
-                                            const IconComponent = alertIcons[alert.type];
-                                            
-                                            // Iconos para las rutas de destino
-                                            const routeIcons: { [key: string]: any } = {
-                                                '/dashboard/invoices': FileText,
-                                                '/dashboard/projects': Briefcase,
-                                                '/dashboard/clients': Users,
-                                                '/dashboard/tasks': Clock,
-                                                '/dashboard/time-tracking': Clock,
-                                                '/dashboard': BarChart3
-                                            };
-                                            
-                                            const RouteIcon = alert.route ? routeIcons[alert.route] : null;
-                                            
-                                            return (
-                                                <div 
-                                                    key={alert.id} 
-                                                    className={`flex items-start gap-3 p-4 border rounded-xl transition-all duration-300 ${alertColors[alert.type]} ${
-                                                        alert.actionable && alert.route 
-                                                            ? 'hover:shadow-lg cursor-pointer hover:scale-[1.02] transform hover:border-opacity-80' 
-                                                            : 'hover:shadow-sm'
-                                                    }`}
-                                                    onClick={() => handleAlertClick(alert)}
-                                                >
-                                                    <div className="flex-shrink-0">
-                                                        <IconComponent className={`w-5 h-5 ${iconColors[alert.type]}`} />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <p className="font-semibold text-sm truncate">{alert.title}</p>
-                                                            {alert.priority === 'high' && (
-                                                                <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
-                                                                    Alta
-                                                                </span>
+                                                const alertIcons = {
+                                                    success: CheckCircle,
+                                                    warning: AlertTriangle,
+                                                    error: AlertCircle,
+                                                    info: Lightbulb
+                                                };
+                                                const alertColors = {
+                                                    success: 'bg-green-50 border-green-200 text-green-800',
+                                                    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+                                                    error: 'bg-red-50 border-red-200 text-red-800',
+                                                    info: 'bg-blue-50 border-blue-200 text-blue-800'
+                                                };
+                                                const iconColors = {
+                                                    success: 'text-green-600',
+                                                    warning: 'text-yellow-600',
+                                                    error: 'text-red-600',
+                                                    info: 'text-blue-600'
+                                                };
+
+                                                const IconComponent = alertIcons[alert.type];
+
+                                                // Iconos para las rutas de destino
+                                                const routeIcons: { [key: string]: any } = {
+                                                    '/dashboard/invoices': FileText,
+                                                    '/dashboard/projects': Briefcase,
+                                                    '/dashboard/clients': Users,
+                                                    '/dashboard/tasks': Clock,
+                                                    '/dashboard/time-tracking': Clock,
+                                                    '/dashboard': BarChart3
+                                                };
+
+                                                const RouteIcon = alert.route ? routeIcons[alert.route] : null;
+
+                                                return (
+                                                    <div
+                                                        key={alert.id}
+                                                        className={`flex items-start gap-3 p-4 border rounded-xl transition-all duration-300 ${alertColors[alert.type]} ${alert.actionable && alert.route
+                                                                ? 'hover:shadow-lg cursor-pointer hover:scale-[1.02] transform hover:border-opacity-80'
+                                                                : 'hover:shadow-sm'
+                                                            }`}
+                                                        onClick={() => handleAlertClick(alert)}
+                                                    >
+                                                        <div className="flex-shrink-0">
+                                                            <IconComponent className={`w-5 h-5 ${iconColors[alert.type]}`} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <p className="font-semibold text-sm truncate">{alert.title}</p>
+                                                                {alert.priority === 'high' && (
+                                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+                                                                        Alta
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-xs opacity-90 leading-relaxed mb-2">{alert.message}</p>
+                                                            {alert.actionable && alert.route && (
+                                                                <div className="flex items-center gap-1 text-xs font-medium opacity-70">
+                                                                    {RouteIcon && <RouteIcon className="w-3 h-3" />}
+                                                                    <span>Clic para abrir</span>
+                                                                    <ArrowRight className="w-3 h-3" />
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs opacity-90 leading-relaxed mb-2">{alert.message}</p>
-                                                        {alert.actionable && alert.route && (
-                                                            <div className="flex items-center gap-1 text-xs font-medium opacity-70">
-                                                                {RouteIcon && <RouteIcon className="w-3 h-3" />}
-                                                                <span>Clic para abrir</span>
-                                                                <ArrowRight className="w-3 h-3" />
-                                                            </div>
-                                                        )}
                                                     </div>
-                                                </div>
-                                            );
-                                        })
+                                                );
+                                            })
                                         )}
                                     </CardContent>
                                 </Card>

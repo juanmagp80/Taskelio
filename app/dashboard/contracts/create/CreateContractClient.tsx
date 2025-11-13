@@ -678,7 +678,6 @@ Fecha: _______________                          Fecha: _______________
                 throw new Error('El contenido del contrato no puede estar vacío');
             }
 
-            console.log('Datos a insertar:', {
                 user_id: user.id,
                 client_id: selectedClient.id,
                 template_id: selectedTemplate.id,

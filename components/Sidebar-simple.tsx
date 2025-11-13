@@ -24,7 +24,6 @@ const navigation = [
 
 export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
   const pathname = usePathname();
-  console.log('✅ Sidebar simplificado renderizado con userEmail:', userEmail);
 
   return (
     <div className="flex h-full w-56 flex-col fixed inset-y-0 z-50 bg-slate-50 border-r border-slate-200 shadow-lg">
@@ -68,7 +67,6 @@ export default function Sidebar({ userEmail, onLogout }: SidebarProps) {
         </div>
         <button
           onClick={() => {
-            console.log('🚪 Logout clicked from Sidebar');
             if (onLogout) {
               onLogout();
             }

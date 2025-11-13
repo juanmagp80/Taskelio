@@ -77,7 +77,6 @@ export default function ClientPortalPage() {
             setLoading(true);
             setError(null);
 
-            console.log('🔍 Validating token:', token);
 
             // Validar token y obtener información del cliente
             const response = await fetch('/api/client-portal/validate', {
@@ -86,7 +85,6 @@ export default function ClientPortalPage() {
                 body: JSON.stringify({ token })
             });
 
-            console.log('📡 Response status:', response.status);
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -106,7 +104,6 @@ export default function ClientPortalPage() {
             }
 
             const data = await response.json();
-            console.log('✅ Token validation success:', data);
 
             if (!data.client.is_valid) {
                 throw new Error('Este enlace ha expirado o no es válido');

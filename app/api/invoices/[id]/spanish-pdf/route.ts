@@ -40,8 +40,6 @@ export async function GET(
 
         if (invoiceError || !invoice) {
             console.error('Error obteniendo factura:', invoiceError);
-            console.log('Invoice ID buscado:', invoiceId);
-            console.log('User ID:', user.id);
             return NextResponse.json({
                 error: 'Factura no encontrada',
                 debug: {
@@ -53,13 +51,6 @@ export async function GET(
         }
 
         // Log para depuración - más detallado
-        console.log('=== DATOS COMPLETOS DE LA FACTURA ===');
-        console.log('ID:', invoice.id);
-        console.log('Descripción RAW:', JSON.stringify(invoice.description));
-        console.log('Notas:', JSON.stringify(invoice.notes));
-        console.log('Cantidad:', invoice.amount);
-        console.log('Todos los campos:', Object.keys(invoice));
-        console.log('=================================');
 
         // Obtener configuración de la empresa
         const { data: companyConfig, error: companyError } = await supabase
@@ -565,7 +556,6 @@ function generateVerifacTU(invoice: any, company: any): string {
 function extractConceptsFromNotes(notes: string): string {
     if (!notes) return 'Servicios profesionales';
 
-    console.log('Notes original:', notes);
 
     // Buscar líneas que empiecen con "- " después de "Conceptos:"
     const lines = notes.split('\n');
@@ -603,7 +593,6 @@ function extractConceptsFromNotes(notes: string): string {
     }
 
     const result = concepts.length > 0 ? concepts.join(', ') : 'Servicios profesionales';
-    console.log('Conceptos extraídos:', result);
 
     return result;
 }

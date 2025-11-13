@@ -74,7 +74,8 @@ export default function CookiePreferencesClient({ userEmail }: CookiePreferences
   };
 
   const handleRevokeAll = async () => {
-    if (confirm('¿Estás seguro de que quieres revocar todas las cookies opcionales? Esta acción no se puede deshacer.')) {
+    const confirmed = await showToast.confirm('¿Estás seguro de que quieres revocar todas las cookies opcionales? Esta acción no se puede deshacer.');
+    if (confirmed) {
       setSaving(true);
       try {
         await revokeConsent();

@@ -8,7 +8,6 @@ export async function getFirstClientForUser(user_id: string) {
       return null;
     }
 
-    console.log('🔍 Buscando clientes para usuario:', user_id);
 
     const { data, error } = await supabase
       .from('clients')
@@ -22,11 +21,9 @@ export async function getFirstClientForUser(user_id: string) {
     }
     
     if (!data || data.length === 0) {
-      console.log('⚠️ No se encontraron clientes para el usuario');
       return null;
     }
     
-    console.log('✅ Cliente encontrado:', data[0].name);
     return data[0];
   } catch (error) {
     console.error('❌ Error en getFirstClientForUser:', error);
@@ -42,7 +39,6 @@ export async function getFirstProjectForUser(user_id: string) {
       return null;
     }
 
-    console.log('🔍 Buscando proyectos para usuario:', user_id);
 
     const { data, error } = await supabase
       .from('projects')
@@ -56,11 +52,9 @@ export async function getFirstProjectForUser(user_id: string) {
     }
     
     if (!data || data.length === 0) {
-      console.log('⚠️ No se encontraron proyectos para el usuario');
       return null;
     }
     
-    console.log('✅ Proyecto encontrado:', data[0].name);
     return data[0];
   } catch (error) {
     console.error('❌ Error en getFirstProjectForUser:', error);
@@ -76,7 +70,6 @@ export async function getFirstInvoiceForUser(user_id: string) {
       return null;
     }
 
-    console.log('🔍 Buscando facturas para usuario:', user_id);
 
     const { data, error } = await supabase
       .from('invoices')
@@ -90,11 +83,9 @@ export async function getFirstInvoiceForUser(user_id: string) {
     }
     
     if (!data || data.length === 0) {
-      console.log('⚠️ No se encontraron facturas para el usuario');
       return null;
     }
     
-    console.log('✅ Factura encontrada:', data[0].invoice_number);
     return data[0];
   } catch (error) {
     console.error('❌ Error en getFirstInvoiceForUser:', error);
@@ -110,10 +101,6 @@ export async function checkUserEntities(user_id: string) {
     getFirstInvoiceForUser(user_id)
   ]);
 
-  console.log('📊 Resumen de entidades del usuario:');
-  console.log('- Clientes:', client ? '✅' : '❌');
-  console.log('- Proyectos:', project ? '✅' : '❌');
-  console.log('- Facturas:', invoice ? '✅' : '❌');
 
   return {
     client,

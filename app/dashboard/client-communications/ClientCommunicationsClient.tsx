@@ -1,10 +1,12 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { createSupabaseClient } from '@/src/lib/supabase';
+import { toast } from 'sonner';
 import {
     AlertTriangle,
     Building2,
@@ -115,7 +117,6 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                     table: 'client_messages' 
                 },
                 (payload: any) => {
-                    console.log('📨 Mensaje en tiempo real:', payload);
                     // Recargar mensajes cuando hay cambios
                     loadMessages();
                 }
@@ -146,11 +147,9 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
         if (!supabase) return;
 
         try {
-            console.log('🔄 Loading clients...');
             
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                console.log('⚠️ No user found');
                 return;
             }
 
@@ -166,7 +165,6 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                 return;
             }
 
-            console.log('✅ Clients loaded:', data?.length || 0);
             setClients(data || []);
         } catch (error) {
             console.error('Error in loadClients:', error);
@@ -253,7 +251,7 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
     const generateToken = async () => {
         if (!selectedClientForToken || !supabase) {
-            alert('Por favor selecciona un cliente');
+            toast.error('Por favor selecciona un cliente');
             return;
         }
 
@@ -262,7 +260,7 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                alert('No hay usuario autenticado');
+                toast.error('No hay usuario autenticado');
                 return;
             }
 
@@ -271,16 +269,21 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
             if (error) {
                 console.error('Error generating token:', error);
-                alert('Error generando token: ' + error.message);
+                toast.error('Error generando token', {
+                    description: error.message
+                });
             } else {
-                alert('Token generado exitosamente: ' + data);
+                toast.success('Token generado exitosamente', {
+                    description: data,
+                    duration: 4000
+                });
                 setShowTokenForm(false);
                 setSelectedClientForToken('');
                 await loadTokens();
             }
         } catch (error) {
             console.error('Error in generateToken:', error);
-            alert('Error generando token');
+            toast.error('Error generando token');
         } finally {
             setGeneratingToken(false);
         }
@@ -288,13 +291,12 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
     const sendTokenByEmail = async () => {
         if (!selectedClientForToken || !supabase) {
-            alert('Por favor selecciona un cliente');
+            toast.error('Por favor selecciona un cliente');
             return;
         }
 
         try {
             setSendingEmail(true);
-            console.log('📤 Enviando email con datos:', {
                 clientId: selectedClientForToken,
                 message: emailMessage || 'Te comparto el acceso a nuestro portal de comunicación seguro.',
                 freelancerName: userEmail?.split('@')[0] || 'Tu Freelancer'
@@ -312,7 +314,6 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                 }),
             });
 
-            console.log('📡 Respuesta del servidor:', {
                 status: response.status,
                 statusText: response.statusText,
                 ok: response.ok,
@@ -335,21 +336,27 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
             }
 
             const result = await response.json();
-            console.log('✅ Respuesta exitosa:', result);
 
             if (result.success) {
-                alert(`✅ Email enviado a ${result.clientEmail}\n\nPortal URL: ${result.portalUrl}`);
+                toast.success('Email enviado exitosamente', {
+                    description: `Enviado a ${result.clientEmail}`,
+                    duration: 4000
+                });
                 setShowTokenForm(false);
                 setSelectedClientForToken('');
                 setEmailMessage('');
                 await loadTokens();
             } else {
                 console.error('Error en la respuesta:', result);
-                alert('Error enviando email: ' + (result.error || 'Error desconocido'));
+                toast.error('Error enviando email', {
+                    description: result.error || 'Error desconocido'
+                });
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error enviando email: ' + error);
+            toast.error('Error enviando email', {
+                description: String(error)
+            });
         } finally {
             setSendingEmail(false);
         }
@@ -358,7 +365,7 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
     const copyTokenUrl = (token: string) => {
         const url = `${window.location.origin}/client-portal/${token}`;
         navigator.clipboard.writeText(url);
-        alert('URL copiada al portapapeles!');
+        toast.success('URL copiada al portapapeles');
     };
 
     const sendReply = async () => {
@@ -380,14 +387,15 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
             if (error) {
                 console.error('Error sending reply:', error);
-                alert('Error enviando respuesta');
+                toast.error('Error enviando respuesta');
             } else {
+                toast.success('Respuesta enviada');
                 setReplyMessage('');
                 await loadMessages();
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error enviando respuesta');
+            toast.error('Error enviando respuesta');
         } finally {
             setSending(false);
         }
@@ -428,10 +436,12 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 text-slate-900">
-            <div className="flex">
+            <div className="flex h-screen">
                 <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-                <main className="flex-1 ml-56 overflow-auto">
+                <div className="flex flex-col flex-1 ml-56">
+                    <Header userEmail={userEmail} onLogout={handleLogout} />
+                    <div className="flex-1 overflow-auto">
                     <div className="p-4">
                         {/* Trial Banner */}
                         <div className="mb-4">
@@ -743,7 +753,8 @@ export default function ClientCommunications({ userEmail }: ClientCommunications
                             </div>
                         </div>
                     </div>
-                </main>
+                    </div>
+                </div>
             </div>
 
             {/* Modal para generar token */}

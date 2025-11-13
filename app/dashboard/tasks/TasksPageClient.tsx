@@ -1,6 +1,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { Button } from "@/components/ui/Button";
 import CustomDatePicker from '@/components/ui/DatePicker';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
@@ -163,7 +164,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
     // Función para limpiar sesión corrupta
     const clearCorruptedSession = async () => {
         try {
-            console.log('🧹 Limpiando sesión corrupta...');
 
             // Limpiar cookies de Supabase
             if (typeof window !== 'undefined') {
@@ -196,7 +196,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 await supabase.auth.signOut();
             }
 
-            console.log('✅ Sesión limpiada, redirigiendo al login...');
             showToast.error('🔧 Se detectó un problema con la sesión. Serás redirigido al login para solucionarlo.');
             router.push('/login');
 
@@ -254,7 +253,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 console.error('Error fetching tasks:', error);
                 setTasks([]);
             } else {
-                console.log('✅ Tareas cargadas:', data?.length || 0);
                 setTasks((data || []) as Task[]);
             }
         } catch (error) {
@@ -272,7 +270,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
         }
 
         try {
-            console.log('🔍 Intentando obtener usuario...');
 
             // Intentar obtener el usuario de varias formas
             let uid = userId;
@@ -280,25 +277,19 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
             if (!uid) {
                 // Método 1: getUser (más confiable)
                 const { data: authData, error: authError } = await supabase.auth.getUser();
-                console.log('📋 Respuesta de getUser:', { user: authData?.user?.id, error: authError });
 
                 if (authError) {
                     console.error('❌ Error en getUser:', authError);
                     // Método 2: getSession como fallback
-                    console.log('🔄 Intentando con getSession...');
                     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-                    console.log('📋 Respuesta de getSession:', { user: sessionData?.session?.user?.id, error: sessionError });
 
                     if (sessionError) {
                         console.error('❌ Error en getSession:', sessionError);
                         // Método 3: Forzar refresh de la sesión
-                        console.log('🔄 Intentando refresh de sesión...');
                         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-                        console.log('📋 Respuesta de refreshSession:', { user: refreshData?.session?.user?.id, error: refreshError });
 
                         if (refreshError) {
                             console.error('❌ Error en refreshSession:', refreshError);
-                            console.log('🧹 Sesión parece estar corrupta, iniciando limpieza...');
                             await clearCorruptedSession();
                             return;
                         } else {
@@ -321,8 +312,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 return;
             }
 
-            console.log('✅ User ID obtenido:', uid);
-            console.log('🔍 Buscando proyectos para user_id:', uid);
 
             const { data, error } = await supabase
                 .from('projects')
@@ -330,7 +319,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 .eq('user_id', uid)
                 .order('name');
 
-            console.log('📋 Respuesta de proyectos:', { data, error });
 
             if (error) {
                 console.error('❌ Error fetching projects:', error);
@@ -340,19 +328,14 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
             }
 
             if (!data) {
-                console.log('📋 No se encontraron proyectos');
                 setProjects([]);
                 return;
             }
 
-            console.log('📊 Todos los proyectos encontrados:', data.length);
-            console.log('📋 Estados de proyectos encontrados:', data.map((p: Project) => ({ name: p.name, status: p.status })));
 
             // TEMPORAL: Mostrar TODOS los proyectos para debugging
             const activeProjects = data; // Sin filtrar por estado
 
-            console.log('✅ Proyectos filtrados (todos):', activeProjects.length);
-            console.log('📋 Proyectos activos:', activeProjects.map((p: Project) => ({ name: p.name, status: p.status })));
 
             setProjects(activeProjects as Project[]);
 
@@ -360,7 +343,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
             if (!newTask.project_id && activeProjects.length > 0) {
                 const generalProject = activeProjects.find((p: any) => p.name === 'General');
                 if (generalProject) {
-                    console.log('🏷️ Preseleccionando proyecto General:', generalProject.id);
                     setNewTask(prev => ({
                         ...prev,
                         project_id: generalProject.id
@@ -399,7 +381,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 setUserId(uid);
             }
 
-            console.log('🔧 Creando tarea con user_id:', uid);
 
             // Si no hay project_id seleccionado, buscar el proyecto "General"
             let projectId = newTask.project_id;
@@ -416,7 +397,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                     return;
                 }
                 projectId = defaultProject.id;
-                console.log('📁 Usando proyecto por defecto:', projectId);
             }
 
             const taskData = {
@@ -430,7 +410,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 user_id: uid // ¡Añadir el user_id!
             };
 
-            console.log('📋 Datos de la tarea a crear:', taskData);
 
             const { data, error } = await supabase
                 .from('tasks')
@@ -444,7 +423,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                 return;
             }
 
-            console.log('✅ Tarea creada:', data);
             showToast.success('¡Tarea creada exitosamente! 🎉');
             setShowNewTaskModal(false);
             resetNewTaskForm();
@@ -543,7 +521,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
 
     // Timer functions - persistir en Supabase
     const startTimer = async (taskId: string) => {
-        console.log('DEBUG startTimer called for', taskId);
         if (!supabase) return;
         try {
             // Si hay otro timer activo, pausarlo primero
@@ -578,7 +555,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
     };
 
     const pauseTimer = async () => {
-        console.log('DEBUG pauseTimer called, activeTimer=', activeTimer);
         if (!supabase) return;
         if (!activeTimer) return;
         try {
@@ -679,16 +655,15 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-            <div className="flex min-h-screen">
-                {/* Sidebar Premium */}
-                <Sidebar
-                    userEmail={currentUserEmail}
-                    onLogout={handleLogout}
-                />
+        <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+            <Sidebar
+                userEmail={currentUserEmail}
+                onLogout={handleLogout}
+            />
 
-                {/* Contenido principal */}
-                <div className="flex-1 ml-56 p-8">
+            <div className="flex flex-col flex-1 ml-56">
+                <Header userEmail={currentUserEmail} onLogout={handleLogout} />
+                <div className="flex-1 overflow-auto p-8">
                     {/* Header */}
                     <div className="mb-8">
                         <div className="flex items-center justify-between mb-6">
@@ -1444,6 +1419,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
     );
 }

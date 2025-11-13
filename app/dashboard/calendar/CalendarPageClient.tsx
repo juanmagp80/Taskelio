@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { showToast } from '@/utils/toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -226,7 +227,6 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             if (eventsError) {
                 console.error('Error creating sample events:', eventsError);
             } else {
-                console.log('✅ Datos de ejemplo creados exitosamente');
                 await fetchEvents();
                 await loadClientsAndProjects();
                 await loadAIData();
@@ -1165,10 +1165,12 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                 <div className="absolute inset-0 bg-grid-slate-900/[0.02] dark:bg-grid-slate-100/[0.02] bg-[size:32px_32px]" />
             </div>
 
-            <div className="relative z-10 flex">
+            <div className="relative z-10 flex h-screen">
                 <Sidebar userEmail={userEmail} onLogout={handleLogout} />
                 
-                <main className="flex-1 ml-56 overflow-auto">
+                <div className="flex flex-col flex-1 ml-56">
+                    <Header userEmail={userEmail} onLogout={handleLogout} />
+                    <div className="flex-1 overflow-auto">
                     <div className="p-4">
                         {/* Trial Banner */}
                         <div className="mb-4">
@@ -1782,7 +1784,8 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                             </div>
                         )}
                     </div>
-                </main>
+                    </div>
+                </div>
             </div>
 
             {/* Modal para nuevo evento - CRM & IA Integrado */}

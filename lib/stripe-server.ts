@@ -32,7 +32,7 @@ export const createCheckoutSession = async (
   }
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [
@@ -50,11 +50,13 @@ export const createCheckoutSession = async (
           userId: userId || '',
         },
       },
-    });
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return session;
   } catch (error) {
-    console.error('Error creating Stripe checkout session:', error);
+    console.error('❌ Error creating Stripe checkout session:', error);
     throw error;
   }
 };

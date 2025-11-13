@@ -185,8 +185,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                 return modalData.text?.trim();
             case 'communication_optimization':
                 return modalData.originalMessage?.trim();
-            case 'proposal_analysis':
-                return modalData.proposalId; // Solo necesita que haya una propuesta seleccionada
             case 'content_generation':
                 return modalData.topic?.trim() && modalData.contentType?.trim();
             case 'conversation_analysis':
@@ -1446,7 +1444,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
         setShowModal(false);
 
         try {
-            console.log('🤖 Executing real AI automation:', currentAutomation.name);
 
             let requestData: any = {};
             let automationType = '';
@@ -1474,7 +1471,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                 case 'proposal_analysis':
                     // Para análisis de propuesta, usar endpoint específico directamente
-                    console.log('📊 Executing proposal analysis...');
 
                     const proposalResponse = await fetch('/api/ai/analyze-proposal', {
                         method: 'POST',
@@ -1488,7 +1484,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                     const proposalResult = await proposalResponse.json();
 
-                    console.log('🔍 PROPOSAL ANALYSIS RESULT:', {
                         ok: proposalResponse.ok,
                         status: proposalResponse.status,
                         hasResult: !!proposalResult,
@@ -1532,7 +1527,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                 case 'conversation_analysis':
                     // Para análisis de conversación, usar endpoint específico directamente
-                    console.log('🧠 Executing conversation analysis...');
 
                     const convResponse = await fetch('/api/ai/optimize-message', {
                         method: 'POST',
@@ -1582,7 +1576,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                 case 'risk_detection':
                     // Para detección de riesgos, usar endpoint específico directamente
-                    console.log('⚠️ Executing project risk detection...');
 
                     const riskResponse = await fetch('/api/ai/analyze-project-risks', {
                         method: 'POST',
@@ -1625,7 +1618,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                 case 'pricing_optimization':
                     // Para optimización de precios, usar endpoint específico directamente
-                    console.log('💰 Executing pricing optimization...');
 
                     const pricingResponse = await fetch('/api/ai/optimize-pricing', {
                         method: 'POST',
@@ -1670,7 +1662,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                 case 'performance_analysis':
                     // Caso especial: análisis de rendimiento
-                    console.log('📈 Executing performance analysis...');
 
                     // Verificar autenticación antes de llamar API
                     const supabaseAuth = createSupabaseClient();
@@ -1680,7 +1671,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                         throw new Error('Usuario no autenticado. Por favor, recarga la página.');
                     }
 
-                    console.log('🔐 Usuario autenticado:', authUser.email);
 
                     // Obtener token de sesión para incluir en headers
                     const { data: { session } } = await supabaseAuth.auth.getSession();
@@ -1704,7 +1694,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                     const performanceResult = await performanceResponse.json();
 
-                    console.log('📊 Performance analysis response:', {
                         ok: performanceResponse.ok,
                         status: performanceResponse.status,
                         result: performanceResult
@@ -1775,7 +1764,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                 case 'auto_detect':
                     // Caso especial: detección automática de eventos
-                    console.log('🔍 Executing automatic event detection...');
 
                     // Obtener user ID para el detector automático
                     const supabaseForAuto = createSupabaseClient();
@@ -1821,7 +1809,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                 case 'conversation_analysis':
                     // Para análisis de conversación, usar endpoint específico
-                    console.log('🧠 Executing conversation analysis...');
 
                     const analyzeResponse = await fetch('/api/ai/optimize-message', {
                         method: 'POST',
@@ -1915,7 +1902,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
     // Función para mostrar resultado de manera profesional
     const showExecutionResult = (result: any, automation: AIAutomation) => {
-        console.log('🎯 RESULTADO RECIBIDO:', {
             automationType: automation.type,
             automationName: automation.name,
             resultStructure: Object.keys(result),
@@ -1958,18 +1944,70 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
         // La nueva estructura del endpoint es: { success: true, data: { analysis, ... } }
         const data = result.data || {};
 
-        if (data.analysis) {
+        // Manejar sentiment_analysis (estructura: { success, analysis, saved_id, message })
+        if (data.analysis?.sentiment) {
             const analysis = data.analysis;
-            if (analysis.sentiment) {
-                resultMessage += `🎯 Sentimiento: ${analysis.sentiment.toUpperCase()}\n`;
-                resultMessage += `📊 Confianza: ${Math.round(analysis.confidence * 100)}%\n`;
-                if (analysis.recommendations?.length > 0) {
-                    resultMessage += `💡 Recomendaciones: ${analysis.recommendations.slice(0, 2).join(', ')}\n`;
-                }
-            } else if (analysis.optimizedMessage) {
-                resultMessage += `📝 Mensaje optimizado generado\n`;
-                resultMessage += `📊 Mejoras detectadas: ${analysis.improvements?.length || 0}\n`;
-            } else if (analysis.score) {
+            resultMessage += `🎯 Sentimiento: ${analysis.sentiment.toUpperCase()}\n`;
+            resultMessage += `📊 Confianza: ${Math.round(analysis.confidence * 100)}%\n`;
+
+            if (analysis.emotions && analysis.emotions.length > 0) {
+                resultMessage += `😊 Emociones: ${analysis.emotions.slice(0, 3).join(', ')}\n`;
+            }
+
+            if (analysis.urgency) {
+                const urgencyIcon = analysis.urgency === 'high' ? '🔴' : analysis.urgency === 'medium' ? '🟡' : '🟢';
+                resultMessage += `${urgencyIcon} Urgencia: ${analysis.urgency.toUpperCase()}\n`;
+            }
+
+            if (analysis.recommendations?.length > 0) {
+                resultMessage += `💡 Recomendaciones:\n`;
+                analysis.recommendations.slice(0, 3).forEach((rec: string, i: number) => {
+                    resultMessage += `  ${i + 1}. ${rec}\n`;
+                });
+            }
+
+            // Mostrar si se creó tarea automática
+            if (analysis.sentiment === 'negative' && analysis.urgency === 'high') {
+                resultMessage += `\n🚨 Se creó una tarea urgente automáticamente\n`;
+            }
+        }
+        // Manejar communication_optimization (estructura: { optimization, saved_insight_id })
+        else if (data.optimization) {
+            const optimization = data.optimization;
+            resultMessage += `📝 Mensaje optimizado generado exitosamente\n\n`;
+
+            if (optimization.toneAnalysis) {
+                resultMessage += `🎭 Tono: ${optimization.toneAnalysis}\n`;
+            }
+
+            if (optimization.improvements?.length > 0) {
+                resultMessage += `📊 Mejoras aplicadas (${optimization.improvements.length}):\n`;
+                optimization.improvements.slice(0, 3).forEach((imp: string, i: number) => {
+                    resultMessage += `  ${i + 1}. ${imp}\n`;
+                });
+            }
+
+            if (optimization.confidence) {
+                resultMessage += `\n💯 Confianza: ${Math.round(optimization.confidence * 100)}%\n`;
+            }
+
+            if (optimization.optimizedMessage) {
+                const preview = optimization.optimizedMessage.substring(0, 150);
+                const ellipsis = optimization.optimizedMessage.length > 150 ? '...' : '';
+                resultMessage += `\n✨ Mensaje optimizado:\n"${preview}${ellipsis}"\n`;
+            }
+
+            if (optimization.suggestions?.length > 0) {
+                resultMessage += `\n💡 Sugerencias adicionales:\n`;
+                optimization.suggestions.slice(0, 2).forEach((sug: string, i: number) => {
+                    resultMessage += `  ${i + 1}. ${sug}\n`;
+                });
+            }
+        }
+        // Otros tipos de análisis
+        else if (data.analysis) {
+            const analysis = data.analysis;
+            if (analysis.score) {
                 resultMessage += `📊 Score: ${analysis.score}/100\n`;
                 resultMessage += `💪 Fortalezas: ${analysis.strengths?.length || 0}\n`;
                 resultMessage += `⚠️ Debilidades: ${analysis.weaknesses?.length || 0}\n`;
@@ -1998,14 +2036,9 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
         showToast(resultMessage);
 
-        console.log('💾 AUTOMATIZACIÓN TERMINADA - programando actualizaciones...');
-        console.log('🔧 Tipo:', automation.type);
-        console.log('📝 Nombre:', automation.name);
-        console.log('📊 Resultado tiene analysis:', !!result.analysis);
 
         // Actualización adicional después del toast para asegurar que aparezca el nuevo insight
         setTimeout(() => {
-            console.log('🔄 Actualización adicional post-toast...');
             fetchRecentInsights();
         }, 5000); // 5 segundos después del toast
     };
@@ -2013,16 +2046,13 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
     // Función para cargar insights recientes del usuario
     const fetchRecentInsights = async () => {
         try {
-            console.log('🔄 Actualizando insights recientes...');
             const supabase = createSupabaseClient();
             const user = (await supabase.auth.getUser()).data.user;
 
             if (!user) {
-                console.log('❌ No hay usuario autenticado');
                 return;
             }
 
-            console.log('👤 Usuario autenticado:', user.email);
 
             const { data: insights, error } = await supabase
                 .from('ai_insights')
@@ -2037,7 +2067,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
             }
 
 
-            console.log(`✅ Se encontraron ${insights?.length || 0} insights:`, insights?.slice(0, 3).map((i: {
                 id: string;
                 insight_type: string;
                 created_at: string;
@@ -2052,8 +2081,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                 timeAgo: getTimeAgo(i.created_at)
             })));
 
-            console.log('📊 Primeros 3 insights completos:', insights?.slice(0, 3));
-            console.log('🕐 Insight más reciente:', insights?.[0] ? {
                 created: insights[0].created_at,
                 timeAgo: getTimeAgo(insights[0].created_at),
                 type: insights[0].insight_type,
@@ -2062,7 +2089,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
             setRecentInsights(insights || []);
 
-            console.log('🔄 Estado actualizado, recentInsights.length será:', insights?.length || 0);
         } catch (error) {
             console.error('❌ Error in fetchRecentInsights:', error);
         }
@@ -2070,16 +2096,12 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
     // Función auxiliar para actualizar insights con retraso
     const updateInsightsDelayed = () => {
-        console.log('⏰ Programando actualización de insights...');
         setTimeout(async () => {
-            console.log('⏰ EJECUTANDO actualización después de ejecución...');
-            console.log('📊 Estado actual antes de actualizar:', recentInsights.length);
 
             // Esperar un momento adicional
             await new Promise(resolve => setTimeout(resolve, 500));
 
             await fetchRecentInsights();
-            console.log('📊 Estado después de actualizar:', recentInsights.length);
         }, 3000); // Aumentar a 3 segundos para dar más tiempo al servidor
     };
 
@@ -2243,21 +2265,6 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
             aiFeatures: ['Optimización de Tono', 'Mejora de Claridad', 'Personalización por Cliente', 'Sugerencias de Mejora'],
             icon: Mail,
             color: 'green',
-            isNew: true
-        },
-        {
-            id: 'proposal-analyzer',
-            name: '📊 Analizador de Propuestas',
-            description: 'Selecciona cliente → Elige propuesta → IA analiza automáticamente calidad, precios y sugiere mejoras específicas',
-            category: 'sales',
-            type: 'proposal_analysis',
-            status: 'active',
-            confidence: 88,
-            successRate: 86,
-            executionCount: 0,
-            aiFeatures: ['Análisis de Propuestas Reales', 'Score de Calidad', 'Análisis de Competitividad', 'Sugerencias de Mejora Específicas'],
-            icon: FileText,
-            color: 'purple',
             isNew: true
         },
         {
@@ -2552,17 +2559,7 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                                         Automatizaciones IA conectadas con OpenAI GPT-4o-mini
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-4">
 
-                                    <Button
-                                        onClick={() => router.push('/dashboard/automations')}
-                                        variant="outline"
-                                        className="flex items-center gap-2"
-                                    >
-                                        <ArrowRight className="h-4 w-4" />
-                                        Ver Automatizaciones Tradicionales
-                                    </Button>
-                                </div>
                             </div>
 
                             {/* Estadísticas IA */}
@@ -2840,8 +2837,8 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                                         <div
                                             key={item.id}
                                             className={`rounded-lg shadow-sm border p-6 hover:shadow-md transition-all duration-200 cursor-pointer group ${item.isRecent
-                                                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 border-2'
-                                                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                                ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 border-2'
+                                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                                                 }`}
                                             onClick={() => {
                                                 if (item.type === 'session') {
@@ -2915,8 +2912,8 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm font-medium">Sentimiento:</span>
                                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.data_points.sentiment === 'positive' ? 'bg-green-100 text-green-800' :
-                                                                    item.data_points.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
-                                                                        'bg-yellow-100 text-yellow-800'
+                                                                item.data_points.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
+                                                                    'bg-yellow-100 text-yellow-800'
                                                                 }`}>
                                                                 {item.data_points.sentiment.toUpperCase()}
                                                             </span>
@@ -2951,8 +2948,8 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                                                     variant="outline"
                                                     size="sm"
                                                     className={`w-full group-hover:shadow-md transition-all duration-200 ${item.isRecent
-                                                            ? 'text-green-600 border-green-600 hover:bg-green-50'
-                                                            : 'text-blue-600 border-blue-600 hover:bg-blue-50'
+                                                        ? 'text-green-600 border-green-600 hover:bg-green-50'
+                                                        : 'text-blue-600 border-blue-600 hover:bg-blue-50'
                                                         }`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -3059,39 +3056,182 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
                                 </div>
                             )}
 
-                            {/* Debug: Completamente deshabilitado */}
-                            {false && process.env.NODE_ENV === 'development' && (
-                                <>
-                                    {/* Debug: Mostrar estructura de datos */}
-                                    <div className="bg-gray-100 border border-gray-300 rounded-lg p-4">
-                                        <h5 className="font-medium text-gray-900 mb-2">🔧 Debug - Estructura de Datos:</h5>
-                                        <pre className="text-xs text-gray-700 overflow-auto max-h-40 bg-white p-3 rounded border">
-                                            {JSON.stringify(currentResults, null, 2)}
-                                        </pre>
+                            {/* Resultados específicos para Sentiment Analysis */}
+                            {currentResults.data?.analysis?.sentiment && (
+                                <div className="space-y-6">
+                                    {/* Header de Sentimiento */}
+                                    <div className={`bg-gradient-to-r ${currentResults.data.analysis.sentiment === 'positive' ? 'from-green-50 to-emerald-50 border-green-200' :
+                                        currentResults.data.analysis.sentiment === 'negative' ? 'from-red-50 to-rose-50 border-red-200' :
+                                            'from-yellow-50 to-amber-50 border-yellow-200'} border rounded-lg p-6`}>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className={`p-3 ${currentResults.data.analysis.sentiment === 'positive' ? 'bg-green-100' :
+                                                currentResults.data.analysis.sentiment === 'negative' ? 'bg-red-100' : 'bg-yellow-100'} rounded-full`}>
+                                                {currentResults.data.analysis.sentiment === 'positive' ? '😊' :
+                                                    currentResults.data.analysis.sentiment === 'negative' ? '😟' : '😐'}
+                                            </div>
+                                            <div>
+                                                <h4 className={`font-bold text-lg ${currentResults.data.analysis.sentiment === 'positive' ? 'text-green-900' :
+                                                    currentResults.data.analysis.sentiment === 'negative' ? 'text-red-900' : 'text-yellow-900'}`}>
+                                                    Sentimiento: {currentResults.data.analysis.sentiment.toUpperCase()}
+                                                </h4>
+                                                <p className="text-sm text-gray-700">
+                                                    Confianza: {Math.round(currentResults.data.analysis.confidence * 100)}%
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Urgencia */}
+                                        {currentResults.data.analysis.urgency && (
+                                            <div className="flex items-center gap-2 mt-3">
+                                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${currentResults.data.analysis.urgency === 'high' ? 'bg-red-100 text-red-800' :
+                                                    currentResults.data.analysis.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-green-100 text-green-800'}`}>
+                                                    {currentResults.data.analysis.urgency === 'high' ? '🔴 Alta Urgencia' :
+                                                        currentResults.data.analysis.urgency === 'medium' ? '🟡 Urgencia Media' :
+                                                            '🟢 Baja Urgencia'}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Emociones */}
+                                        {currentResults.data.analysis.emotions && currentResults.data.analysis.emotions.length > 0 && (
+                                            <div className="mt-4">
+                                                <p className="text-sm font-medium text-gray-700 mb-2">😊 Emociones Detectadas:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {currentResults.data.analysis.emotions.map((emotion: string, i: number) => (
+                                                        <span key={i} className="bg-white px-3 py-1 rounded-full text-sm text-gray-700 border">
+                                                            {emotion}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Verificar si hay análisis estructurado */}
-                                    {currentResults.analysis ? (
-                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                            <h5 className="font-medium text-green-900 mb-2">✅ Análisis Estructurado Detectado</h5>
-                                            <p className="text-sm text-green-700">
-                                                El análisis tiene la estructura correcta. Los campos disponibles son:
-                                            </p>
-                                            <ul className="text-xs text-green-600 mt-2 space-y-1">
-                                                {Object.keys(currentResults.analysis || {}).map(key => (
-                                                    <li key={key}>• {key}: {typeof currentResults.analysis[key]}</li>
+                                    {/* Recomendaciones */}
+                                    {currentResults.data.analysis.recommendations && currentResults.data.analysis.recommendations.length > 0 && (
+                                        <div className="bg-white border-l-4 border-blue-500 rounded-lg p-6 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="p-2 bg-blue-100 rounded-lg">
+                                                    <Brain className="h-5 w-5 text-blue-600" />
+                                                </div>
+                                                <h5 className="font-semibold text-gray-900">💡 Recomendaciones IA</h5>
+                                            </div>
+                                            <ul className="space-y-3">
+                                                {currentResults.data.analysis.recommendations.map((rec: string, i: number) => (
+                                                    <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                                                        <span className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-xs">
+                                                            {i + 1}
+                                                        </span>
+                                                        {rec}
+                                                    </li>
                                                 ))}
                                             </ul>
                                         </div>
-                                    ) : (
-                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                            <h5 className="font-medium text-yellow-900 mb-2">⚠️ Sin Análisis Estructurado</h5>
-                                            <p className="text-sm text-yellow-700">
-                                                No se encontró el campo `analysis` o está vacío. Mostrando resultado raw...
+                                    )}
+
+                                    {/* Texto Original */}
+                                    {currentResults.data.analysis && (
+                                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                            <h5 className="font-semibold text-gray-900 mb-3">📝 Texto Analizado:</h5>
+                                            <p className="text-sm text-gray-700 italic leading-relaxed">
+                                                "{currentResults.message || 'No disponible'}"
                                             </p>
                                         </div>
                                     )}
-                                </>
+                                </div>
+                            )}
+
+                            {/* Resultados específicos para Communication Optimization */}
+                            {currentResults.data?.optimization && (
+                                <div className="space-y-6">
+                                    {/* Header de Optimización */}
+                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="p-3 bg-blue-100 rounded-full">
+                                                <Brain className="h-6 w-6 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-blue-900 text-lg">✨ Mensaje Optimizado</h4>
+                                                <p className="text-sm text-blue-700">
+                                                    {currentResults.data.optimization.toneAnalysis && `Tono: ${currentResults.data.optimization.toneAnalysis}`}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Confianza */}
+                                        {currentResults.data.optimization.confidence && (
+                                            <div className="flex items-center gap-2 mt-3">
+                                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                                    💯 Confianza: {Math.round(currentResults.data.optimization.confidence * 100)}%
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Mensaje Optimizado */}
+                                    {currentResults.data.optimization.optimizedMessage && (
+                                        <div className="bg-white border-l-4 border-green-500 rounded-lg p-6 shadow-sm">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h5 className="font-semibold text-gray-900">✨ Mensaje Mejorado:</h5>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(currentResults.data.optimization.optimizedMessage);
+                                                        showToast('📋 Mensaje copiado al portapapeles', 'success');
+                                                    }}
+                                                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
+                                                >
+                                                    📋 Copiar
+                                                </button>
+                                            </div>
+                                            <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
+                                                {currentResults.data.optimization.optimizedMessage}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Mejoras Aplicadas */}
+                                    {currentResults.data.optimization.improvements && currentResults.data.optimization.improvements.length > 0 && (
+                                        <div className="bg-white border-l-4 border-purple-500 rounded-lg p-6 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="p-2 bg-purple-100 rounded-lg">
+                                                    <CheckCircle className="h-5 w-5 text-purple-600" />
+                                                </div>
+                                                <h5 className="font-semibold text-gray-900">📊 Mejoras Aplicadas</h5>
+                                            </div>
+                                            <ul className="space-y-2">
+                                                {currentResults.data.optimization.improvements.map((imp: string, i: number) => (
+                                                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                                                        <span className="text-green-500 mt-1">✓</span>
+                                                        {imp}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Sugerencias Adicionales */}
+                                    {currentResults.data.optimization.suggestions && currentResults.data.optimization.suggestions.length > 0 && (
+                                        <div className="bg-white border-l-4 border-blue-500 rounded-lg p-6 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="p-2 bg-blue-100 rounded-lg">
+                                                    <Brain className="h-5 w-5 text-blue-600" />
+                                                </div>
+                                                <h5 className="font-semibold text-gray-900">💡 Sugerencias Adicionales</h5>
+                                            </div>
+                                            <ul className="space-y-3">
+                                                {currentResults.data.optimization.suggestions.map((sug: string, i: number) => (
+                                                    <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                                                        <span className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-xs">
+                                                            {i + 1}
+                                                        </span>
+                                                        {sug}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                             {/* Resultados específicos para Análisis de Rendimiento */}

@@ -113,7 +113,6 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
         }
 
         // TODO: Aquí integraríamos con servicio de email real (SendGrid, Resend, etc.)
-        console.log('📧 Email que se enviaría:', {
             to: payload.client.email,
             subject: emailData.subject,
             content: emailContent
@@ -323,7 +322,6 @@ export async function executeAutomationAction(
         }
 
         // Log de inicio
-        console.log(`🚀 Ejecutando acción: ${action.type}`, {
             executionId: payload.executionId,
             client: payload.client.name,
             automation: payload.automation.name
@@ -334,7 +332,6 @@ export async function executeAutomationAction(
 
         // Log del resultado
         if (result.success) {
-            console.log(`✅ Acción completada: ${action.type}`, result);
         } else {
             console.error(`❌ Acción falló: ${action.type}`, result);
         }
