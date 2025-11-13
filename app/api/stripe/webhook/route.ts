@@ -3,6 +3,7 @@ import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+    console.log('🔔 Webhook received');
 
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
             signature,
             process.env.STRIPE_WEBHOOK_SECRET!
         );
+        console.log('✅ Webhook signature verified. Event type:', event.type);
     } catch (error) {
         console.error('❌ Webhook signature verification failed:', error);
         return NextResponse.json(
@@ -38,13 +40,25 @@ export async function POST(request: NextRequest) {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object as any;
+                console.log('📦 Checkout session completed:', {
+                    sessionId: session.id,
+                    customer: session.customer,
+                    mode: session.mode,
+                    client_reference_id: session.client_reference_id
+                });
 
                 if (session.mode === 'subscription') {
                     const subscription = await stripe.subscriptions.retrieve(session.subscription);
+                    console.log('💳 Subscription retrieved:', {
+                        id: subscription.id,
+                        status: subscription.status
+                    });
 
                     const userId = session.client_reference_id;
 
                 if (userId) {
+                    console.log('👤 Processing subscription for user:', userId);
+                    
                     const { error: subError } = await supabase
                         .from('subscriptions')
                         .upsert({
@@ -61,6 +75,7 @@ export async function POST(request: NextRequest) {
                     if (subError) {
                         console.error('❌ Error upserting subscription:', subError);
                     } else {
+                        console.log('✅ Subscription upserted successfully');
                     }
 
                     // Además, actualizar el perfil del usuario para reflejar el nuevo estado PRO
@@ -79,14 +94,17 @@ export async function POST(request: NextRequest) {
                         if (profileError) {
                             console.error('❌ Error updating profile:', profileError);
                         } else {
+                            console.log('✅ Profile updated successfully to PRO');
                         }
                     } catch (profileErr) {
                         console.error('💥 Exception updating profile:', profileErr);
                     }
                 } else {
-                    console.error('❌ No client_reference_id found in session');
+                    console.error('❌ No client_reference_id found in session. Cannot update user.');
+                    console.error('Session data:', JSON.stringify(session, null, 2));
                 }
         } else {
+            console.log('ℹ️ Session mode is not subscription:', session.mode);
         }
         break;
     }
