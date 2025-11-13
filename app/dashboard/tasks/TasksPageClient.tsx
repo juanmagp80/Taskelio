@@ -1,7 +1,7 @@
 'use client';
 
-import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import { Button } from "@/components/ui/Button";
 import CustomDatePicker from '@/components/ui/DatePicker';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
@@ -1419,6 +1419,6 @@ export default function TasksPageClient({ userEmail }: TasksPageClientProps) {
                     </div>
                 </div>
             )}
-            </div>
+        </div>
     );
 }

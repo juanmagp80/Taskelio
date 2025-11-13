@@ -17,13 +17,13 @@ export const getStripe = () => {
 
 export const redirectToCheckout = async (sessionId: string) => {
   const stripe = await getStripe();
-  
+
   if (!stripe) {
     throw new Error('Failed to load Stripe');
   }
 
   const { error } = await stripe.redirectToCheckout({ sessionId });
-  
+
   if (error) {
     console.error('Error redirecting to checkout:', error);
     throw error;
@@ -50,7 +50,7 @@ export const createCheckoutAndRedirect = async (
     // Verificar si el usuario está autenticado
     const supabase = await import('@/src/lib/supabase-client').then(m => m.createSupabaseClient());
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
       throw new Error('Usuario no autenticado');
     }

@@ -1,6 +1,6 @@
+import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -8,9 +8,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    
+
     const { userEmail } = await request.json();
-    
+
     if (!userEmail) {
       return NextResponse.json(
         { error: 'Email de usuario requerido' },
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       const subWithPeriod = sub as Stripe.Subscription & {
         current_period_end: number;
       };
-      return sub.status === 'active' && 
+      return sub.status === 'active' &&
         new Date(subWithPeriod.current_period_end * 1000) > new Date();
     });
 
@@ -54,14 +54,14 @@ export async function POST(request: NextRequest) {
 
       // Usar cliente admin para actualizar
       const supabaseAdmin = createSupabaseAdmin();
-      
+
       // Buscar usuario por email
       const { data: profiles, error: findError } = await supabaseAdmin
         .from('profiles')
         .select('id')
         .eq('email', userEmail)
         .single();
-        
+
       if (findError) {
         console.error('❌ Error finding user profile:', findError);
         return NextResponse.json({
@@ -115,9 +115,9 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error syncing subscription:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Error syncing subscription',
-        message: error.message 
+        message: error.message
       },
       { status: 500 }
     );

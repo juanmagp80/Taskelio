@@ -28,7 +28,7 @@ export const predefinedAutomations: PredefinedAutomation[] = [
     trigger_type: "client_inactive",
     is_public: true,
   },
-  
+
   // === AUTOMACIONES DE PROYECTOS ===
   {
     name: "Inicio de proyecto",
@@ -60,7 +60,7 @@ export const predefinedAutomations: PredefinedAutomation[] = [
     trigger_type: "budget_exceeded",
     is_public: true,
   },
-  
+
   // === AUTOMACIONES DE FACTURACIÓN ===
   {
     name: "Factura vencida",
@@ -80,7 +80,7 @@ export const predefinedAutomations: PredefinedAutomation[] = [
     trigger_type: "auto_invoice_generation",
     is_public: false, // Deshabilitada temporalmente hasta implementar generación real de facturas
   },
-  
+
   // === AUTOMACIONES DE TIEMPO Y TAREAS ===
   {
     name: "Recordatorio de registro de tiempo",
@@ -100,7 +100,7 @@ export const predefinedAutomations: PredefinedAutomation[] = [
     trigger_type: "task_overdue",
     is_public: true,
   },
-  
+
   // === AUTOMACIONES DE CALENDAR ===
   {
     name: "Recordatorio de reunión",
@@ -114,7 +114,7 @@ export const predefinedAutomations: PredefinedAutomation[] = [
     trigger_type: "meeting_followup",
     is_public: true,
   },
-  
+
   // === AUTOMACIONES DE FEEDBACK Y CALIDAD ===
   {
     name: "Solicitud de feedback",
@@ -128,7 +128,7 @@ export const predefinedAutomations: PredefinedAutomation[] = [
     trigger_type: "satisfaction_survey",
     is_public: true,
   },
-  
+
   // === AUTOMACIONES DE MARKETING Y VENTAS ===
   {
     name: "Seguimiento de propuesta",

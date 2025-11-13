@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
 
     // Obtener el usuario autenticado desde Supabase
     const supabase = await createServerSupabaseClient();
-    
+
     // Verificar autenticación del usuario
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       console.error('❌ Authentication failed:', authError);
       return NextResponse.json(

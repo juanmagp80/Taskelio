@@ -3,7 +3,7 @@ import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-    
+
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
 
@@ -38,144 +38,144 @@ export async function POST(request: NextRequest) {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object as any;
-                    sessionId: session.id,
+                sessionId: session.id,
                     mode: session.mode,
-                    customer: session.customer,
-                    client_reference_id: session.client_reference_id,
-                    subscription: session.subscription
-                });
+                        customer: session.customer,
+                            client_reference_id: session.client_reference_id,
+                                subscription: session.subscription
+            });
 
                 if (session.mode === 'subscription') {
                     const subscription = await stripe.subscriptions.retrieve(session.subscription);
-                        id: subscription.id,
+                    id: subscription.id,
                         status: subscription.status,
-                        customer: subscription.customer
-                    });
+                            customer: subscription.customer
+                });
 
-                    const userId = session.client_reference_id;
+                const userId = session.client_reference_id;
 
-                    if (userId) {
-                        const { error: subError } = await supabase
-                            .from('subscriptions')
-                            .upsert({
-                                user_id: userId,
-                                stripe_customer_id: session.customer,
+                if (userId) {
+                    const { error: subError } = await supabase
+                        .from('subscriptions')
+                        .upsert({
+                            user_id: userId,
+                            stripe_customer_id: session.customer,
+                            stripe_subscription_id: subscription.id,
+                            status: subscription.status,
+                            price_id: subscription.items.data[0].price.id,
+                            current_period_start: (subscription as any).current_period_start ? new Date((subscription as any).current_period_start * 1000).toISOString() : null,
+                            current_period_end: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null,
+                            cancel_at_period_end: subscription.cancel_at_period_end || false,
+                        });
+
+                    if (subError) {
+                        console.error('❌ Error upserting subscription:', subError);
+                    } else {
+                    }
+
+                    // Además, actualizar el perfil del usuario para reflejar el nuevo estado PRO
+                    try {
+                        const { error: profileError } = await supabase
+                            .from('profiles')
+                            .update({
+                                subscription_status: subscription.status === 'active' ? 'active' : subscription.status,
+                                subscription_plan: 'pro',
                                 stripe_subscription_id: subscription.id,
-                                status: subscription.status,
-                                price_id: subscription.items.data[0].price.id,
-                                current_period_start: (subscription as any).current_period_start ? new Date((subscription as any).current_period_start * 1000).toISOString() : null,
-                                current_period_end: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null,
-                                cancel_at_period_end: subscription.cancel_at_period_end || false,
-                            });
+                                stripe_customer_id: session.customer,
+                                subscription_current_period_end: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null,
+                            })
+                            .eq('id', userId);
 
-                        if (subError) {
-                            console.error('❌ Error upserting subscription:', subError);
+                        if (profileError) {
+                            console.error('❌ Error updating profile:', profileError);
                         } else {
                         }
-
-                        // Además, actualizar el perfil del usuario para reflejar el nuevo estado PRO
-                        try {
-                            const { error: profileError } = await supabase
-                                .from('profiles')
-                                .update({
-                                    subscription_status: subscription.status === 'active' ? 'active' : subscription.status,
-                                    subscription_plan: 'pro',
-                                    stripe_subscription_id: subscription.id,
-                                    stripe_customer_id: session.customer,
-                                    subscription_current_period_end: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null,
-                                })
-                                .eq('id', userId);
-                            
-                            if (profileError) {
-                                console.error('❌ Error updating profile:', profileError);
-                            } else {
-                            }
-                        } catch (profileErr) {
-                            console.error('💥 Exception updating profile:', profileErr);
-                        }
-                    } else {
-                        console.error('❌ No client_reference_id found in session');
+                    } catch (profileErr) {
+                        console.error('💥 Exception updating profile:', profileErr);
                     }
                 } else {
+                    console.error('❌ No client_reference_id found in session');
                 }
-                break;
-            }
+        } else {
+        }
+        break;
+    }
 
             case 'customer.subscription.updated':
             case 'customer.subscription.deleted': {
-                const subscription = event.data.object as any;
+        const subscription = event.data.object as any;
 
-                await supabase
-                    .from('subscriptions')
-                    .update({
-                        status: subscription.status,
-                        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-                        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-                        cancel_at_period_end: subscription.cancel_at_period_end,
-                    })
-                    .eq('stripe_subscription_id', subscription.id);
+        await supabase
+            .from('subscriptions')
+            .update({
+                status: subscription.status,
+                current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+                current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+                cancel_at_period_end: subscription.cancel_at_period_end,
+            })
+            .eq('stripe_subscription_id', subscription.id);
 
-                // También reflejar cambios en el perfil (si existe)
-                try {
-                    await supabase
-                        .from('profiles')
-                        .update({
-                            subscription_status: subscription.status === 'active' ? 'active' : subscription.status,
-                            subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-                            cancel_at_period_end: subscription.cancel_at_period_end || false
-                        })
-                        .eq('stripe_subscription_id', subscription.id);
-                } catch (profileErr) {
-                    console.warn('No se pudo actualizar el perfil tras subscription.updated/deleted:', profileErr);
-                }
-                break;
-            }
+        // También reflejar cambios en el perfil (si existe)
+        try {
+            await supabase
+                .from('profiles')
+                .update({
+                    subscription_status: subscription.status === 'active' ? 'active' : subscription.status,
+                    subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+                    cancel_at_period_end: subscription.cancel_at_period_end || false
+                })
+                .eq('stripe_subscription_id', subscription.id);
+        } catch (profileErr) {
+            console.warn('No se pudo actualizar el perfil tras subscription.updated/deleted:', profileErr);
+        }
+        break;
+    }
 
             case 'invoice.payment_succeeded': {
-                const invoice = event.data.object as any;
+        const invoice = event.data.object as any;
 
-                if (invoice.subscription) {
-                    await supabase
-                        .from('subscriptions')
-                        .update({
-                            status: 'active',
-                        })
-                        .eq('stripe_subscription_id', invoice.subscription);
+        if (invoice.subscription) {
+            await supabase
+                .from('subscriptions')
+                .update({
+                    status: 'active',
+                })
+                .eq('stripe_subscription_id', invoice.subscription);
 
-                    // Marcar perfil como activo si encontramos la suscripción
-                    try {
-                        await supabase
-                            .from('profiles')
-                            .update({ subscription_status: 'active', subscription_plan: 'pro' })
-                            .eq('stripe_subscription_id', invoice.subscription);
-                    } catch (profileErr) {
-                        console.warn('No se pudo actualizar el perfil tras invoice.payment_succeeded:', profileErr);
-                    }
-                }
-                break;
-            }
-
-            case 'invoice.payment_failed': {
-                const invoice = event.data.object as any;
-
-                if (invoice.subscription) {
-                    await supabase
-                        .from('subscriptions')
-                        .update({
-                            status: 'past_due',
-                        })
-                        .eq('stripe_subscription_id', invoice.subscription);
-                }
-                break;
+            // Marcar perfil como activo si encontramos la suscripción
+            try {
+                await supabase
+                    .from('profiles')
+                    .update({ subscription_status: 'active', subscription_plan: 'pro' })
+                    .eq('stripe_subscription_id', invoice.subscription);
+            } catch (profileErr) {
+                console.warn('No se pudo actualizar el perfil tras invoice.payment_succeeded:', profileErr);
             }
         }
-
-        return NextResponse.json({ received: true });
-    } catch (error) {
-        console.error('💥 Error processing webhook:', error);
-        return NextResponse.json(
-            { error: 'Error processing webhook' },
-            { status: 500 }
-        );
+        break;
     }
+
+            case 'invoice.payment_failed': {
+        const invoice = event.data.object as any;
+
+        if (invoice.subscription) {
+            await supabase
+                .from('subscriptions')
+                .update({
+                    status: 'past_due',
+                })
+                .eq('stripe_subscription_id', invoice.subscription);
+        }
+        break;
+    }
+}
+
+return NextResponse.json({ received: true });
+    } catch (error) {
+    console.error('💥 Error processing webhook:', error);
+    return NextResponse.json(
+        { error: 'Error processing webhook' },
+        { status: 500 }
+    );
+}
 }

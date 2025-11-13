@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Zap, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { toast } from 'sonner';
 import { showToast } from '@/utils/toast';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { AlertCircle, CreditCard, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface SubscriptionStatusProps {
     userEmail?: string;
@@ -15,7 +15,7 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
     const [isPro, setIsPro] = useState(false);
     const [loading, setLoading] = useState(true);
     const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-    
+
     const supabase = createClientComponentClient();
 
     useEffect(() => {
@@ -24,10 +24,10 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
 
     async function checkSubscription() {
         try {
-            
+
             // Intentar obtener el usuario
             const { data: { user }, error: authError } = await supabase.auth.getUser();
-            
+
             if (authError || !user) {
                 // Para testing, forzar PRO si no hay autenticación
                 setIsPro(true);
@@ -119,7 +119,7 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
             return;
         }
 
-        try{
+        try {
             const response = await fetch('/api/stripe/cancel-subscription', {
                 method: 'POST',
             });
@@ -155,9 +155,9 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
                     </span>
                 </div>
             </div>
-            
+
             {!isPro && (
-                <Button 
+                <Button
                     onClick={handleSubscribe}
                     className="w-full text-[11px] h-7 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
                 >
@@ -165,15 +165,15 @@ export default function SubscriptionStatusNew({ userEmail }: SubscriptionStatusP
                     Suscribirse al Plan Pro
                 </Button>
             )}
-            
+
             {isPro && (
                 <>
                     <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 mb-2">
-                        {subscriptionEnd ? 
+                        {subscriptionEnd ?
                             `Suscripción activa hasta ${new Date(subscriptionEnd).toLocaleDateString()}` :
                             'Suscripción activa'}
                     </p>
-                    <Button 
+                    <Button
                         onClick={handleCancelSubscription}
                         variant="destructive"
                         className="w-full text-[11px] h-7"

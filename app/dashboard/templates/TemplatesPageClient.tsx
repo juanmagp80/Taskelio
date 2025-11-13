@@ -1,9 +1,8 @@
 'use client';
 
-import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
-import { toast } from 'sonner';
 import {
     AlertTriangle,
     Calendar,
@@ -26,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import TrialBanner from '../../../components/TrialBanner';
 import { useTrialStatus } from '../../../src/lib/useTrialStatus';
 
@@ -509,345 +509,255 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                 <Header userEmail={userEmail} onLogout={handleLogout} />
                 <div className="flex-1 overflow-auto">
 
-                {/* Header */}
-                <div className="bg-white border-b border-gray-200">
-                    <div className="px-6 py-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-semibold text-gray-900">Templates de Proyecto</h1>
-                                <p className="mt-1 text-sm text-gray-600">
-                                    Acelera tu trabajo con plantillas profesionales
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleNewTemplateClick}
-                                disabled={!canUseFeatures}
-                                className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${!canUseFeatures
+                    {/* Header */}
+                    <div className="bg-white border-b border-gray-200">
+                        <div className="px-6 py-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-2xl font-semibold text-gray-900">Templates de Proyecto</h1>
+                                    <p className="mt-1 text-sm text-gray-600">
+                                        Acelera tu trabajo con plantillas profesionales
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={handleNewTemplateClick}
+                                    disabled={!canUseFeatures}
+                                    className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${!canUseFeatures
                                         ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400'
                                         : ''
-                                    }`}
-                            >
-                                {!canUseFeatures ? (
-                                    <AlertTriangle className="w-4 h-4 mr-2" />
-                                ) : (
-                                    <Plus className="w-4 h-4 mr-2" />
-                                )}
-                                {!canUseFeatures ? 'Trial Expirado' : 'Nuevo Template'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-6">
-                    {/* Estadísticas */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-blue-100 rounded-lg">
-                                    <FileText className="h-6 w-6 text-blue-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">Total Templates</p>
-                                    <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-green-100 rounded-lg">
-                                    <Users className="h-6 w-6 text-green-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">Públicos</p>
-                                    <p className="text-2xl font-semibold text-gray-900">{stats.public}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-purple-100 rounded-lg">
-                                    <Eye className="h-6 w-6 text-purple-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">Privados</p>
-                                    <p className="text-2xl font-semibold text-gray-900">{stats.private}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-yellow-100 rounded-lg">
-                                    <Target className="h-6 w-6 text-yellow-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">Categorías</p>
-                                    <p className="text-2xl font-semibold text-gray-900">{stats.categories}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Controles de búsqueda y filtros */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                                <div className="relative flex-1">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Search className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar templates..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-
-                                <select
-                                    value={filterCategory}
-                                    onChange={(e) => setFilterCategory(e.target.value)}
-                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="all">Todas las Categorías</option>
-                                    <option value="web_development">Desarrollo Web</option>
-                                    <option value="design">Diseño</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="consulting">Consultoría</option>
-                                    <option value="content">Contenido</option>
-                                    <option value="photography">Fotografía</option>
-                                    <option value="video">Video</option>
-                                    <option value="automation">Automatización</option>
-                                </select>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg ${viewMode === 'grid'
-                                            ? 'bg-blue-100 text-blue-600'
-                                            : 'text-gray-400 hover:text-gray-600'
                                         }`}
                                 >
-                                    <Grid3x3 className="h-5 w-5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg ${viewMode === 'list'
-                                            ? 'bg-blue-100 text-blue-600'
-                                            : 'text-gray-400 hover:text-gray-600'
-                                        }`}
-                                >
-                                    <List className="h-5 w-5" />
+                                    {!canUseFeatures ? (
+                                        <AlertTriangle className="w-4 h-4 mr-2" />
+                                    ) : (
+                                        <Plus className="w-4 h-4 mr-2" />
+                                    )}
+                                    {!canUseFeatures ? 'Trial Expirado' : 'Nuevo Template'}
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Lista de templates */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                        <div className="p-6">
-                            <h2 className="text-lg font-medium text-gray-900 mb-6">
-                                Templates Disponibles ({filteredTemplates.length})
-                            </h2>
-
-                            {loading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <div className="text-center">
-                                        <div className="w-8 h-8 border-3 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-                                        <p className="text-sm text-gray-600">Cargando templates...</p>
+                    <div className="p-6">
+                        {/* Estadísticas */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div className="flex items-center">
+                                    <div className="p-2 bg-blue-100 rounded-lg">
+                                        <FileText className="h-6 w-6 text-blue-600" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-600">Total Templates</p>
+                                        <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
                                     </div>
                                 </div>
-                            ) : filteredTemplates.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                        {searchTerm ? 'No se encontraron templates' : 'No hay templates disponibles'}
-                                    </h3>
-                                    <p className="text-gray-600 mb-4">
-                                        {searchTerm
-                                            ? `No hay templates que coincidan con "${searchTerm}"`
-                                            : 'Comienza creando tu primer template para acelerar futuros proyectos'
-                                        }
-                                    </p>
-                                    {!searchTerm && (
-                                        <button
-                                            onClick={handleNewTemplateClick}
-                                            disabled={!canUseFeatures}
-                                            className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 ${!canUseFeatures
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div className="flex items-center">
+                                    <div className="p-2 bg-green-100 rounded-lg">
+                                        <Users className="h-6 w-6 text-green-600" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-600">Públicos</p>
+                                        <p className="text-2xl font-semibold text-gray-900">{stats.public}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div className="flex items-center">
+                                    <div className="p-2 bg-purple-100 rounded-lg">
+                                        <Eye className="h-6 w-6 text-purple-600" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-600">Privados</p>
+                                        <p className="text-2xl font-semibold text-gray-900">{stats.private}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <div className="flex items-center">
+                                    <div className="p-2 bg-yellow-100 rounded-lg">
+                                        <Target className="h-6 w-6 text-yellow-600" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="text-sm font-medium text-gray-600">Categorías</p>
+                                        <p className="text-2xl font-semibold text-gray-900">{stats.categories}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Controles de búsqueda y filtros */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                <div className="flex flex-col sm:flex-row gap-4 flex-1">
+                                    <div className="relative flex-1">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Search className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar templates..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+
+                                    <select
+                                        value={filterCategory}
+                                        onChange={(e) => setFilterCategory(e.target.value)}
+                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="all">Todas las Categorías</option>
+                                        <option value="web_development">Desarrollo Web</option>
+                                        <option value="design">Diseño</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="consulting">Consultoría</option>
+                                        <option value="content">Contenido</option>
+                                        <option value="photography">Fotografía</option>
+                                        <option value="video">Video</option>
+                                        <option value="automation">Automatización</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setViewMode('grid')}
+                                        className={`p-2 rounded-lg ${viewMode === 'grid'
+                                            ? 'bg-blue-100 text-blue-600'
+                                            : 'text-gray-400 hover:text-gray-600'
+                                            }`}
+                                    >
+                                        <Grid3x3 className="h-5 w-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-2 rounded-lg ${viewMode === 'list'
+                                            ? 'bg-blue-100 text-blue-600'
+                                            : 'text-gray-400 hover:text-gray-600'
+                                            }`}
+                                    >
+                                        <List className="h-5 w-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Lista de templates */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                            <div className="p-6">
+                                <h2 className="text-lg font-medium text-gray-900 mb-6">
+                                    Templates Disponibles ({filteredTemplates.length})
+                                </h2>
+
+                                {loading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="text-center">
+                                            <div className="w-8 h-8 border-3 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+                                            <p className="text-sm text-gray-600">Cargando templates...</p>
+                                        </div>
+                                    </div>
+                                ) : filteredTemplates.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                            {searchTerm ? 'No se encontraron templates' : 'No hay templates disponibles'}
+                                        </h3>
+                                        <p className="text-gray-600 mb-4">
+                                            {searchTerm
+                                                ? `No hay templates que coincidan con "${searchTerm}"`
+                                                : 'Comienza creando tu primer template para acelerar futuros proyectos'
+                                            }
+                                        </p>
+                                        {!searchTerm && (
+                                            <button
+                                                onClick={handleNewTemplateClick}
+                                                disabled={!canUseFeatures}
+                                                className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 ${!canUseFeatures
                                                     ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400'
                                                     : ''
-                                                }`}
-                                        >
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Crear primer template
-                                        </button>
-                                    )}
-                                </div>
-                            ) : (
-                                <div>
-                                    {viewMode === 'grid' ? (
-                                        /* Vista de Tarjetas */
-                                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                            {filteredTemplates.map((template) => {
-                                                const phases = template.template_data?.phases?.length || 0;
-                                                const basePrice = template.template_data?.pricing?.base_price || 0;
+                                                    }`}
+                                            >
+                                                <Plus className="w-4 h-4 mr-2" />
+                                                Crear primer template
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {viewMode === 'grid' ? (
+                                            /* Vista de Tarjetas */
+                                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                                {filteredTemplates.map((template) => {
+                                                    const phases = template.template_data?.phases?.length || 0;
+                                                    const basePrice = template.template_data?.pricing?.base_price || 0;
 
-                                                return (
-                                                    <div
-                                                        key={template.id}
-                                                        className="border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition-colors"
-                                                    >
-                                                        <div className="flex items-start justify-between mb-4">
-                                                            <div className="flex items-center space-x-3">
-                                                                <div className="p-2 bg-gray-100 rounded-lg">
-                                                                    {getCategoryIcon(template.category)}
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-medium text-gray-900 truncate" title={template.name}>
-                                                                        {template.name || 'Sin nombre'}
-                                                                    </h3>
-                                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(template.category)}`}>
-                                                                        {template.category.replace('_', ' ').charAt(0).toUpperCase() + template.category.replace('_', ' ').slice(1)}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            {template.is_public && (
-                                                                <Star className="h-4 w-4 text-yellow-400" />
-                                                            )}
-                                                        </div>
-
-                                                        {template.description && (
-                                                            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                                                                {template.description}
-                                                            </p>
-                                                        )}
-
-                                                        <div className="space-y-2 mb-4">
-                                                            {phases > 0 && (
-                                                                <div className="flex items-center text-sm text-gray-600">
-                                                                    <Target className="h-4 w-4 mr-2" />
-                                                                    {phases} fases
-                                                                </div>
-                                                            )}
-
-                                                            {basePrice > 0 && (
-                                                                <div className="flex items-center text-sm text-gray-600">
-                                                                    <DollarSign className="h-4 w-4 mr-2" />
-                                                                    {formatCurrency(basePrice)}
-                                                                </div>
-                                                            )}
-
-                                                            <div className="flex items-center text-sm text-gray-500">
-                                                                <Calendar className="h-4 w-4 mr-2" />
-                                                                {formatDate(template.created_at)}
-                                                            </div>
-
-                                                            {template.usage_count > 0 && (
-                                                                <div className="flex items-center text-sm text-gray-500">
-                                                                    <Users className="h-4 w-4 mr-2" />
-                                                                    {template.usage_count} usos
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => handleUseTemplate(template)}
-                                                                className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700"
-                                                            >
-                                                                <Play className="w-4 h-4 mr-2" />
-                                                                Usar
-                                                            </button>
-                                                            <button
-                                                                onClick={() => duplicateTemplate(template)}
-                                                                className="px-3 py-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                                                                title="Duplicar template"
-                                                            >
-                                                                <Copy className="w-4 h-4" />
-                                                            </button>
-                                                            <button className="px-3 py-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                                                <Eye className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        /* Vista de Lista */
-                                        <div className="space-y-4">
-                                            {filteredTemplates.map((template) => {
-                                                const phases = template.template_data?.phases?.length || 0;
-                                                const basePrice = template.template_data?.pricing?.base_price || 0;
-
-                                                return (
-                                                    <div
-                                                        key={template.id}
-                                                        className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center space-x-4 flex-1 min-w-0">
-                                                                <div className="p-2 bg-gray-100 rounded-lg">
-                                                                    {getCategoryIcon(template.category)}
-                                                                </div>
-
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-center gap-2 mb-1">
+                                                    return (
+                                                        <div
+                                                            key={template.id}
+                                                            className="border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition-colors"
+                                                        >
+                                                            <div className="flex items-start justify-between mb-4">
+                                                                <div className="flex items-center space-x-3">
+                                                                    <div className="p-2 bg-gray-100 rounded-lg">
+                                                                        {getCategoryIcon(template.category)}
+                                                                    </div>
+                                                                    <div>
                                                                         <h3 className="font-medium text-gray-900 truncate" title={template.name}>
                                                                             {template.name || 'Sin nombre'}
                                                                         </h3>
                                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(template.category)}`}>
                                                                             {template.category.replace('_', ' ').charAt(0).toUpperCase() + template.category.replace('_', ' ').slice(1)}
                                                                         </span>
-                                                                        {template.is_public && (
-                                                                            <Star className="h-4 w-4 text-yellow-400" />
-                                                                        )}
                                                                     </div>
-
-                                                                    <div className="flex items-center gap-6 text-sm text-gray-600">
-                                                                        {phases > 0 && (
-                                                                            <div className="flex items-center">
-                                                                                <Target className="h-4 w-4 mr-1" />
-                                                                                {phases} fases
-                                                                            </div>
-                                                                        )}
-
-                                                                        {basePrice > 0 && (
-                                                                            <div className="flex items-center">
-                                                                                <DollarSign className="h-4 w-4 mr-1" />
-                                                                                {formatCurrency(basePrice)}
-                                                                            </div>
-                                                                        )}
-
-                                                                        <div className="flex items-center">
-                                                                            <Calendar className="h-4 w-4 mr-1" />
-                                                                            {formatDate(template.created_at)}
-                                                                        </div>
-
-                                                                        {template.usage_count > 0 && (
-                                                                            <div className="flex items-center">
-                                                                                <Users className="h-4 w-4 mr-1" />
-                                                                                {template.usage_count} usos
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {template.description && (
-                                                                        <p className="text-sm text-gray-500 mt-1 line-clamp-1" title={template.description}>
-                                                                            {template.description}
-                                                                        </p>
-                                                                    )}
                                                                 </div>
+                                                                {template.is_public && (
+                                                                    <Star className="h-4 w-4 text-yellow-400" />
+                                                                )}
                                                             </div>
 
-                                                            <div className="flex items-center gap-2 ml-4">
+                                                            {template.description && (
+                                                                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                                                                    {template.description}
+                                                                </p>
+                                                            )}
+
+                                                            <div className="space-y-2 mb-4">
+                                                                {phases > 0 && (
+                                                                    <div className="flex items-center text-sm text-gray-600">
+                                                                        <Target className="h-4 w-4 mr-2" />
+                                                                        {phases} fases
+                                                                    </div>
+                                                                )}
+
+                                                                {basePrice > 0 && (
+                                                                    <div className="flex items-center text-sm text-gray-600">
+                                                                        <DollarSign className="h-4 w-4 mr-2" />
+                                                                        {formatCurrency(basePrice)}
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="flex items-center text-sm text-gray-500">
+                                                                    <Calendar className="h-4 w-4 mr-2" />
+                                                                    {formatDate(template.created_at)}
+                                                                </div>
+
+                                                                {template.usage_count > 0 && (
+                                                                    <div className="flex items-center text-sm text-gray-500">
+                                                                        <Users className="h-4 w-4 mr-2" />
+                                                                        {template.usage_count} usos
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            <div className="flex gap-2">
                                                                 <button
                                                                     onClick={() => handleUseTemplate(template)}
-                                                                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700"
+                                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700"
                                                                 >
                                                                     <Play className="w-4 h-4 mr-2" />
                                                                     Usar
@@ -864,16 +774,106 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            /* Vista de Lista */
+                                            <div className="space-y-4">
+                                                {filteredTemplates.map((template) => {
+                                                    const phases = template.template_data?.phases?.length || 0;
+                                                    const basePrice = template.template_data?.pricing?.base_price || 0;
+
+                                                    return (
+                                                        <div
+                                                            key={template.id}
+                                                            className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center space-x-4 flex-1 min-w-0">
+                                                                    <div className="p-2 bg-gray-100 rounded-lg">
+                                                                        {getCategoryIcon(template.category)}
+                                                                    </div>
+
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center gap-2 mb-1">
+                                                                            <h3 className="font-medium text-gray-900 truncate" title={template.name}>
+                                                                                {template.name || 'Sin nombre'}
+                                                                            </h3>
+                                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(template.category)}`}>
+                                                                                {template.category.replace('_', ' ').charAt(0).toUpperCase() + template.category.replace('_', ' ').slice(1)}
+                                                                            </span>
+                                                                            {template.is_public && (
+                                                                                <Star className="h-4 w-4 text-yellow-400" />
+                                                                            )}
+                                                                        </div>
+
+                                                                        <div className="flex items-center gap-6 text-sm text-gray-600">
+                                                                            {phases > 0 && (
+                                                                                <div className="flex items-center">
+                                                                                    <Target className="h-4 w-4 mr-1" />
+                                                                                    {phases} fases
+                                                                                </div>
+                                                                            )}
+
+                                                                            {basePrice > 0 && (
+                                                                                <div className="flex items-center">
+                                                                                    <DollarSign className="h-4 w-4 mr-1" />
+                                                                                    {formatCurrency(basePrice)}
+                                                                                </div>
+                                                                            )}
+
+                                                                            <div className="flex items-center">
+                                                                                <Calendar className="h-4 w-4 mr-1" />
+                                                                                {formatDate(template.created_at)}
+                                                                            </div>
+
+                                                                            {template.usage_count > 0 && (
+                                                                                <div className="flex items-center">
+                                                                                    <Users className="h-4 w-4 mr-1" />
+                                                                                    {template.usage_count} usos
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {template.description && (
+                                                                            <p className="text-sm text-gray-500 mt-1 line-clamp-1" title={template.description}>
+                                                                                {template.description}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex items-center gap-2 ml-4">
+                                                                    <button
+                                                                        onClick={() => handleUseTemplate(template)}
+                                                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700"
+                                                                    >
+                                                                        <Play className="w-4 h-4 mr-2" />
+                                                                        Usar
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => duplicateTemplate(template)}
+                                                                        className="px-3 py-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                                                                        title="Duplicar template"
+                                                                    >
+                                                                        <Copy className="w-4 h-4" />
+                                                                    </button>
+                                                                    <button className="px-3 py-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                                                        <Eye className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
                 </div>
             </div>
 

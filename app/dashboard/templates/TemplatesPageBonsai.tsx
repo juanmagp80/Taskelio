@@ -2,7 +2,6 @@
 
 import Sidebar from '@/components/Sidebar';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
-import { toast } from 'sonner';
 import {
     AlertTriangle,
     Calendar,
@@ -11,22 +10,23 @@ import {
     Edit,
     Eye,
     FileText,
+    Grid3x3,
+    List,
+    Play,
     Plus,
     Search,
     Star,
     Target,
-    TrendingUp,
     Trash2,
+    TrendingUp,
     Users,
-    X,
-    Grid3x3,
-    List,
-    Play
+    X
 } from 'lucide-react';
-import TrialBanner from '../../../components/TrialBanner';
-import { useTrialStatus } from '../../../src/lib/useTrialStatus';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import TrialBanner from '../../../components/TrialBanner';
+import { useTrialStatus } from '../../../src/lib/useTrialStatus';
 
 // Tipo Template
 type Template = {
@@ -50,7 +50,7 @@ interface TemplatesPageBonsaiProps {
 export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiProps) {
     // Hook de trial status
     const { trialInfo, loading: trialLoading, hasReachedLimit, canUseFeatures } = useTrialStatus(userEmail);
-    
+
     // Estados
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState('all');
@@ -58,7 +58,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
     const [showForm, setShowForm] = useState(false);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     // Estados para usar template
     const [showUseModal, setShowUseModal] = useState(false);
     const [templateToUse, setTemplateToUse] = useState<Template | null>(null);
@@ -72,7 +72,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
         start_date: '',
         end_date: ''
     });
-    
+
     // Estado para el formulario de nuevo template
     const [newTemplate, setNewTemplate] = useState({
         name: '',
@@ -86,7 +86,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
             fixed_price: true
         }
     });
-    
+
     const supabase = createSupabaseClient();
     const router = useRouter();
 
@@ -117,7 +117,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                 console.error('Supabase client not available');
                 return;
             }
-            
+
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) return;
 
@@ -144,7 +144,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
     const createTemplate = async () => {
         try {
             if (!supabase || !newTemplate.name) return;
-            
+
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) return;
 
@@ -202,7 +202,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
     const duplicateTemplate = async (template: Template) => {
         try {
             if (!supabase) return;
-            
+
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) return;
 
@@ -243,7 +243,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
     const applyTemplate = async (template: Template) => {
         try {
             if (!supabase) return;
-            
+
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) return;
 
@@ -288,7 +288,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                 toast.error('Por favor, completa todos los campos requeridos');
                 return;
             }
-            
+
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) return;
 
@@ -354,7 +354,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                 });
 
                 toast.success('¡Proyecto creado exitosamente!');
-                
+
                 // Redirigir al proyecto creado después de un pequeño delay
                 setTimeout(() => {
                     router.push(`/dashboard/projects/${data[0].id}`);
@@ -368,8 +368,8 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
 
     // Funciones para gestionar fases editables en el modal de usar template
     const updateEditablePhase = (index: number, field: string, value: string) => {
-        setEditablePhases(prev => 
-            prev.map((phase, i) => 
+        setEditablePhases(prev =>
+            prev.map((phase, i) =>
                 i === index ? { ...phase, [field]: value } : phase
             )
         );
@@ -404,7 +404,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
     const updatePhase = (index: number, field: string, value: string) => {
         setNewTemplate(prev => ({
             ...prev,
-            phases: prev.phases.map((phase, i) => 
+            phases: prev.phases.map((phase, i) =>
                 i === index ? { ...phase, [field]: value } : phase
             )
         }));
@@ -519,11 +519,10 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                             <button
                                 onClick={handleNewTemplateClick}
                                 disabled={!canUseFeatures}
-                                className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
-                                    !canUseFeatures 
-                                        ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400' 
+                                className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${!canUseFeatures
+                                        ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400'
                                         : ''
-                                }`}
+                                    }`}
                             >
                                 {!canUseFeatures ? (
                                     <AlertTriangle className="w-4 h-4 mr-2" />
@@ -604,7 +603,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                         className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
-                                
+
                                 <select
                                     value={filterCategory}
                                     onChange={(e) => setFilterCategory(e.target.value)}
@@ -625,21 +624,19 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg ${
-                                        viewMode === 'grid'
+                                    className={`p-2 rounded-lg ${viewMode === 'grid'
                                             ? 'bg-blue-100 text-blue-600'
                                             : 'text-gray-400 hover:text-gray-600'
-                                    }`}
+                                        }`}
                                 >
                                     <Grid3x3 className="h-5 w-5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg ${
-                                        viewMode === 'list'
+                                    className={`p-2 rounded-lg ${viewMode === 'list'
                                             ? 'bg-blue-100 text-blue-600'
                                             : 'text-gray-400 hover:text-gray-600'
-                                    }`}
+                                        }`}
                                 >
                                     <List className="h-5 w-5" />
                                 </button>
@@ -653,7 +650,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                             <h2 className="text-lg font-medium text-gray-900 mb-6">
                                 Templates Disponibles ({filteredTemplates.length})
                             </h2>
-                            
+
                             {loading ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="text-center">
@@ -668,7 +665,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                         {searchTerm ? 'No se encontraron templates' : 'No hay templates disponibles'}
                                     </h3>
                                     <p className="text-gray-600 mb-4">
-                                        {searchTerm 
+                                        {searchTerm
                                             ? `No hay templates que coincidan con "${searchTerm}"`
                                             : 'Comienza creando tu primer template para acelerar futuros proyectos'
                                         }
@@ -677,11 +674,10 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                         <button
                                             onClick={handleNewTemplateClick}
                                             disabled={!canUseFeatures}
-                                            className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 ${
-                                                !canUseFeatures 
-                                                    ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400' 
+                                            className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 ${!canUseFeatures
+                                                    ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400'
                                                     : ''
-                                            }`}
+                                                }`}
                                         >
                                             <Plus className="w-4 h-4 mr-2" />
                                             Crear primer template
@@ -726,7 +722,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                 {template.description}
                                                             </p>
                                                         )}
-                                                        
+
                                                         <div className="space-y-2 mb-4">
                                                             {phases > 0 && (
                                                                 <div className="flex items-center text-sm text-gray-600">
@@ -734,14 +730,14 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                     {phases} fases
                                                                 </div>
                                                             )}
-                                                            
+
                                                             {basePrice > 0 && (
                                                                 <div className="flex items-center text-sm text-gray-600">
                                                                     <DollarSign className="h-4 w-4 mr-2" />
                                                                     {formatCurrency(basePrice)}
                                                                 </div>
                                                             )}
-                                                            
+
                                                             <div className="flex items-center text-sm text-gray-500">
                                                                 <Calendar className="h-4 w-4 mr-2" />
                                                                 {formatDate(template.created_at)}
@@ -795,7 +791,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                 <div className="p-2 bg-gray-100 rounded-lg">
                                                                     {getCategoryIcon(template.category)}
                                                                 </div>
-                                                                
+
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-2 mb-1">
                                                                         <h3 className="font-medium text-gray-900 truncate" title={template.name}>
@@ -808,7 +804,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                             <Star className="h-4 w-4 text-yellow-400" />
                                                                         )}
                                                                     </div>
-                                                                    
+
                                                                     <div className="flex items-center gap-6 text-sm text-gray-600">
                                                                         {phases > 0 && (
                                                                             <div className="flex items-center">
@@ -816,14 +812,14 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                                 {phases} fases
                                                                             </div>
                                                                         )}
-                                                                        
+
                                                                         {basePrice > 0 && (
                                                                             <div className="flex items-center">
                                                                                 <DollarSign className="h-4 w-4 mr-1" />
                                                                                 {formatCurrency(basePrice)}
                                                                             </div>
                                                                         )}
-                                                                        
+
                                                                         <div className="flex items-center">
                                                                             <Calendar className="h-4 w-4 mr-1" />
                                                                             {formatDate(template.created_at)}
@@ -836,7 +832,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    
+
                                                                     {template.description && (
                                                                         <p className="text-sm text-gray-500 mt-1 line-clamp-1" title={template.description}>
                                                                             {template.description}
@@ -844,7 +840,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            
+
                                                             <div className="flex items-center gap-2 ml-4">
                                                                 <button
                                                                     onClick={() => handleUseTemplate(template)}
@@ -995,7 +991,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                         Agregar Fase
                                     </button>
                                 </div>
-                                
+
                                 <div className="space-y-4">
                                     {newTemplate.phases.map((phase, index) => (
                                         <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -1055,7 +1051,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                         Agregar Entregable
                                     </button>
                                 </div>
-                                
+
                                 <div className="space-y-3">
                                     {newTemplate.deliverables.map((deliverable, index) => (
                                         <div key={index} className="flex items-center gap-3">
@@ -1224,7 +1220,7 @@ export default function TemplatesPageBonsai({ userEmail }: TemplatesPageBonsaiPr
                                         Agregar Fase
                                     </button>
                                 </div>
-                                
+
                                 <div className="space-y-4">
                                     {editablePhases.map((phase, index) => (
                                         <div key={index} className="border border-gray-200 rounded-lg p-4">

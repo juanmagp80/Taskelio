@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Zap, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { toast } from 'sonner';
 import { showToast } from '@/utils/toast';
+import { AlertCircle, CreditCard, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface SimpleSubscriptionStatusProps {
     userEmail?: string;
@@ -38,7 +38,7 @@ export default function SimpleSubscriptionStatus({ userEmail }: SimpleSubscripti
                 setIsPro(false);
             } else {
                 // Si el error es que no hay suscripción, simular cancelación exitosa
-                if (data.error?.includes('No se encontró una suscripción') || 
+                if (data.error?.includes('No se encontró una suscripción') ||
                     data.error?.includes('Usuario no encontrado')) {
                     toast.success('Estado actualizado a plan gratuito');
                     setIsPro(false);
@@ -55,7 +55,7 @@ export default function SimpleSubscriptionStatus({ userEmail }: SimpleSubscripti
     };
 
     const handleSubscribe = async () => {
-        try {            
+        try {
             const response = await fetch('/api/stripe/create-checkout-session', {
                 method: 'POST',
                 headers: {
@@ -95,15 +95,15 @@ export default function SimpleSubscriptionStatus({ userEmail }: SimpleSubscripti
                     </span>
                 </div>
             </div>
-            
+
             {isPro && (
                 <>
                     <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 mb-2">
-                        {subscriptionEnd ? 
+                        {subscriptionEnd ?
                             `Suscripción activa hasta ${new Date(subscriptionEnd).toLocaleDateString()}` :
                             'Suscripción activa'}
                     </p>
-                    <Button 
+                    <Button
                         onClick={handleCancelSubscription}
                         variant="destructive"
                         className="w-full text-[11px] h-7 mb-1"
@@ -113,9 +113,9 @@ export default function SimpleSubscriptionStatus({ userEmail }: SimpleSubscripti
                     </Button>
                 </>
             )}
-            
+
             {!isPro && (
-                <Button 
+                <Button
                     onClick={handleSubscribe}
                     className="w-full text-[11px] h-7 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 mb-1"
                 >

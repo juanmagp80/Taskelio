@@ -6,7 +6,7 @@ import emailService from './email-service';
 import { analyzeSentiment, generateProposal, optimizePricing, prioritizeTasks, type SentimentAnalysisRequest, type ProposalGenerationRequest, type PricingOptimizationRequest, type TaskPrioritizationRequest } from '../../lib/openai';
 
 // Tipos de acciones disponibles
-export type ActionType = 
+export type ActionType =
     | 'send_email'
     | 'create_invoice'
     | 'update_project_status'
@@ -69,7 +69,7 @@ export interface ActionExecutor {
 const sendEmailAction: ActionExecutor = async (action, payload) => {
     try {
         const emailData = action.parameters;
-        
+
         // Validar parámetros requeridos
         if (!emailData.subject || !emailData.template) {
             return {
@@ -108,7 +108,7 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
         } catch (error) {
             console.warn('⚠️ No se pudo obtener empresa/teléfono del usuario, usando valores por defecto');
         }
-        
+
 
         // Preparar variables para el template
         const variables = {
@@ -137,7 +137,7 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
         // Reemplazar variables en el template
         let emailContent = emailData.template;
         let emailSubject = emailData.subject;
-        
+
         Object.entries(variables).forEach(([key, value]) => {
             const regex = new RegExp(`{{${key}}}`, 'g');
             emailContent = emailContent.replace(regex, String(value));
@@ -232,7 +232,7 @@ const sendEmailAction: ActionExecutor = async (action, payload) => {
 const assignTaskAction: ActionExecutor = async (action, payload) => {
     try {
         const taskData = action.parameters;
-        
+
         // Validar parámetros requeridos
         if (!taskData.title) {
             return {
@@ -305,7 +305,7 @@ const assignTaskAction: ActionExecutor = async (action, payload) => {
             console.error('Detalles del error:', taskError.details);
             console.error('Hint del error:', taskError.hint);
             console.error('Datos que se intentaron insertar:', taskInsert);
-            
+
             return {
                 success: false,
                 message: `Error al crear la tarea: ${taskError.message || taskError.code || 'Error desconocido'}`,
@@ -341,7 +341,7 @@ const assignTaskAction: ActionExecutor = async (action, payload) => {
 const updateProjectStatusAction: ActionExecutor = async (action, payload) => {
     try {
         const projectData = action.parameters;
-        
+
         if (!projectData.project_id) {
             return {
                 success: false,
@@ -351,10 +351,10 @@ const updateProjectStatusAction: ActionExecutor = async (action, payload) => {
         }
 
         const newStatus = projectData.status || 'updated';
-        
+
         const { data: projectUpdated, error: projectError } = await payload.supabase
             .from('projects')
-            .update({ 
+            .update({
                 status: newStatus,
                 updated_at: new Date().toISOString()
             })
@@ -405,7 +405,7 @@ const notImplementedAction: ActionExecutor = async (action, payload) => {
 const createNotificationAction: ActionExecutor = async (action, payload) => {
     try {
         const notificationData = action.parameters;
-        
+
         // Validar parámetros requeridos
         if (!notificationData.title || !notificationData.message) {
             return {
@@ -522,7 +522,7 @@ const createNotificationAction: ActionExecutor = async (action, payload) => {
 const analyzeSentimentAction: ActionExecutor = async (action, payload) => {
     try {
         const params = action.parameters;
-        
+
         if (!params.text) {
             return {
                 success: false,
@@ -606,7 +606,7 @@ const analyzeSentimentAction: ActionExecutor = async (action, payload) => {
 const generateAIProposalAction: ActionExecutor = async (action, payload) => {
     try {
         const params = action.parameters;
-        
+
         if (!params.clientBrief) {
             return {
                 success: false,
@@ -685,7 +685,7 @@ const generateAIProposalAction: ActionExecutor = async (action, payload) => {
 const optimizePricingAction: ActionExecutor = async (action, payload) => {
     try {
         const params = action.parameters;
-        
+
         if (!params.projectType || !params.projectScope) {
             return {
                 success: false,
@@ -749,7 +749,7 @@ const optimizePricingAction: ActionExecutor = async (action, payload) => {
 const prioritizeTasksAIAction: ActionExecutor = async (action, payload) => {
     try {
         const params = action.parameters;
-        
+
         // Obtener tareas del usuario
         const { data: tasksData, error: tasksError } = await payload.supabase
             .from('tasks')
@@ -785,8 +785,8 @@ const prioritizeTasksAIAction: ActionExecutor = async (action, payload) => {
         for (const task of result.prioritized_tasks) {
             // Buscar la tarea original para preservar la descripción
             const originalTask = tasksData.find(t => t.id === task.id);
-            const updatedDescription = originalTask?.description ? 
-                `${originalTask.description}\n\n🤖 IA: ${task.reasoning}` : 
+            const updatedDescription = originalTask?.description ?
+                `${originalTask.description}\n\n🤖 IA: ${task.reasoning}` :
                 `🤖 IA: ${task.reasoning}`;
 
             const { error: updateError } = await payload.supabase
@@ -889,28 +889,28 @@ export async function executeAutomationAction(
         }
 
         // Log de inicio
-            executionId: payload.executionId,
+        executionId: payload.executionId,
             client: payload.client.name,
-            automation: payload.automation.name
-        });
+                automation: payload.automation.name
+    });
 
-        // Ejecutar la acción
-        const result = await executor(action, payload);
+    // Ejecutar la acción
+    const result = await executor(action, payload);
 
-        // Log del resultado
-        if (result.success) {
-        } else {
-            console.error(`❌ Acción falló: ${action.type}`, result);
-        }
-
-        return result;
-
-    } catch (error) {
-        console.error('Error crítico ejecutando acción:', error);
-        return {
-            success: false,
-            message: "Error crítico durante la ejecución",
-            error: error instanceof Error ? error.message : String(error)
-        };
+    // Log del resultado
+    if (result.success) {
+    } else {
+        console.error(`❌ Acción falló: ${action.type}`, result);
     }
+
+    return result;
+
+} catch (error) {
+    console.error('Error crítico ejecutando acción:', error);
+    return {
+        success: false,
+        message: "Error crítico durante la ejecución",
+        error: error instanceof Error ? error.message : String(error)
+    };
+}
 }

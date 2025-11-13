@@ -249,14 +249,14 @@ function generateBudgetEmailHtml(budget: any, profile: any): string {
     // 2. Nombre completo del usuario
     // 3. Email del usuario (sin el dominio)
     const getUserNameFromEmail = (email: string) => {
-        return email.split('@')[0].replace(/[._-]/g, ' ').split(' ').map(word => 
+        return email.split('@')[0].replace(/[._-]/g, ' ').split(' ').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         ).join(' ');
     };
-    
-    const companyName = profile?.company || 
-                        profile?.full_name || 
-                        (profile?.email ? getUserNameFromEmail(profile.email) : 'Prestador del Servicio');
+
+    const companyName = profile?.company ||
+        profile?.full_name ||
+        (profile?.email ? getUserNameFromEmail(profile.email) : 'Prestador del Servicio');
     const contactEmail = profile?.email || 'contacto@ejemplo.com';
     const contactPhone = profile?.phone || '';
     const website = profile?.website || '';

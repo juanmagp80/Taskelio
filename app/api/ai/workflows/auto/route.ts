@@ -71,24 +71,24 @@ export async function POST(request: NextRequest) {
                             .select('*')
                             .eq('id', userId)
                             .single();
-                            
+
                         const { data: companySettings } = await supabase
                             .from('company_settings')
                             .select('*')
                             .eq('user_id', userId)
                             .single();
-                            
+
                         const companyName = companySettings?.company_name || 'Nuestra Empresa';
                         const contactEmail = userProfile?.email || 'contacto@empresa.com';
                         const contactPhone = companySettings?.phone || '+34 900 000 000';
                         const userFullName = userProfile?.full_name || userProfile?.email?.split('@')[0] || 'Equipo';
-                        
+
                         // Limpiar nombre del cliente si contiene "prueba"
                         let clientName = eventData.context.client?.name || 'Cliente';
                         if (clientName.toLowerCase().includes('prueba')) {
                             clientName = 'Cliente';
                         }
-                        
+
                         // Usar plantilla profesional con datos reales
                         email = {
                             subject: `¡Bienvenido/a a ${companyName}!`,

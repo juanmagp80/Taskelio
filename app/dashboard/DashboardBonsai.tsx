@@ -280,7 +280,7 @@ export default function DashboardBonsai({
 
             // Calcular productividad por día de la semana (Lun-Dom)
             const dailyHours = [0, 0, 0, 0, 0, 0, 0]; // Lun=0, Dom=6
-            
+
             // Agrupar time_entries por día de la semana
             (weeklyTimeData || []).forEach((entry: any) => {
                 const entryDate = new Date(entry.start_time);
@@ -357,7 +357,7 @@ export default function DashboardBonsai({
             const currentMonth = today.getMonth(); // 0-11
             const currentYear = today.getFullYear();
             const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            
+
             // Generar array de los últimos 6 meses
             const monthlyData: Array<{ month: string; value: number; amount: number; monthIndex: number; year: number }> = [];
             for (let i = 5; i >= 0; i--) {
@@ -381,219 +381,219 @@ export default function DashboardBonsai({
                 const invoiceMonth = invoiceDate.getMonth(); // 0-11
                 const invoiceYear = invoiceDate.getFullYear();
 
-                    amount: invoice.amount,
+                amount: invoice.amount,
                     issue_date: invoice.issue_date,
-                    created_at: invoice.created_at,
-                    month: invoiceMonth + 1,
-                    year: invoiceYear
-                });
-
-                // Buscar si esta factura pertenece a alguno de los últimos 6 meses
-                const chartMonth = monthlyData.find(m => m.monthIndex === invoiceMonth && m.year === invoiceYear);
-                if (chartMonth) {
-                    chartMonth.amount += parseFloat(invoice.amount) || 0;
-                }
+                        created_at: invoice.created_at,
+                            month: invoiceMonth + 1,
+                                year: invoiceYear
             });
 
-
-            // Calcular valores relativos para la gráfica (basado en el máximo)
-            const maxAmount = Math.max(...monthlyData.map(m => m.amount));
-            monthlyData.forEach(month => {
-                month.value = maxAmount > 0 ? Math.round((month.amount / maxAmount) * 100) : 0;
-            });
-
-            setMonthlyChartData(monthlyData);
-
-            const totalMinutesThisMonth = (monthlyTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 60), 0) || 0;
-
-            // Calcular minutos de eventos del calendario (mes)
-            const calendarMinutesThisMonth = (monthlyCalendarEvents || []).reduce((sum: number, event: any) => {
-                if (event.start_time && event.end_time) {
-                    const start = new Date(event.start_time).getTime();
-                    const end = new Date(event.end_time).getTime();
-                    const duration = (end - start) / 1000 / 60; // convertir a minutos
-                    return sum + duration;
-                }
-                return sum;
-            }, 0) || 0;
-
-
-            // Consultar TIEMPO TOTAL ACUMULADO (sin filtros de fecha)
-            const { data: allTimeData } = await supabase
-                .from('time_entries')
-                .select('duration_seconds')
-                .eq('user_id', user.id);
-
-            const { data: allCalendarEvents } = await supabase
-                .from('calendar_events')
-                .select('start_time, end_time')
-                .eq('user_id', user.id)
-                .eq('status', 'completed');
-
-            // Calcular tiempo total acumulado de time_entries
-            const totalMinutesAllTime = (allTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 60), 0) || 0;
-
-            // Calcular tiempo total acumulado de eventos del calendario
-            const calendarMinutesAllTime = (allCalendarEvents || []).reduce((sum: number, event: any) => {
-                if (event.start_time && event.end_time) {
-                    const start = new Date(event.start_time).getTime();
-                    const end = new Date(event.end_time).getTime();
-                    const duration = (end - start) / 1000 / 60;
-                    return sum + duration;
-                }
-                return sum;
-            }, 0) || 0;
-
-            const totalAccumulatedMinutes = totalMinutesAllTime + calendarMinutesAllTime;
-
-
-            // Sumar tiempo de time_entries + eventos del calendario
-            const totalWeekMinutes = totalMinutesThisWeek + calendarMinutesThisWeek;
-            const totalMonthMinutes = totalMinutesThisMonth + calendarMinutesThisMonth;
-
-            setMetrics({
-                totalClients: clients?.length || 0,
-                activeProjects: activeProjects.length,
-                completedProjects: completedProjects.length,
-                monthlyRevenue: totalRevenue,
-                hoursThisWeek: Math.round((totalWeekMinutes / 60) * 10) / 10,
-                hoursThisMonth: Math.round((totalAccumulatedMinutes / 60) * 10) / 10,
-                billableHoursThisWeek: Math.round((billableMinutesThisWeek / 60) * 10) / 10
-            });
-
-            setRealProjects(allProjects?.slice(0, 5) || []);
-            setRealClients(clients?.slice(0, 5) || []);
-
-        } catch (error) {
-            console.error('Error loading dashboard data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadRecentActivity = async () => {
-        // En modo demo ya está cargado
-        if (isDemo) return;
-
-        try {
-            if (!supabase) return;
-
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Obtener actividad reciente simulada basada en datos reales
-            const { data: recentProjects } = await supabase
-                .from('projects')
-                .select('id, name, created_at, client_id')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(3);
-
-            const { data: recentClients } = await supabase
-                .from('clients')
-                .select('id, name, created_at')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(2);
-
-            const activity: Array<{
-                id: string;
-                type: string;
-                title: string;
-                subtitle: string;
-                date: string;
-                icon: string;
-            }> = [];
-
-            // Agregar proyectos recientes
-            recentProjects?.forEach((project: any) => {
-                activity.push({
-                    id: project.id,
-                    type: 'project',
-                    title: 'Proyecto creado',
-                    subtitle: project.name,
-                    date: new Date(project.created_at).toLocaleDateString('es-ES'),
-                    icon: 'briefcase'
-                });
-            });
-
-            // Agregar clientes recientes
-            recentClients?.forEach((client: any) => {
-                activity.push({
-                    id: client.id,
-                    type: 'client',
-                    title: 'Cliente agregado',
-                    subtitle: client.name,
-                    date: new Date(client.created_at).toLocaleDateString('es-ES'),
-                    icon: 'user'
-                });
-            });
-
-            // Ordenar por fecha más reciente
-            activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-            setRecentActivity(activity.slice(0, 5));
-
-        } catch (error) {
-            console.error('Error loading recent activity:', error);
-        }
-    };
-
-    useEffect(() => {
-        loadDashboardData();
-        loadRecentActivity();
-    }, []);
-
-    // Verificar si viene de Stripe checkout exitoso
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('session_id');
-        const success = urlParams.get('success');
-
-        if (sessionId && success === 'true') {
-            verifyStripeSession(sessionId);
-
-            // Limpiar parámetros de la URL sin recargar
-            const cleanUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-        }
-    }, []);
-
-    const verifyStripeSession = async (sessionId: string) => {
-        try {
-            toast.info('Verificando pago...', { duration: 3000 });
-
-            const response = await fetch(`/api/stripe/verify-session?session_id=${sessionId}`);
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success('¡Pago procesado correctamente! Bienvenido al Plan PRO 🎉', {
-                    duration: 5000
-                });
-
-                // Recargar la página para actualizar el estado de suscripción
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-            } else {
-                toast.error('Error verificando el pago: ' + (data.error || 'Error desconocido'));
+            // Buscar si esta factura pertenece a alguno de los últimos 6 meses
+            const chartMonth = monthlyData.find(m => m.monthIndex === invoiceMonth && m.year === invoiceYear);
+            if (chartMonth) {
+                chartMonth.amount += parseFloat(invoice.amount) || 0;
             }
-        } catch (error) {
-            console.error('Error verificando sesión de Stripe:', error);
-            toast.error('Error verificando el pago');
+        });
+
+
+        // Calcular valores relativos para la gráfica (basado en el máximo)
+        const maxAmount = Math.max(...monthlyData.map(m => m.amount));
+        monthlyData.forEach(month => {
+            month.value = maxAmount > 0 ? Math.round((month.amount / maxAmount) * 100) : 0;
+        });
+
+        setMonthlyChartData(monthlyData);
+
+        const totalMinutesThisMonth = (monthlyTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 60), 0) || 0;
+
+        // Calcular minutos de eventos del calendario (mes)
+        const calendarMinutesThisMonth = (monthlyCalendarEvents || []).reduce((sum: number, event: any) => {
+            if (event.start_time && event.end_time) {
+                const start = new Date(event.start_time).getTime();
+                const end = new Date(event.end_time).getTime();
+                const duration = (end - start) / 1000 / 60; // convertir a minutos
+                return sum + duration;
+            }
+            return sum;
+        }, 0) || 0;
+
+
+        // Consultar TIEMPO TOTAL ACUMULADO (sin filtros de fecha)
+        const { data: allTimeData } = await supabase
+            .from('time_entries')
+            .select('duration_seconds')
+            .eq('user_id', user.id);
+
+        const { data: allCalendarEvents } = await supabase
+            .from('calendar_events')
+            .select('start_time, end_time')
+            .eq('user_id', user.id)
+            .eq('status', 'completed');
+
+        // Calcular tiempo total acumulado de time_entries
+        const totalMinutesAllTime = (allTimeData || []).reduce((sum: number, entry: any) => sum + (entry.duration_seconds / 60), 0) || 0;
+
+        // Calcular tiempo total acumulado de eventos del calendario
+        const calendarMinutesAllTime = (allCalendarEvents || []).reduce((sum: number, event: any) => {
+            if (event.start_time && event.end_time) {
+                const start = new Date(event.start_time).getTime();
+                const end = new Date(event.end_time).getTime();
+                const duration = (end - start) / 1000 / 60;
+                return sum + duration;
+            }
+            return sum;
+        }, 0) || 0;
+
+        const totalAccumulatedMinutes = totalMinutesAllTime + calendarMinutesAllTime;
+
+
+        // Sumar tiempo de time_entries + eventos del calendario
+        const totalWeekMinutes = totalMinutesThisWeek + calendarMinutesThisWeek;
+        const totalMonthMinutes = totalMinutesThisMonth + calendarMinutesThisMonth;
+
+        setMetrics({
+            totalClients: clients?.length || 0,
+            activeProjects: activeProjects.length,
+            completedProjects: completedProjects.length,
+            monthlyRevenue: totalRevenue,
+            hoursThisWeek: Math.round((totalWeekMinutes / 60) * 10) / 10,
+            hoursThisMonth: Math.round((totalAccumulatedMinutes / 60) * 10) / 10,
+            billableHoursThisWeek: Math.round((billableMinutesThisWeek / 60) * 10) / 10
+        });
+
+        setRealProjects(allProjects?.slice(0, 5) || []);
+        setRealClients(clients?.slice(0, 5) || []);
+
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+    } finally {
+        setLoading(false);
+    }
+};
+
+const loadRecentActivity = async () => {
+    // En modo demo ya está cargado
+    if (isDemo) return;
+
+    try {
+        if (!supabase) return;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Obtener actividad reciente simulada basada en datos reales
+        const { data: recentProjects } = await supabase
+            .from('projects')
+            .select('id, name, created_at, client_id')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+        const { data: recentClients } = await supabase
+            .from('clients')
+            .select('id, name, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(2);
+
+        const activity: Array<{
+            id: string;
+            type: string;
+            title: string;
+            subtitle: string;
+            date: string;
+            icon: string;
+        }> = [];
+
+        // Agregar proyectos recientes
+        recentProjects?.forEach((project: any) => {
+            activity.push({
+                id: project.id,
+                type: 'project',
+                title: 'Proyecto creado',
+                subtitle: project.name,
+                date: new Date(project.created_at).toLocaleDateString('es-ES'),
+                icon: 'briefcase'
+            });
+        });
+
+        // Agregar clientes recientes
+        recentClients?.forEach((client: any) => {
+            activity.push({
+                id: client.id,
+                type: 'client',
+                title: 'Cliente agregado',
+                subtitle: client.name,
+                date: new Date(client.created_at).toLocaleDateString('es-ES'),
+                icon: 'user'
+            });
+        });
+
+        // Ordenar por fecha más reciente
+        activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        setRecentActivity(activity.slice(0, 5));
+
+    } catch (error) {
+        console.error('Error loading recent activity:', error);
+    }
+};
+
+useEffect(() => {
+    loadDashboardData();
+    loadRecentActivity();
+}, []);
+
+// Verificar si viene de Stripe checkout exitoso
+useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const success = urlParams.get('success');
+
+    if (sessionId && success === 'true') {
+        verifyStripeSession(sessionId);
+
+        // Limpiar parámetros de la URL sin recargar
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
+}, []);
+
+const verifyStripeSession = async (sessionId: string) => {
+    try {
+        toast.info('Verificando pago...', { duration: 3000 });
+
+        const response = await fetch(`/api/stripe/verify-session?session_id=${sessionId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            toast.success('¡Pago procesado correctamente! Bienvenido al Plan PRO 🎉', {
+                duration: 5000
+            });
+
+            // Recargar la página para actualizar el estado de suscripción
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            toast.error('Error verificando el pago: ' + (data.error || 'Error desconocido'));
         }
-    };
+    } catch (error) {
+        console.error('Error verificando sesión de Stripe:', error);
+        toast.error('Error verificando el pago');
+    }
+};
 
-    return (
-        <div className="flex h-screen bg-gray-50">
-            <Sidebar userEmail={userEmail} onLogout={handleLogout} />
+return (
+    <div className="flex h-screen bg-gray-50">
+        <Sidebar userEmail={userEmail} onLogout={handleLogout} />
 
-            <div className="flex-1 flex flex-col overflow-hidden ml-56">
-                <Header userEmail={userEmail} onLogout={handleLogout} />
-                
-                <div className="flex-1 overflow-auto">
-                    {/* Trial Banner - Solo si no es demo */}
-                    {!isDemo && <TrialBanner userEmail={userEmail} />}
+        <div className="flex-1 flex flex-col overflow-hidden ml-56">
+            <Header userEmail={userEmail} onLogout={handleLogout} />
+
+            <div className="flex-1 overflow-auto">
+                {/* Trial Banner - Solo si no es demo */}
+                {!isDemo && <TrialBanner userEmail={userEmail} />}
 
                 {/* Header estilo Bonsai */}
                 <div className="bg-white border-b border-gray-200">
@@ -1108,7 +1108,7 @@ export default function DashboardBonsai({
                     )}
                 </div>
             </div>
-            </div>
         </div>
-    );
+    </div>
+);
 }

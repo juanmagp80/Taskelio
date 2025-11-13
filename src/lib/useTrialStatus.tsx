@@ -237,8 +237,8 @@ export function useTrialStatus(userEmail?: string) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    userEmail: user.email 
+                body: JSON.stringify({
+                    userEmail: user.email
                 }),
             });
 
@@ -249,7 +249,7 @@ export function useTrialStatus(userEmail?: string) {
             const data = await response.json();
 
             if (data.success && data.hasActiveSubscription) {
-                
+
                 // Recargar el estado completo del trial
                 await checkTrialStatus();
             }

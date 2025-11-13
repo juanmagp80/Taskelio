@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
 
 
         const supabase = createSupabaseAdmin();
-        
+
         // 1. Probar búsqueda directa (método actualizado)
         const { data: sqlResult, error: sqlError } = await supabase
             .from('profiles')
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('❌ Debug endpoint error:', error);
-        return NextResponse.json({ 
+        return NextResponse.json({
             error: error instanceof Error ? error.message : 'Error desconocido'
         }, { status: 500 });
     }

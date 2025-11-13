@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
-import { 
-    analyzeFeedback, 
-    optimizeCommunication, 
-    analyzeProposal, 
-    generateContent, 
-    detectProjectRisks, 
-    analyzePerformance, 
+import {
+    analyzeFeedback,
+    analyzePerformance,
     analyzePricing,
-    generateSmartEmail,
+    analyzeProposal,
+    detectProjectRisks,
+    generateCalendarLink,
+    generateContent,
     generateDynamicForm,
-    scheduleSmartMeeting,
-    generateCalendarLink
+    generateSmartEmail,
+    optimizeCommunication,
+    scheduleSmartMeeting
 } from '@/lib/openai';
+import { createSupabaseAdmin } from '@/src/lib/supabase-admin';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Tipos para la request
 interface AutomationRequest {
@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
 
 
         const supabase = createSupabaseAdmin();
-        
+
         // Obtener el ID del usuario desde el email usando la tabla profiles
-        
+
         let userId: string | null = null;
-        
+
         // Intentar buscar primero en profiles
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -44,21 +44,21 @@ export async function POST(request: NextRequest) {
             userId = profile.id;
         } else {
             // Si no se encuentra en profiles, buscar en auth.users como fallback
-            
+
             const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-            
+
             if (authError) {
                 console.error('❌ Error listing auth users:', authError);
-                return NextResponse.json({ 
-                    error: 'Error de autenticación del servidor' 
+                return NextResponse.json({
+                    error: 'Error de autenticación del servidor'
                 }, { status: 500 });
             }
-            
+
             const authUser = authData.users.find(u => u.email === userEmail);
-            
+
             if (authUser) {
                 userId = authUser.id;
-                
+
                 // Crear perfil si no existe
                 const { error: insertError } = await supabase
                     .from('profiles')
@@ -68,25 +68,25 @@ export async function POST(request: NextRequest) {
                         full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Usuario',
                         updated_at: new Date().toISOString()
                     });
-                
+
                 if (!insertError) {
                 }
             } else {
                 console.error('❌ User not found in profiles or auth.users:', userEmail);
-                return NextResponse.json({ 
-                    error: 'Usuario no encontrado. Verifica que estés autenticado correctamente.' 
+                return NextResponse.json({
+                    error: 'Usuario no encontrado. Verifica que estés autenticado correctamente.'
                 }, { status: 404 });
             }
         }
-        
+
         // Validar que tenemos un userId antes de continuar
         if (!userId) {
             console.error('❌ No userId obtained');
-            return NextResponse.json({ 
-                error: 'Error obteniendo ID de usuario' 
+            return NextResponse.json({
+                error: 'Error obteniendo ID de usuario'
             }, { status: 500 });
         }
-        
+
         let result: any = null;
 
 
@@ -94,62 +94,62 @@ export async function POST(request: NextRequest) {
             case 'sentiment_analysis':
                 result = await executeSentimentAnalysis(data, userId, supabase);
                 break;
-            
+
             case 'communication_optimization':
                 result = await executeCommunicationOptimization(data, userId, supabase);
                 break;
-            
+
             case 'proposal_analysis':
                 result = await executeProposalAnalysis(data, userId, supabase);
                 break;
-            
+
             case 'content_generation':
                 result = await executeContentGeneration(data, userId, supabase);
                 break;
-            
+
             case 'risk_detection':
                 result = await executeRiskDetection(data, userId, supabase);
                 break;
-            
+
             case 'performance_analysis':
                 result = await executePerformanceAnalysis(data, userId, supabase);
                 break;
-            
+
             case 'pricing_optimization':
                 result = await executePricingOptimization(data, userId, supabase);
                 break;
-            
+
             // 🔄 NUEVOS WORKFLOWS AUTOMÁTICOS
             case 'smart_email':
                 result = await executeSmartEmail(data, userId, supabase);
                 break;
-            
+
             case 'dynamic_form':
                 result = await executeDynamicForm(data, userId, supabase);
                 break;
-            
+
             case 'smart_meeting':
                 result = await executeSmartMeeting(data, userId, supabase);
                 break;
-            
+
             case 'calendar_link':
                 result = await executeCalendarLink(data, userId, supabase);
                 break;
-            
+
             default:
-                return NextResponse.json({ 
-                    error: 'Tipo de automatización no soportado' 
+                return NextResponse.json({
+                    error: 'Tipo de automatización no soportado'
                 }, { status: 400 });
         }
 
-        return NextResponse.json({ 
-            success: true, 
-            data: result 
+        return NextResponse.json({
+            success: true,
+            data: result
         });
 
     } catch (error) {
         console.error('❌ Error in automation endpoint:', error);
-        return NextResponse.json({ 
+        return NextResponse.json({
             error: error instanceof Error ? error.message : 'Error interno del servidor'
         }, { status: 500 });
     }
@@ -160,10 +160,10 @@ export async function POST(request: NextRequest) {
 async function executeSentimentAnalysis(data: any, userId: string, supabase: any) {
     try {
         const { text, clientId, source = 'manual' } = data;
-        
+
         // Analizar sentimiento con OpenAI
         const analysis = await analyzeFeedback(text);
-        
+
         // Buscar información del cliente si existe
         let clientData = null;
         if (clientId) {
@@ -175,7 +175,7 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
                 .single();
             clientData = client;
         }
-        
+
         // Preparar datos para inserción
         const insertData = {
             user_id: userId,
@@ -198,8 +198,8 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
             recommendations: analysis.recommendations,
             suggested_actions: analysis.suggested_actions
         };
-        
-        
+
+
         const { data: savedAnalysis, error } = await supabase
             .from('ai_insights')
             .insert(insertData)
@@ -210,7 +210,7 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
             console.error('❌ Error saving sentiment analysis:', error);
             throw new Error('Error guardando análisis de sentimiento: ' + error.message);
         }
-        
+
 
         // Si es negativo y urgente, crear tarea automática
         if (analysis.sentiment === 'negative' && analysis.urgency === 'high') {
@@ -234,7 +234,7 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
             saved_id: savedAnalysis.id,
             message: `Análisis de sentimiento completado: ${analysis.sentiment.toUpperCase()} (${Math.round(analysis.confidence * 100)}% confianza)`
         };
-        
+
     } catch (error) {
         console.error('❌ Error in executeSentimentAnalysis:', error);
         throw error;
@@ -243,10 +243,10 @@ async function executeSentimentAnalysis(data: any, userId: string, supabase: any
 
 async function executeCommunicationOptimization(data: any, userId: string, supabase: any) {
     const { originalMessage, context, clientId } = data;
-    
+
     // Optimizar comunicación con OpenAI
     const optimization = await optimizeCommunication(originalMessage, context);
-    
+
     // Buscar información del cliente si existe
     let clientData = null;
     if (clientId) {
@@ -258,7 +258,7 @@ async function executeCommunicationOptimization(data: any, userId: string, supab
             .single();
         clientData = client;
     }
-    
+
     // Guardar resultado en base de datos
     const { data: savedOptimization, error } = await supabase
         .from('ai_insights')
@@ -304,7 +304,7 @@ async function executeCommunicationOptimization(data: any, userId: string, supab
 async function executeProposalAnalysis(data: any, userId: string, supabase: any) {
     const { proposalText, clientId, projectType } = data;
     const analysis = await analyzeProposal(proposalText, projectType);
-    
+
     const { data: savedAnalysis, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -329,7 +329,7 @@ async function executeProposalAnalysis(data: any, userId: string, supabase: any)
 async function executeContentGeneration(data: any, userId: string, supabase: any) {
     const { contentType, topic, targetAudience, tone } = data;
     const content = await generateContent(contentType, topic, targetAudience, tone);
-    
+
     const { data: savedContent, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -353,7 +353,7 @@ async function executeContentGeneration(data: any, userId: string, supabase: any
 async function executeRiskDetection(data: any, userId: string, supabase: any) {
     const { projectId } = data;
     const risks = await detectProjectRisks(projectId);
-    
+
     const { data: savedRisks, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -378,7 +378,7 @@ async function executeRiskDetection(data: any, userId: string, supabase: any) {
 async function executePerformanceAnalysis(data: any, userId: string, supabase: any) {
     const { period } = data;
     const performance = await analyzePerformance(userId, period);
-    
+
     const { data: savedPerformance, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -403,7 +403,7 @@ async function executePerformanceAnalysis(data: any, userId: string, supabase: a
 async function executePricingOptimization(data: any, userId: string, supabase: any) {
     const { projectType, scope, currentPrice } = data;
     const pricing = await analyzePricing(projectType, scope, currentPrice);
-    
+
     const { data: savedPricing, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -432,7 +432,7 @@ async function executePricingOptimization(data: any, userId: string, supabase: a
 async function executeSmartEmail(data: any, userId: string, supabase: any) {
     const { trigger, context } = data;
     const email = await generateSmartEmail(trigger, context);
-    
+
     const { data: savedEmail, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -457,7 +457,7 @@ async function executeSmartEmail(data: any, userId: string, supabase: any) {
 async function executeDynamicForm(data: any, userId: string, supabase: any) {
     const { purpose, context } = data;
     const form = await generateDynamicForm(purpose, context);
-    
+
     const { data: savedForm, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -482,7 +482,7 @@ async function executeDynamicForm(data: any, userId: string, supabase: any) {
 async function executeSmartMeeting(data: any, userId: string, supabase: any) {
     const { purpose, participants, context } = data;
     const meeting = await scheduleSmartMeeting(purpose, participants, context);
-    
+
     const { data: savedMeeting, error } = await supabase
         .from('ai_insights')
         .insert({
@@ -507,7 +507,7 @@ async function executeSmartMeeting(data: any, userId: string, supabase: any) {
 async function executeCalendarLink(data: any, userId: string, supabase: any) {
     const { event_type, duration, context } = data;
     const calendar = await generateCalendarLink(event_type, duration, context);
-    
+
     const { data: savedCalendar, error } = await supabase
         .from('ai_insights')
         .insert({

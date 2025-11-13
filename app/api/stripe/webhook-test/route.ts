@@ -10,9 +10,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    
+
     const body = await request.text();
-    
+
     return NextResponse.json({
         message: "Webhook test endpoint received POST",
         timestamp: new Date().toISOString(),

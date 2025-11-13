@@ -1,15 +1,15 @@
 'use client';
 
 import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { SpanishCompanyData, validateSpanishNIF, validateSpanishCIF } from '@/lib/spanish-invoice-utils';
-import { useState, useEffect } from 'react';
+import { SpanishCompanyData, validateSpanishCIF, validateSpanishNIF } from '@/lib/spanish-invoice-utils';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
-import { Building2, MapPin, Phone, Mail, Globe, FileText, Euro, Save, AlertCircle, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { AlertCircle, Building2, Euro, FileText, Globe, Mail, MapPin, Phone, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface CompanyConfigProps {
     onSave?: (data: SpanishCompanyData) => void;
@@ -20,7 +20,7 @@ export default function CompanyConfig({ onSave }: CompanyConfigProps) {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const supabase = createSupabaseClient();
     const router = useRouter();
-    
+
     const [companyData, setCompanyData] = useState<SpanishCompanyData>({
         companyName: '',
         nif: '',
@@ -190,7 +190,7 @@ export default function CompanyConfig({ onSave }: CompanyConfigProps) {
             toast.success('✅ Datos de la empresa guardados correctamente', {
                 duration: 3000
             });
-            
+
             // Feedback adicional visual
             onSave?.(companyData);
 
@@ -477,7 +477,7 @@ export default function CompanyConfig({ onSave }: CompanyConfigProps) {
                     <X className="w-4 h-4" />
                     Cancelar
                 </Button>
-                
+
                 <Button
                     onClick={saveCompanyData}
                     disabled={loading}

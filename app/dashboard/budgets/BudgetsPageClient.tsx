@@ -1,8 +1,8 @@
 'use client';
 
 import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
-import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import TrialBanner from '@/components/TrialBanner';
 import { Button } from '@/components/ui/Button';
 import {
@@ -12,11 +12,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useSupabaseErrorHandler } from '@/src/hooks/useSupabaseErrorHandler';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
 import { useTrialStatus } from '@/src/lib/useTrialStatus';
+import { checkAuthenticationState, debugSupabaseCookies } from '@/src/utils/auth-debug';
 import { cleanSupabaseCookies, hasCorruptedSupabaseCookies } from '@/src/utils/cookie-cleanup';
-import { useSupabaseErrorHandler, debugSupabaseResult } from '@/src/hooks/useSupabaseErrorHandler';
-import { debugSupabaseCookies, checkAuthenticationState } from '@/src/utils/auth-debug';
 import { showToast } from '@/utils/toast';
 import {
     Calculator,
@@ -176,14 +176,14 @@ interface BudgetsPageClientProps {
 // Helper function para validar errores de Supabase
 const isSupabaseError = (error: any): boolean => {
     if (!error || typeof error !== 'object') return false;
-    
+
     // Si es null o undefined, no es error
     if (error === null || error === undefined) return false;
-    
+
     // Si es un objeto vacío, no es error
     const keys = Object.keys(error);
     if (keys.length === 0) return false;
-    
+
     // Solo considerar error si tiene propiedades específicas de error de Supabase
     return !!(error.message || error.code || error.details || error.hint || error.status);
 };
@@ -195,7 +195,7 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
-    
+
     // Estados para el modal de eliminación
     const [deleteModal, setDeleteModal] = useState<{
         isOpen: boolean;
@@ -231,11 +231,11 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             cleanSupabaseCookies();
             return;
         }
-        
+
         // Debug de cookies y estado de autenticación
         debugSupabaseCookies();
         checkAuthenticationState();
-        
+
         loadBudgets();
     }, [userEmail]);
 
@@ -516,9 +516,9 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
     const handleDownloadPDF = async (budgetId: string) => {
         try {
             showToast.info('Generando PDF...');
-            
+
             const supabase = createSupabaseClient();
-            
+
             // Obtener el presupuesto con sus items y datos del cliente
             const { data: budgetData, error: budgetError } = await supabase
                 .from('budgets')
@@ -568,7 +568,7 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             const { data: { user } } = await supabase.auth.getUser();
             let freelancerInfo = null;
             let budgetNumber = 'PREP-001';
-            
+
             if (user) {
                 // Obtener información del freelancer
                 const { data: profileData } = await supabase
@@ -611,13 +611,13 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             // === ENCABEZADO PROFESIONAL ===
             // Fondo degradado del encabezado
             doc.rect(0, 0, pageWidth, 100)
-               .fillAndStroke(primaryColor, primaryColor);
+                .fillAndStroke(primaryColor, primaryColor);
 
             // Título principal
             doc.fillColor('white')
-               .fontSize(32)
-               .font('Helvetica-Bold')
-               .text('PRESUPUESTO', marginLeft, 25);
+                .fontSize(32)
+                .font('Helvetica-Bold')
+                .text('PRESUPUESTO', marginLeft, 25);
 
             // Mapeo de estados a español
             const statusTranslations: { [key: string]: string } = {
@@ -632,10 +632,10 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
 
             // Información del documento en el encabezado
             doc.fontSize(12)
-               .font('Helvetica')
-               .text(`Nº ${budgetNumber}`, pageWidth - 200, 30)
-               .text(`Fecha: ${new Date(budget.created_at).toLocaleDateString('es-ES')}`, pageWidth - 200, 50)
-               .text(`Estado: ${statusTranslations[budget.status] || budget.status.toUpperCase()}`, pageWidth - 200, 70);
+                .font('Helvetica')
+                .text(`Nº ${budgetNumber}`, pageWidth - 200, 30)
+                .text(`Fecha: ${new Date(budget.created_at).toLocaleDateString('es-ES')}`, pageWidth - 200, 50)
+                .text(`Estado: ${statusTranslations[budget.status] || budget.status.toUpperCase()}`, pageWidth - 200, 70);
 
             // === SECCIÓN DE INFORMACIÓN DE CONTACTO MEJORADA ===
             let yPosition = 120;
@@ -643,36 +643,36 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             // Cajas de información con fondo
             // Caja del freelancer (izquierda)
             doc.rect(marginLeft, yPosition, (contentWidth / 2) - 10, 120)
-               .fillAndStroke(lightGrayColor, '#e2e8f0');
+                .fillAndStroke(lightGrayColor, '#e2e8f0');
 
             // Caja del cliente (derecha)  
             doc.rect(marginLeft + (contentWidth / 2) + 10, yPosition, (contentWidth / 2) - 10, 120)
-               .fillAndStroke(lightGrayColor, '#e2e8f0');
+                .fillAndStroke(lightGrayColor, '#e2e8f0');
 
             // === INFORMACIÓN DEL FREELANCER ===
             let freelancerY = yPosition + 15;
             doc.fillColor(primaryColor)
-               .fontSize(12)
-               .font('Helvetica-Bold')
-               .text('EMISOR', marginLeft + 10, freelancerY);
+                .fontSize(12)
+                .font('Helvetica-Bold')
+                .text('EMISOR', marginLeft + 10, freelancerY);
 
             freelancerY += 20;
             doc.fillColor(darkColor)
-               .fontSize(11)
-               .font('Helvetica');
+                .fontSize(11)
+                .font('Helvetica');
 
             if (freelancerInfo) {
                 // Nombre de la empresa o freelancer (solo uno)
                 const displayName = freelancerInfo.company || freelancerInfo.full_name || 'Freelancer';
                 doc.font('Helvetica-Bold')
-                   .text(displayName, marginLeft + 10, freelancerY);
+                    .text(displayName, marginLeft + 10, freelancerY);
                 freelancerY += 15;
 
                 // Email
                 if (user?.email) {
                     doc.font('Helvetica')
-                       .fillColor(textColor)
-                       .text(`Email: ${user.email}`, marginLeft + 10, freelancerY);
+                        .fillColor(textColor)
+                        .text(`Email: ${user.email}`, marginLeft + 10, freelancerY);
                     freelancerY += 12;
                 }
 
@@ -688,39 +688,39 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                 }
             } else {
                 doc.font('Helvetica-Bold')
-                   .text('Freelancer Profesional', marginLeft + 10, freelancerY);
+                    .text('Freelancer Profesional', marginLeft + 10, freelancerY);
                 freelancerY += 15;
                 if (user?.email) {
                     doc.font('Helvetica')
-                       .fillColor(textColor)
-                       .text(`Email: ${user.email}`, marginLeft + 10, freelancerY);
+                        .fillColor(textColor)
+                        .text(`Email: ${user.email}`, marginLeft + 10, freelancerY);
                 }
             }
 
             // === INFORMACIÓN DEL CLIENTE ===
             let clientY = yPosition + 15;
             const clientX = marginLeft + (contentWidth / 2) + 20;
-            
+
             doc.fillColor(primaryColor)
-               .fontSize(12)
-               .font('Helvetica-Bold')
-               .text('CLIENTE', clientX, clientY);
+                .fontSize(12)
+                .font('Helvetica-Bold')
+                .text('CLIENTE', clientX, clientY);
 
             clientY += 20;
             doc.fillColor(darkColor)
-               .fontSize(11)
-               .font('Helvetica-Bold')
-               .text(budget.clients.name, clientX, clientY);
+                .fontSize(11)
+                .font('Helvetica-Bold')
+                .text(budget.clients.name, clientX, clientY);
 
             clientY += 15;
             doc.font('Helvetica')
-               .fillColor(textColor);
+                .fillColor(textColor);
 
             if (budget.clients.email) {
                 doc.text(`Email: ${budget.clients.email}`, clientX, clientY);
                 clientY += 12;
             }
-            
+
             if (budget.clients.phone) {
                 doc.text(`Tel: ${budget.clients.phone}`, clientX, clientY);
                 clientY += 12;
@@ -732,29 +732,29 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
 
             // === ESPACIADO Y LÍNEA SEPARADORA ===
             yPosition = 260; // Posición fija después de las cajas de información
-            
+
             doc.moveTo(marginLeft, yPosition)
-               .lineTo(pageWidth - marginRight, yPosition)
-               .strokeColor('#cbd5e1')
-               .lineWidth(2)
-               .stroke();
+                .lineTo(pageWidth - marginRight, yPosition)
+                .strokeColor('#cbd5e1')
+                .lineWidth(2)
+                .stroke();
 
             // === TÍTULO Y DESCRIPCIÓN DEL PRESUPUESTO ===
             yPosition += 25;
-            
+
             if (budget.title) {
                 doc.fillColor(primaryColor)
-                   .fontSize(18)
-                   .font('Helvetica-Bold')
-                   .text(budget.title, marginLeft, yPosition);
+                    .fontSize(18)
+                    .font('Helvetica-Bold')
+                    .text(budget.title, marginLeft, yPosition);
                 yPosition += 30;
             }
 
             if (budget.description) {
                 doc.fillColor(textColor)
-                   .fontSize(11)
-                   .font('Helvetica')
-                   .text(budget.description, marginLeft, yPosition, { width: contentWidth });
+                    .fontSize(11)
+                    .font('Helvetica')
+                    .text(budget.description, marginLeft, yPosition, { width: contentWidth });
                 yPosition += 35;
             }
 
@@ -764,15 +764,15 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             // Encabezado de tabla mejorado
             const tableHeaderY = yPosition;
             doc.rect(marginLeft, tableHeaderY, contentWidth, 30)
-               .fillAndStroke(primaryColor, primaryColor);
+                .fillAndStroke(primaryColor, primaryColor);
 
             doc.fillColor('white')
-               .fontSize(12)
-               .font('Helvetica-Bold')
-               .text('DESCRIPCIÓN', marginLeft + 15, tableHeaderY + 10)
-               .text('CANT.', marginLeft + 320, tableHeaderY + 10)
-               .text('PRECIO', marginLeft + 380, tableHeaderY + 10)
-               .text('TOTAL', marginLeft + 450, tableHeaderY + 10);
+                .fontSize(12)
+                .font('Helvetica-Bold')
+                .text('DESCRIPCIÓN', marginLeft + 15, tableHeaderY + 10)
+                .text('CANT.', marginLeft + 320, tableHeaderY + 10)
+                .text('PRECIO', marginLeft + 380, tableHeaderY + 10)
+                .text('TOTAL', marginLeft + 450, tableHeaderY + 10);
 
             yPosition += 35;
 
@@ -798,32 +798,32 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                 // Fila alternada con mejor contraste
                 if (index % 2 === 0) {
                     doc.rect(marginLeft, yPosition - 5, contentWidth, rowHeight)
-                       .fillAndStroke(lightGrayColor, lightGrayColor);
+                        .fillAndStroke(lightGrayColor, lightGrayColor);
                 }
 
                 // Contenido de la fila
                 doc.fillColor(darkColor)
-                   .fontSize(11)
-                   .font('Helvetica-Bold')
-                   .text(item.title, marginLeft + 15, yPosition, { width: 300 });
+                    .fontSize(11)
+                    .font('Helvetica-Bold')
+                    .text(item.title, marginLeft + 15, yPosition, { width: 300 });
 
                 let currentY = yPosition;
                 if (item.description) {
                     currentY += 15;
                     doc.fillColor(textColor)
-                       .fontSize(9)
-                       .font('Helvetica')
-                       .text(item.description, marginLeft + 15, currentY, { width: 300 });
+                        .fontSize(9)
+                        .font('Helvetica')
+                        .text(item.description, marginLeft + 15, currentY, { width: 300 });
                 }
 
                 // Cantidad, precio y total alineados
                 doc.fillColor(darkColor)
-                   .fontSize(11)
-                   .font('Helvetica')
-                   .text(item.quantity.toString(), marginLeft + 330, yPosition)
-                   .text(`€${item.unit_price.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, marginLeft + 385, yPosition)
-                   .font('Helvetica-Bold')
-                   .text(`€${itemTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, marginLeft + 455, yPosition);
+                    .fontSize(11)
+                    .font('Helvetica')
+                    .text(item.quantity.toString(), marginLeft + 330, yPosition)
+                    .text(`€${item.unit_price.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, marginLeft + 385, yPosition)
+                    .font('Helvetica-Bold')
+                    .text(`€${itemTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, marginLeft + 455, yPosition);
 
                 yPosition += rowHeight + 5;
             });
@@ -836,14 +836,14 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
                 doc.addPage();
                 yPosition = 50;
             }
-            
+
             // Área de totales con fondo
             const totalsBoxY = yPosition;
             const totalsBoxWidth = 250;
             const totalsBoxX = pageWidth - marginRight - totalsBoxWidth;
 
             doc.rect(totalsBoxX, totalsBoxY, totalsBoxWidth, 100)
-               .fillAndStroke(secondaryColor, '#cbd5e1');
+                .fillAndStroke(secondaryColor, '#cbd5e1');
 
             yPosition += 15;
 
@@ -852,28 +852,28 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
 
             // Subtotal
             doc.fillColor(textColor)
-               .fontSize(12)
-               .font('Helvetica')
-               .text('Subtotal:', totalsBoxX + 15, yPosition)
-               .text(`€${subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, totalsBoxX + 150, yPosition, { align: 'right' });
+                .fontSize(12)
+                .font('Helvetica')
+                .text('Subtotal:', totalsBoxX + 15, yPosition)
+                .text(`€${subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, totalsBoxX + 150, yPosition, { align: 'right' });
 
             yPosition += 20;
 
             // IVA
             doc.text(`IVA (${budget.tax_rate || 21}%):`, totalsBoxX + 15, yPosition)
-               .text(`€${tax.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, totalsBoxX + 150, yPosition, { align: 'right' });
+                .text(`€${tax.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, totalsBoxX + 150, yPosition, { align: 'right' });
 
             yPosition += 25;
 
             // Total principal destacado
             doc.rect(totalsBoxX + 10, yPosition - 8, totalsBoxWidth - 20, 30)
-               .fillAndStroke(primaryColor, primaryColor);
+                .fillAndStroke(primaryColor, primaryColor);
 
             doc.fillColor('white')
-               .fontSize(16)
-               .font('Helvetica-Bold')
-               .text('TOTAL:', totalsBoxX + 20, yPosition)
-               .text(`€${total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, totalsBoxX + 150, yPosition);
+                .fontSize(16)
+                .font('Helvetica-Bold')
+                .text('TOTAL:', totalsBoxX + 20, yPosition)
+                .text(`€${total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`, totalsBoxX + 150, yPosition);
 
             yPosition = totalsBoxY + 120;
 
@@ -891,42 +891,42 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             if (budget.notes) {
                 // Caja para las notas
                 doc.rect(marginLeft, yPosition, contentWidth, 15)
-                   .fillAndStroke(accentColor, accentColor);
-                
+                    .fillAndStroke(accentColor, accentColor);
+
                 doc.fillColor('white')
-                   .fontSize(12)
-                   .font('Helvetica-Bold')
-                   .text('NOTAS ADICIONALES', marginLeft + 15, yPosition + 4);
-                
+                    .fontSize(12)
+                    .font('Helvetica-Bold')
+                    .text('NOTAS ADICIONALES', marginLeft + 15, yPosition + 4);
+
                 yPosition += 25;
                 doc.fontSize(11)
-                   .font('Helvetica')
-                   .fillColor(textColor)
-                   .text(budget.notes, marginLeft, yPosition, { 
-                       width: contentWidth,
-                       lineGap: 3
-                   });
+                    .font('Helvetica')
+                    .fillColor(textColor)
+                    .text(budget.notes, marginLeft, yPosition, {
+                        width: contentWidth,
+                        lineGap: 3
+                    });
                 yPosition += 35;
             }
 
             if (budget.terms_conditions) {
                 // Caja para términos y condiciones
                 doc.rect(marginLeft, yPosition, contentWidth, 15)
-                   .fillAndStroke('#dc2626', '#dc2626');
-                
+                    .fillAndStroke('#dc2626', '#dc2626');
+
                 doc.fillColor('white')
-                   .fontSize(12)
-                   .font('Helvetica-Bold')
-                   .text('TÉRMINOS Y CONDICIONES', marginLeft + 15, yPosition + 4);
-                
+                    .fontSize(12)
+                    .font('Helvetica-Bold')
+                    .text('TÉRMINOS Y CONDICIONES', marginLeft + 15, yPosition + 4);
+
                 yPosition += 25;
                 doc.fontSize(10)
-                   .font('Helvetica')
-                   .fillColor(textColor)
-                   .text(budget.terms_conditions, marginLeft, yPosition, { 
-                       width: contentWidth,
-                       lineGap: 2
-                   });
+                    .font('Helvetica')
+                    .fillColor(textColor)
+                    .text(budget.terms_conditions, marginLeft, yPosition, {
+                        width: contentWidth,
+                        lineGap: 2
+                    });
                 yPosition += 35;
             }
 
@@ -941,20 +941,20 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
 
             // Línea separadora del pie más elegante
             doc.moveTo(marginLeft, footerY)
-               .lineTo(pageWidth - marginRight, footerY)
-               .strokeColor('#cbd5e1')
-               .lineWidth(2)
-               .stroke();
+                .lineTo(pageWidth - marginRight, footerY)
+                .strokeColor('#cbd5e1')
+                .lineWidth(2)
+                .stroke();
 
             // Información del pie en dos columnas
             const footerTextY = footerY + 20;
-            
+
             // Columna izquierda - Información de validez
             doc.fontSize(10)
-               .fillColor(textColor)
-               .font('Helvetica')
-               .text('• Este presupuesto es válido por 30 días desde la fecha de emisión.', marginLeft, footerTextY)
-               .text(`• Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, marginLeft, footerTextY + 15);
+                .fillColor(textColor)
+                .font('Helvetica')
+                .text('• Este presupuesto es válido por 30 días desde la fecha de emisión.', marginLeft, footerTextY)
+                .text(`• Generado el ${new Date().toLocaleDateString('es-ES')} a las ${new Date().toLocaleTimeString('es-ES')}`, marginLeft, footerTextY + 15);
 
             // Columna derecha - Estado del presupuesto
             const statusColors: { [key: string]: string } = {
@@ -980,12 +980,12 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
             // Badge del estado más elegante
             const statusBadgeX = pageWidth - marginRight - 120;
             doc.rect(statusBadgeX, footerTextY - 5, 110, 25)
-               .fillAndStroke(statusColor, statusColor);
+                .fillAndStroke(statusColor, statusColor);
 
             doc.fillColor('white')
-               .fontSize(10)
-               .font('Helvetica-Bold')
-               .text(statusLabel, statusBadgeX + 10, footerTextY + 3);
+                .fontSize(10)
+                .font('Helvetica-Bold')
+                .text(statusLabel, statusBadgeX + 10, footerTextY + 3);
 
             // Finalizar el documento
             doc.end();
@@ -1063,218 +1063,218 @@ export function BudgetsPageClient({ userEmail }: BudgetsPageClientProps) {
 
             <div className="flex-1 flex flex-col overflow-hidden ml-56">
                 <Header userEmail={userEmail} onLogout={handleLogout} />
-                
+
                 <div className="flex-1 overflow-auto">
                     <TrialBanner userEmail={userEmail} />
-                <div className="w-full">
-                    {/* Header */}
-                    <div className="bg-white border-b border-gray-200 px-6 py-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-semibold text-gray-900">Presupuestos</h1>
-                                <p className="mt-1 text-sm text-gray-600">
-                                    Gestiona y crea presupuestos para tus clientes
-                                </p>
-                            </div>
-                            <Button
-                                onClick={() => router.push('/dashboard/budgets/create')}
-                                disabled={!canUseFeatures}
-                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Nuevo Presupuesto
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        {/* Métricas */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Presupuestos</p>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.totalBudgets}</p>
-                                    </div>
-                                    <Calculator className="w-8 h-8 text-blue-600" />
-                                </div>
-                            </div>
-
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Aprobados</p>
-                                        <p className="text-2xl font-bold text-green-600">{metrics.approvedBudgets}</p>
-                                    </div>
-                                    <TrendingUp className="w-8 h-8 text-green-600" />
-                                </div>
-                            </div>
-
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Valor Total</p>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">€{metrics.totalValue.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
-                                    </div>
-                                    <DollarSign className="w-8 h-8 text-yellow-600" />
-                                </div>
-                            </div>
-
-                            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tasa Conversión</p>
-                                        <p className="text-2xl font-bold text-blue-600">{metrics.conversionRate.toFixed(2)}%</p>
-                                    </div>
-                                    <TrendingUp className="w-8 h-8 text-blue-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Filtros */}
-                        <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar presupuestos..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Filter className="w-4 h-4 text-gray-400" />
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                >
-                                    <option value="all">Todos los estados</option>
-                                    <option value="draft">Borrador</option>
-                                    <option value="sent">Enviado</option>
-                                    <option value="approved">Aprobado</option>
-                                    <option value="rejected">Rechazado</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Lista de presupuestos */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                            {loading ? (
-                                <div className="p-8 text-center">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                                    <p className="mt-2 text-gray-600 dark:text-gray-400">Cargando presupuestos...</p>
-                                </div>
-                            ) : filteredBudgets.length === 0 ? (
-                                <div className="p-8 text-center">
-                                    <Calculator className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                                        No hay presupuestos
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                                        Comienza creando tu primer presupuesto para un cliente.
+                    <div className="w-full">
+                        {/* Header */}
+                        <div className="bg-white border-b border-gray-200 px-6 py-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-2xl font-semibold text-gray-900">Presupuestos</h1>
+                                    <p className="mt-1 text-sm text-gray-600">
+                                        Gestiona y crea presupuestos para tus clientes
                                     </p>
-                                    <Button
-                                        onClick={() => router.push('/dashboard/budgets/create')}
-                                        disabled={!canUseFeatures}
+                                </div>
+                                <Button
+                                    onClick={() => router.push('/dashboard/budgets/create')}
+                                    disabled={!canUseFeatures}
+                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Nuevo Presupuesto
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Métricas */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Presupuestos</p>
+                                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.totalBudgets}</p>
+                                        </div>
+                                        <Calculator className="w-8 h-8 text-blue-600" />
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Aprobados</p>
+                                            <p className="text-2xl font-bold text-green-600">{metrics.approvedBudgets}</p>
+                                        </div>
+                                        <TrendingUp className="w-8 h-8 text-green-600" />
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Valor Total</p>
+                                            <p className="text-2xl font-bold text-gray-900 dark:text-white">€{metrics.totalValue.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
+                                        </div>
+                                        <DollarSign className="w-8 h-8 text-yellow-600" />
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tasa Conversión</p>
+                                            <p className="text-2xl font-bold text-blue-600">{metrics.conversionRate.toFixed(2)}%</p>
+                                        </div>
+                                        <TrendingUp className="w-8 h-8 text-blue-600" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Filtros */}
+                            <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div className="flex-1 relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar presupuestos..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Filter className="w-4 h-4 text-gray-400" />
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                                     >
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Crear Presupuesto
-                                    </Button>
+                                        <option value="all">Todos los estados</option>
+                                        <option value="draft">Borrador</option>
+                                        <option value="sent">Enviado</option>
+                                        <option value="approved">Aprobado</option>
+                                        <option value="rejected">Rechazado</option>
+                                    </select>
                                 </div>
-                            ) : (
-                                <div className="overflow-x-auto overflow-y-visible">
-                                    <table className="w-full">
-                                        <thead className="bg-gray-50 dark:bg-gray-700/50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    Presupuesto
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    Cliente
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    Estado
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    Valor
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    Fecha
-                                                </th>
-                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    Acciones
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                            {filteredBudgets.map((budget) => (
-                                                <tr key={budget.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 relative">
-                                                    <td className="px-6 py-4">
-                                                        <div>
-                                                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                {budget.budget_reference || `Presupuesto #${budget.id.slice(0,8)}`} - {budget.title}
-                                                            </div>
-                                                            <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                                                                {budget.description}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="text-sm text-gray-900 dark:text-white">
-                                                            {budget.client_name}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(budget.status)}`}>
-                                                            {getStatusText(budget.status)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            €{budget.total_amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                            {new Date(budget.created_at).toLocaleDateString('es-ES')}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right relative z-[99999]">
-                                                        <div className="flex items-center justify-end gap-2 relative">
-                                                            <BudgetDropdownMenu
-                                                                budget={budget}
-                                                                onEdit={handleEdit}
-                                                                onDuplicate={handleDuplicate}
-                                                                onSend={handleSend}
-                                                                onApprove={handleApprove}
-                                                                onReject={handleReject}
-                                                                onDelete={handleDelete}
-                                                                onDownloadPDF={handleDownloadPDF}
-                                                                router={router}
-                                                            />
-                                                        </div>
-                                                    </td>
+                            </div>
+
+                            {/* Lista de presupuestos */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                                {loading ? (
+                                    <div className="p-8 text-center">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                                        <p className="mt-2 text-gray-600 dark:text-gray-400">Cargando presupuestos...</p>
+                                    </div>
+                                ) : filteredBudgets.length === 0 ? (
+                                    <div className="p-8 text-center">
+                                        <Calculator className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                            No hay presupuestos
+                                        </h3>
+                                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                            Comienza creando tu primer presupuesto para un cliente.
+                                        </p>
+                                        <Button
+                                            onClick={() => router.push('/dashboard/budgets/create')}
+                                            disabled={!canUseFeatures}
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Crear Presupuesto
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto overflow-y-visible">
+                                        <table className="w-full">
+                                            <thead className="bg-gray-50 dark:bg-gray-700/50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                        Presupuesto
+                                                    </th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                        Cliente
+                                                    </th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                        Estado
+                                                    </th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                        Valor
+                                                    </th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                        Fecha
+                                                    </th>
+                                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                        Acciones
+                                                    </th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                                {filteredBudgets.map((budget) => (
+                                                    <tr key={budget.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 relative">
+                                                        <td className="px-6 py-4">
+                                                            <div>
+                                                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {budget.budget_reference || `Presupuesto #${budget.id.slice(0, 8)}`} - {budget.title}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                                                                    {budget.description}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm text-gray-900 dark:text-white">
+                                                                {budget.client_name}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(budget.status)}`}>
+                                                                {getStatusText(budget.status)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                €{budget.total_amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                                {new Date(budget.created_at).toLocaleDateString('es-ES')}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right relative z-[99999]">
+                                                            <div className="flex items-center justify-end gap-2 relative">
+                                                                <BudgetDropdownMenu
+                                                                    budget={budget}
+                                                                    onEdit={handleEdit}
+                                                                    onDuplicate={handleDuplicate}
+                                                                    onSend={handleSend}
+                                                                    onApprove={handleApprove}
+                                                                    onReject={handleReject}
+                                                                    onDelete={handleDelete}
+                                                                    onDownloadPDF={handleDownloadPDF}
+                                                                    router={router}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-            {/* Modal de confirmación de eliminación */}
-            <DeleteConfirmationModal
-                isOpen={deleteModal.isOpen}
-                onClose={closeDeleteModal}
-                onConfirm={confirmDelete}
-                budgetTitle={deleteModal.budgetTitle}
-                isDeleting={deleteModal.isDeleting}
-            />
-            </div>
+                    {/* Modal de confirmación de eliminación */}
+                    <DeleteConfirmationModal
+                        isOpen={deleteModal.isOpen}
+                        onClose={closeDeleteModal}
+                        onConfirm={confirmDelete}
+                        budgetTitle={deleteModal.budgetTitle}
+                        isDeleting={deleteModal.isDeleting}
+                    />
+                </div>
             </div>
         </div>
     );
