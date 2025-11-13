@@ -20,13 +20,7 @@ export async function GET(request: NextRequest) {
         // Obtener la sesión de checkout
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        id: session.id,
-            status: session.payment_status,
-                customer: session.customer,
-                    subscription: session.subscription
-    });
-
-    if (session.payment_status !== 'paid') {
+        if (session.payment_status !== 'paid') {
         return NextResponse.json({
             success: false,
             error: 'Pago no completado'
@@ -44,13 +38,8 @@ export async function GET(request: NextRequest) {
     // Obtener la suscripción completa
     const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
-    id: subscription.id,
-        status: subscription.status,
-            customer: subscription.customer
-});
-
-// Obtener el usuario usando client_reference_id de la sesión
-const userId = session.client_reference_id;
+    // Obtener el usuario usando client_reference_id de la sesión
+    const userId = session.client_reference_id;
 
 if (!userId) {
     return NextResponse.json({

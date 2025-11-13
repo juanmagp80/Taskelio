@@ -6,12 +6,6 @@ import { getBaseUrlFromRequest } from '../../../../lib/url';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    supabaseUrl: supabaseUrl ? '✅ Configurada' : '❌ Faltante',
-    serviceKey: supabaseServiceKey ? '✅ Configurada' : '❌ Faltante',
-    resendKey: process.env.RESEND_API_KEY ? '✅ Configurada' : '❌ Faltante',
-    fromEmail: process.env.FROM_EMAIL || 'No configurado'
-});
-
 export async function POST(request: NextRequest) {
     
     try {
@@ -57,11 +51,6 @@ export async function POST(request: NextRequest) {
             .eq('id', clientId)
             .single();
 
-            clientId, 
-            found: !!client, 
-            error: clientError?.message || 'ninguno'
-        });
-
         if (clientError || !client) {
             return NextResponse.json(
                 { error: 'Cliente no encontrado', details: clientError?.message },
@@ -75,11 +64,6 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
-
-            name: client.name, 
-            email: client.email,
-            company: client.company || 'Sin empresa'
-        });
 
         // Buscar token existente activo - simplificado para anon key
         let token;

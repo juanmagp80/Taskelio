@@ -18,14 +18,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { to, subject, html, from, reply_to, userId } = body;
 
-            to,
-            subject,
-            from,
-            reply_to,
-            userId,
-            htmlLength: html?.length
-        });
-
         // Validar datos requeridos
         if (!to || !subject || !html) {
             return NextResponse.json({
@@ -51,12 +43,6 @@ export async function POST(request: NextRequest) {
         if (reply_to) {
             emailData.reply_to = [reply_to];
         }
-
-            from: emailData.from,
-            to: emailData.to,
-            subject: emailData.subject,
-            reply_to: emailData.reply_to
-        });
 
         // **MODO SIMULACIÓN** - Para testing cuando la API key es inválida
         const SIMULATION_MODE = process.env.EMAIL_SIMULATION_MODE === 'true';

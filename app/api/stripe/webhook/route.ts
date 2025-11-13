@@ -38,21 +38,11 @@ export async function POST(request: NextRequest) {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object as any;
-                sessionId: session.id,
-                    mode: session.mode,
-                        customer: session.customer,
-                            client_reference_id: session.client_reference_id,
-                                subscription: session.subscription
-            });
 
                 if (session.mode === 'subscription') {
                     const subscription = await stripe.subscriptions.retrieve(session.subscription);
-                    id: subscription.id,
-                        status: subscription.status,
-                            customer: subscription.customer
-                });
 
-                const userId = session.client_reference_id;
+                    const userId = session.client_reference_id;
 
                 if (userId) {
                     const { error: subError } = await supabase
