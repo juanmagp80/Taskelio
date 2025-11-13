@@ -17,11 +17,6 @@ export const debugSupabaseCookies = () => {
                 };
             });
 
-            total: supabaseCookies.length,
-            cookies: supabaseCookies,
-            timestamp: new Date().toISOString()
-        });
-
         return supabaseCookies;
     } catch (error) {
         console.warn('Error debugging cookies:', error);
@@ -40,11 +35,6 @@ export const checkAuthenticationState = async () => {
             .filter(cookie => cookie.split('=')[0].startsWith('sb-'));
         
         const hasAuthCookies = cookies.length > 0;
-        
-            hasAuthCookies,
-            cookieCount: cookies.length,
-            timestamp: new Date().toISOString()
-        });
         
         return hasAuthCookies;
     } catch (error) {

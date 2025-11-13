@@ -20,10 +20,6 @@ export async function POST(request: NextRequest) {
       const authResult = await supabase.auth.getUser();
       user = authResult.data?.user;
       authError = authResult.error;
-      
-        user: user ? { id: user.id, email: user.email } : null, 
-        authError: authError?.message 
-      });
     } catch (error) {
     }
 
@@ -64,11 +60,6 @@ export async function POST(request: NextRequest) {
         .select('id')
         .eq('user_id', user.id)
         .limit(1);
-
-        success: !testError, 
-        error: testError?.message,
-        hasData: testEvents && testEvents.length > 0
-      });
 
       if (testError) {
         return NextResponse.json({

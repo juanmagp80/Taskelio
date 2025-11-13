@@ -53,15 +53,8 @@ export default function SubscriptionStatus({ userEmail }: SubscriptionStatusProp
                 if (result.success && result.profile) {
                     const profile = result.profile;
                     const plan = (profile.subscription_plan || '').toLowerCase();
-                    plan,
-                        status: profile.subscription_status,
-                            email: profile.email,
-                                stripe_id: profile.stripe_subscription_id,
-                                    trial_ends_at: profile.trial_ends_at,
-                                        trial_started_at: profile.trial_started_at
-                });
 
-    setStatus({
+                    setStatus({
         is_subscribed: profile.subscription_status === 'active',
         trial_end: profile.trial_ends_at,
         subscription_end: profile.subscription_current_period_end,
@@ -108,12 +101,7 @@ async function init() {
         const result = await Promise.race([authPromise, timeoutPromise]);
         const { data: { user }, error: authError } = result as any;
 
-        hasUser: !!user,
-            email: user?.email,
-                error: authError?.message || 'none'
-    });
-
-    if (!user || authError) {
+        if (!user || authError) {
         const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
             if (session?.user) {
                 setCurrentUserEmail(session.user.email || '');
@@ -169,15 +157,8 @@ async function fetchProfileByEmail(email: string) {
         if (result.success && result.profile) {
             const profile = result.profile;
             const plan = (profile.subscription_plan || '').toLowerCase();
-            plan,
-                status: profile.subscription_status,
-                    email: profile.email,
-                        stripe_id: profile.stripe_subscription_id,
-                            trial_ends_at: profile.trial_ends_at,
-                                trial_started_at: profile.trial_started_at
-        });
 
-        setStatus({
+            setStatus({
             is_subscribed: profile.subscription_status === 'active',
             trial_end: profile.trial_ends_at,
             subscription_end: profile.subscription_current_period_end,
@@ -260,14 +241,6 @@ const calculateDaysRemaining = () => {
 
 const daysRemaining = calculateDaysRemaining();
 const isTrialActive = !isPro && status.trial_end && new Date(status.trial_end) > new Date();
-
-isPro,
-    isTrialActive,
-    daysRemaining,
-    trial_end: status.trial_end,
-        plan_type: status.plan_type,
-            is_subscribed: status.is_subscribed
-    });
 
 const handleSubscribe = async () => {
     try {

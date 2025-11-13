@@ -888,14 +888,8 @@ export async function executeAutomationAction(
             };
         }
 
-        // Log de inicio
-        executionId: payload.executionId,
-            client: payload.client.name,
-                automation: payload.automation.name
-    });
-
-    // Ejecutar la acción
-    const result = await executor(action, payload);
+        // Ejecutar la acción
+        const result = await executor(action, payload);
 
     // Log del resultado
     if (result.success) {
