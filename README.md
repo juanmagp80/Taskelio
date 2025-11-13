@@ -40,4 +40,6 @@ Una aplicación SaaS moderna diseñada específicamente para freelancers que bus
 ## 📝 Licencia
 
 MIT License - ve el archivo LICENSE para más detalles.
-// Updated sáb 16 ago 2025 11:21:24 CEST
+
+---
+*Última actualización: 13 de noviembre de 2025*
