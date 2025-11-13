@@ -1,5 +1,5 @@
-import { Metadata } from 'next';
 import { createServerSupabaseClient } from '@/src/lib/supabase-server';
+import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import AutomationsAIClient from './AutomationsAIClient';
 

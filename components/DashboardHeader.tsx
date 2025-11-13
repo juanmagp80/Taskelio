@@ -1,7 +1,7 @@
 'use client';
 
-import UserMenu from './UserMenu';
 import NotificationBell from './NotificationBell';
+import UserMenu from './UserMenu';
 
 interface DashboardHeaderProps {
   userEmail?: string;
@@ -22,7 +22,7 @@ export default function DashboardHeader({ userEmail, onLogout }: DashboardHeader
       <div className="flex items-center gap-3">
         {/* Notificaciones */}
         <NotificationBell />
-        
+
         {/* Menú de usuario */}
         <UserMenu userEmail={userEmail} onLogout={onLogout} />
       </div>

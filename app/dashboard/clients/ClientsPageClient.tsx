@@ -1,12 +1,12 @@
 'use client';
 
-import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import TrialBanner from '@/components/TrialBanner';
 import { getCitiesByProvince, getProvinceNames } from '@/src/data/spanish-locations';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
-import { showToast } from '@/utils/toast';
 import { useTrialStatus } from '@/src/lib/useTrialStatus';
+import { showToast } from '@/utils/toast';
 import {
     Building,
     Edit3,
@@ -434,386 +434,386 @@ export default function ClientsPageClient({ userEmail }: ClientsPageClientProps)
                 <TrialBanner userEmail={userEmail} />
                 <Header userEmail={userEmail} onLogout={handleLogout} />
                 <div className="flex-1 overflow-auto">
-                <div className="w-full">
-                    {/* Header Bonsai Style */}
-                    <div className="bg-white border-b border-gray-200 px-6 py-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-semibold text-gray-900">Clientes</h1>
-                                <p className="mt-1 text-sm text-gray-600">
-                                    Gestiona tu cartera de {clients.length} clientes
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleNewClientClick}
-                                disabled={trialLoading || (!canUseFeatures || hasReachedLimit('clients'))}
-                                className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${trialLoading
+                    <div className="w-full">
+                        {/* Header Bonsai Style */}
+                        <div className="bg-white border-b border-gray-200 px-6 py-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-2xl font-semibold text-gray-900">Clientes</h1>
+                                    <p className="mt-1 text-sm text-gray-600">
+                                        Gestiona tu cartera de {clients.length} clientes
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={handleNewClientClick}
+                                    disabled={trialLoading || (!canUseFeatures || hasReachedLimit('clients'))}
+                                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${trialLoading
                                         ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-wait'
                                         : (!canUseFeatures || hasReachedLimit('clients'))
                                             ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
                                             : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 hover:border-blue-700'
-                                    }`}
-                            >
-                                {trialLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 mr-2 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                                        Cargando...
-                                    </>
-                                ) : (!canUseFeatures || hasReachedLimit('clients')) ? (
-                                    <>
-                                        <X className="w-4 h-4 mr-2" />
-                                        Trial Expirado
-                                    </>
-                                ) : (
-                                    <>
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Nuevo Cliente
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Stats Section */}
-                    <div className="bg-white border-b border-gray-200 px-6 py-6">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <Users className="h-6 w-6 text-gray-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-600">Total</p>
-                                        <p className="text-2xl font-semibold text-gray-900">{clients.length}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <Building className="h-6 w-6 text-gray-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-600">Con Empresa</p>
-                                        <p className="text-2xl font-semibold text-gray-900">
-                                            {clients.filter(client => client.company).length}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <Mail className="h-6 w-6 text-gray-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-600">Con Email</p>
-                                        <p className="text-2xl font-semibold text-gray-900">
-                                            {clients.filter(client => client.email).length}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <Phone className="h-6 w-6 text-gray-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-600">Con Teléfono</p>
-                                        <p className="text-2xl font-semibold text-gray-900">
-                                            {clients.filter(client => client.phone).length}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Search and Filters */}
-                    <div className="bg-white border-b border-gray-200 px-6 py-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex-1 max-w-lg">
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Search className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        ref={(el) => setSearchInputRef(el)}
-                                        type="text"
-                                        placeholder="Buscar clientes por nombre, empresa, email..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                    />
-                                    {searchTerm && (
-                                        <button
-                                            onClick={() => setSearchTerm('')}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                        >
-                                            <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-                                        </button>
+                                        }`}
+                                >
+                                    {trialLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 mr-2 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                            Cargando...
+                                        </>
+                                    ) : (!canUseFeatures || hasReachedLimit('clients')) ? (
+                                        <>
+                                            <X className="w-4 h-4 mr-2" />
+                                            Trial Expirado
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Nuevo Cliente
+                                        </>
                                     )}
-                                </div>
-                            </div>
-                            <div className="ml-4 flex items-center space-x-2">
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg ${viewMode === 'list'
-                                        ? 'bg-blue-100 text-blue-600'
-                                        : 'text-gray-400 hover:text-gray-600'
-                                        }`}
-                                >
-                                    <List className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('cards')}
-                                    className={`p-2 rounded-lg ${viewMode === 'cards'
-                                        ? 'bg-blue-100 text-blue-600'
-                                        : 'text-gray-400 hover:text-gray-600'
-                                        }`}
-                                >
-                                    <Grid3X3 className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Clients Content */}
-                    <div className="bg-white px-6 py-6">
-                        {loading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
-                                    <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                                    <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                        {/* Stats Section */}
+                        <div className="bg-white border-b border-gray-200 px-6 py-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <Users className="h-6 w-6 text-gray-400" />
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Total</p>
+                                            <p className="text-2xl font-semibold text-gray-900">{clients.length}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <Building className="h-6 w-6 text-gray-400" />
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Con Empresa</p>
+                                            <p className="text-2xl font-semibold text-gray-900">
+                                                {clients.filter(client => client.company).length}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <Mail className="h-6 w-6 text-gray-400" />
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Con Email</p>
+                                            <p className="text-2xl font-semibold text-gray-900">
+                                                {clients.filter(client => client.email).length}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <Phone className="h-6 w-6 text-gray-400" />
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">Con Teléfono</p>
+                                            <p className="text-2xl font-semibold text-gray-900">
+                                                {clients.filter(client => client.phone).length}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        ) : filteredClients.length === 0 ? (
-                            <div className="text-center py-12">
-                                <Users className="mx-auto h-12 w-12 text-gray-400" />
-                                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                                    {searchTerm ? 'No se encontraron clientes' : 'No hay clientes'}
-                                </h3>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    {searchTerm
-                                        ? `No hay clientes que coincidan con "${searchTerm}"`
-                                        : 'Comienza creando tu primer cliente.'
-                                    }
-                                </p>
-                                {!searchTerm && (
-                                    <div className="mt-6">
-                                        <button
-                                            onClick={handleNewClientClick}
-                                            disabled={trialLoading || (!canUseFeatures || hasReachedLimit('clients'))}
-                                            className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${trialLoading
+                        </div>
+
+                        {/* Search and Filters */}
+                        <div className="bg-white border-b border-gray-200 px-6 py-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1 max-w-lg">
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Search className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            ref={(el) => setSearchInputRef(el)}
+                                            type="text"
+                                            placeholder="Buscar clientes por nombre, empresa, email..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        />
+                                        {searchTerm && (
+                                            <button
+                                                onClick={() => setSearchTerm('')}
+                                                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                            >
+                                                <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="ml-4 flex items-center space-x-2">
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-2 rounded-lg ${viewMode === 'list'
+                                            ? 'bg-blue-100 text-blue-600'
+                                            : 'text-gray-400 hover:text-gray-600'
+                                            }`}
+                                    >
+                                        <List className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('cards')}
+                                        className={`p-2 rounded-lg ${viewMode === 'cards'
+                                            ? 'bg-blue-100 text-blue-600'
+                                            : 'text-gray-400 hover:text-gray-600'
+                                            }`}
+                                    >
+                                        <Grid3X3 className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clients Content */}
+                        <div className="bg-white px-6 py-6">
+                            {loading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
+                                        <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                        <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                    </div>
+                                </div>
+                            ) : filteredClients.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <Users className="mx-auto h-12 w-12 text-gray-400" />
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                                        {searchTerm ? 'No se encontraron clientes' : 'No hay clientes'}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        {searchTerm
+                                            ? `No hay clientes que coincidan con "${searchTerm}"`
+                                            : 'Comienza creando tu primer cliente.'
+                                        }
+                                    </p>
+                                    {!searchTerm && (
+                                        <div className="mt-6">
+                                            <button
+                                                onClick={handleNewClientClick}
+                                                disabled={trialLoading || (!canUseFeatures || hasReachedLimit('clients'))}
+                                                className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${trialLoading
                                                     ? 'bg-gray-400 cursor-wait'
                                                     : (!canUseFeatures || hasReachedLimit('clients'))
                                                         ? 'bg-gray-400 cursor-not-allowed'
                                                         : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                                                }`}
-                                        >
-                                            {trialLoading ? (
-                                                <>
-                                                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    Cargando...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Plus className="w-4 h-4 mr-2" />
-                                                    Nuevo Cliente
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : viewMode === 'list' ? (
-                            /* Vista Lista */
-                            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                                <table className="min-w-full divide-y divide-gray-300">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Cliente
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Contacto
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Ubicación
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Creado
-                                            </th>
-                                            <th className="relative px-6 py-3">
-                                                <span className="sr-only">Acciones</span>
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {filteredClients.map((client) => (
-                                            <tr key={client.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className="flex-shrink-0 h-10 w-10">
-                                                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                                                <span className="text-sm font-medium text-blue-800">
-                                                                    {getInitials(client.name)}
-                                                                </span>
+                                                    }`}
+                                            >
+                                                {trialLoading ? (
+                                                    <>
+                                                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                        Cargando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Plus className="w-4 h-4 mr-2" />
+                                                        Nuevo Cliente
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : viewMode === 'list' ? (
+                                /* Vista Lista */
+                                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                                    <table className="min-w-full divide-y divide-gray-300">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Cliente
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Contacto
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Ubicación
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Creado
+                                                </th>
+                                                <th className="relative px-6 py-3">
+                                                    <span className="sr-only">Acciones</span>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {filteredClients.map((client) => (
+                                                <tr key={client.id} className="hover:bg-gray-50">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center">
+                                                            <div className="flex-shrink-0 h-10 w-10">
+                                                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                                    <span className="text-sm font-medium text-blue-800">
+                                                                        {getInitials(client.name)}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="ml-4">
+                                                                <div className="text-sm font-medium text-gray-900">
+                                                                    {client.name}
+                                                                </div>
+                                                                {client.company && (
+                                                                    <div className="text-sm text-gray-500">
+                                                                        {client.company}
+                                                                    </div>
+                                                                )}
+                                                                {client.tag && (
+                                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                                                        {client.tag}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div className="ml-4">
-                                                            <div className="text-sm font-medium text-gray-900">
-                                                                {client.name}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {client.email && (
+                                                            <div className="flex items-center">
+                                                                <Mail className="h-4 w-4 text-gray-400 mr-2" />
+                                                                {client.email}
                                                             </div>
-                                                            {client.company && (
-                                                                <div className="text-sm text-gray-500">
-                                                                    {client.company}
-                                                                </div>
-                                                            )}
-                                                            {client.tag && (
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
-                                                                    {client.tag}
-                                                                </span>
-                                                            )}
+                                                        )}
+                                                        {client.phone && (
+                                                            <div className="flex items-center mt-1">
+                                                                <Phone className="h-4 w-4 text-gray-400 mr-2" />
+                                                                {client.phone}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {client.city && client.province && (
+                                                            <div>{client.city}, {client.province}</div>
+                                                        )}
+                                                        {client.address && (
+                                                            <div className="text-xs">{client.address}</div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {new Date(client.created_at).toLocaleDateString('es-ES')}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex items-center space-x-2">
+                                                            <Link href={`/dashboard/clients/${client.id}`}>
+                                                                <button className="text-blue-600 hover:text-blue-900 text-sm">
+                                                                    Ver
+                                                                </button>
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => startEdit(client)}
+                                                                className="text-gray-600 hover:text-gray-900"
+                                                            >
+                                                                <Edit3 className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => deleteClient(client.id)}
+                                                                className="text-red-600 hover:text-red-900"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                /* Vista Cards */
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {filteredClients.map((client) => (
+                                        <div key={client.id} className="bg-white overflow-hidden shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                                            <div className="p-6">
+                                                <div className="flex items-center">
+                                                    <div className="flex-shrink-0">
+                                                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                            <span className="text-sm font-medium text-blue-800">
+                                                                {getInitials(client.name)}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    <div className="ml-4 flex-1">
+                                                        <h3 className="text-lg font-medium text-gray-900 truncate">
+                                                            {client.name}
+                                                        </h3>
+                                                        {client.company && (
+                                                            <p className="text-sm text-gray-500 truncate">
+                                                                {client.company}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    {client.tag && (
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                            {client.tag}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="mt-4 space-y-2">
                                                     {client.email && (
-                                                        <div className="flex items-center">
+                                                        <div className="flex items-center text-sm text-gray-600">
                                                             <Mail className="h-4 w-4 text-gray-400 mr-2" />
-                                                            {client.email}
+                                                            <span className="truncate">{client.email}</span>
                                                         </div>
                                                     )}
                                                     {client.phone && (
-                                                        <div className="flex items-center mt-1">
+                                                        <div className="flex items-center text-sm text-gray-600">
                                                             <Phone className="h-4 w-4 text-gray-400 mr-2" />
                                                             {client.phone}
                                                         </div>
                                                     )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {client.city && client.province && (
-                                                        <div>{client.city}, {client.province}</div>
+                                                        <div className="flex items-center text-sm text-gray-600">
+                                                            <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                                                            <span className="truncate">{client.city}, {client.province}</span>
+                                                        </div>
                                                     )}
-                                                    {client.address && (
-                                                        <div className="text-xs">{client.address}</div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {new Date(client.created_at).toLocaleDateString('es-ES')}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex items-center space-x-2">
+                                                </div>
+
+                                                <div className="mt-4 flex items-center justify-between">
+                                                    <span className="text-xs text-gray-500">
+                                                        {new Date(client.created_at).toLocaleDateString('es-ES')}
+                                                    </span>
+                                                    <div className="flex space-x-2">
                                                         <Link href={`/dashboard/clients/${client.id}`}>
-                                                            <button className="text-blue-600 hover:text-blue-900 text-sm">
+                                                            <button className="text-sm text-blue-600 hover:text-blue-800">
                                                                 Ver
                                                             </button>
                                                         </Link>
                                                         <button
                                                             onClick={() => startEdit(client)}
-                                                            className="text-gray-600 hover:text-gray-900"
+                                                            className="text-gray-400 hover:text-gray-600"
                                                         >
                                                             <Edit3 className="h-4 w-4" />
                                                         </button>
                                                         <button
                                                             onClick={() => deleteClient(client.id)}
-                                                            className="text-red-600 hover:text-red-900"
+                                                            className="text-gray-400 hover:text-red-600"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            /* Vista Cards */
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                {filteredClients.map((client) => (
-                                    <div key={client.id} className="bg-white overflow-hidden shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-                                        <div className="p-6">
-                                            <div className="flex items-center">
-                                                <div className="flex-shrink-0">
-                                                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                                        <span className="text-sm font-medium text-blue-800">
-                                                            {getInitials(client.name)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="ml-4 flex-1">
-                                                    <h3 className="text-lg font-medium text-gray-900 truncate">
-                                                        {client.name}
-                                                    </h3>
-                                                    {client.company && (
-                                                        <p className="text-sm text-gray-500 truncate">
-                                                            {client.company}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                {client.tag && (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        {client.tag}
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            <div className="mt-4 space-y-2">
-                                                {client.email && (
-                                                    <div className="flex items-center text-sm text-gray-600">
-                                                        <Mail className="h-4 w-4 text-gray-400 mr-2" />
-                                                        <span className="truncate">{client.email}</span>
-                                                    </div>
-                                                )}
-                                                {client.phone && (
-                                                    <div className="flex items-center text-sm text-gray-600">
-                                                        <Phone className="h-4 w-4 text-gray-400 mr-2" />
-                                                        {client.phone}
-                                                    </div>
-                                                )}
-                                                {client.city && client.province && (
-                                                    <div className="flex items-center text-sm text-gray-600">
-                                                        <MapPin className="h-4 w-4 text-gray-400 mr-2" />
-                                                        <span className="truncate">{client.city}, {client.province}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="mt-4 flex items-center justify-between">
-                                                <span className="text-xs text-gray-500">
-                                                    {new Date(client.created_at).toLocaleDateString('es-ES')}
-                                                </span>
-                                                <div className="flex space-x-2">
-                                                    <Link href={`/dashboard/clients/${client.id}`}>
-                                                        <button className="text-sm text-blue-600 hover:text-blue-800">
-                                                            Ver
-                                                        </button>
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => startEdit(client)}
-                                                        className="text-gray-400 hover:text-gray-600"
-                                                    >
-                                                        <Edit3 className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => deleteClient(client.id)}
-                                                        className="text-gray-400 hover:text-red-600"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
                 </div>
             </div>
 

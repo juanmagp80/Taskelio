@@ -1,27 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
 import { showToast } from '@/utils/toast';
-import { 
-  Brain, 
-  Mail, 
-  BarChart3, 
-  Calendar, 
-  DollarSign, 
-  Users, 
+import {
+  BarChart3,
+  Brain,
+  Calendar,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Euro,
+  Mail,
   MessageSquare,
   Sparkles,
   TrendingUp,
-  Zap,
-  Clock,
-  Euro,
-  Send,
-  CheckCircle
+  Users,
+  Zap
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface UsageStats {
   currentMonth: {
@@ -243,11 +242,11 @@ export default function AutomationsAIClient({ userEmail }: AutomationsAIClientPr
       if (!response.ok) {
         throw new Error('Error al obtener análisis de desarrollo');
       }
-      
+
       const data = await response.json();
-      
+
       // Mostrar logs de debug en consola de forma muy visible
-      
+
       if (data.success && data.analysis) {
         // Formatear el resultado para mostrar de manera más visual
         const analysis = data.analysis;
@@ -321,448 +320,447 @@ ${analysis.predictions?.focus_areas?.length || 0}
   return (
     <div className="flex h-screen bg-black">
       <Sidebar userEmail={userEmail} onLogout={onLogout} />
-      
+
       <div className="flex flex-col flex-1 ml-56">
         <Header userEmail={userEmail} onLogout={onLogout} />
         <div className="flex-1 overflow-auto">
-        <div className="p-4 lg:p-6">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 gap-4">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-3 text-white">
-                <Brain className="w-6 h-6 lg:w-8 lg:h-8 text-blue-400" />
-                Automatizaciones IA
-              </h1>
-              <p className="text-gray-400 mt-2 text-sm lg:text-base">
-                Inteligencia artificial que trabaja para ti 24/7
-              </p>
-            </div>
-            
-            <div className="flex gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowUsageStats(!showUsageStats)}
-                className="border-gray-700 hover:bg-gray-800 text-sm"
-              >
-                <Euro className="w-4 h-4 mr-2" />
-                Uso y Costos
-              </Button>
-            </div>
-          </div>
+          <div className="p-4 lg:p-6">
+            {/* Header */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 gap-4">
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-3 text-white">
+                  <Brain className="w-6 h-6 lg:w-8 lg:h-8 text-blue-400" />
+                  Automatizaciones IA
+                </h1>
+                <p className="text-gray-400 mt-2 text-sm lg:text-base">
+                  Inteligencia artificial que trabaja para ti 24/7
+                </p>
+              </div>
 
-          {/* Usage Stats Panel */}
-          {showUsageStats && usageStats && (
-            <Card className="mb-6 lg:mb-8 bg-gray-900/50 border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-400 text-lg">
-                  <TrendingUp className="w-5 h-5" />
-                  Estadísticas de Uso - Mes Actual
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-gray-800/50 rounded-lg">
-                    <p className="text-xl lg:text-2xl font-bold text-green-400">
-                      €{usageStats.currentMonth.total_cost_usd.toFixed(4)}
-                    </p>
-                    <p className="text-xs lg:text-sm text-gray-400">Gastado este mes</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-800/50 rounded-lg">
-                    <p className="text-xl lg:text-2xl font-bold text-blue-400">
-                      {usageStats.currentMonth.total_requests}
-                    </p>
-                    <p className="text-xs lg:text-sm text-gray-400">Automatizaciones</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-800/50 rounded-lg">
-                    <p className="text-xl lg:text-2xl font-bold text-purple-400">
-                      €{usageStats.currentMonth.projected_monthly_cost.toFixed(3)}
-                    </p>
-                    <p className="text-xs lg:text-sm text-gray-400">Proyección mensual</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-800/50 rounded-lg">
-                    <p className="text-xl lg:text-2xl font-bold text-cyan-400">
-                      €{(usageStats.currentMonth.total_requests > 0 ? usageStats.currentMonth.total_cost_usd / usageStats.currentMonth.total_requests : 0).toFixed(4)}
-                    </p>
-                    <p className="text-xs lg:text-sm text-gray-400">Costo promedio</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="grid xl:grid-cols-5 gap-6 lg:gap-8">
-            {/* Lista de Automatizaciones */}
-            <div className="xl:col-span-3">
-              <h2 className="text-lg lg:text-xl font-semibold mb-4 flex items-center gap-2 text-white">
-                <Sparkles className="w-5 h-5 text-yellow-400" />
-                Automatizaciones Disponibles
-              </h2>
-              
-              <div className="grid gap-3 lg:gap-4">
-                {automations.map((automation) => (
-                  <Card 
-                    key={automation.id}
-                    className={`cursor-pointer transition-all duration-200 ai-automations-card ${
-                      selectedAutomation === automation.id 
-                        ? 'border-blue-500 bg-blue-500/5' 
-                        : 'bg-gray-900/50 border-gray-700 hover:border-gray-600'
-                    }`}
-                    onClick={() => automation.status === 'active' ? setSelectedAutomation(automation.id) : null}
-                  >
-                    <CardHeader className="pb-2 lg:pb-3 ai-automations-card-header">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-start gap-3 min-w-0 flex-1">
-                          <div className={`p-2 rounded-lg ${automation.color} flex-shrink-0 mt-0.5`}>
-                            <automation.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <CardTitle className="text-sm lg:text-base text-white line-clamp-2 leading-tight">{automation.title}</CardTitle>
-                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                              <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded text-gray-300 whitespace-nowrap">
-                                {automation.category}
-                              </span>
-                              <span className="text-xs text-green-400 whitespace-nowrap">
-                                {automation.cost}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex-shrink-0 sm:self-start">
-                          {automation.status === 'coming_soon' ? (
-                            <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded border border-yellow-500/30 whitespace-nowrap">
-                              Próximamente
-                            </span>
-                          ) : (
-                            <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border border-green-500/30 whitespace-nowrap">
-                              Activo
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <CardDescription className="text-gray-300 text-xs lg:text-sm line-clamp-2 leading-relaxed">
-                        {automation.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowUsageStats(!showUsageStats)}
+                  className="border-gray-700 hover:bg-gray-800 text-sm"
+                >
+                  <Euro className="w-4 h-4 mr-2" />
+                  Uso y Costos
+                </Button>
               </div>
             </div>
 
-            {/* Panel de Configuración */}
-            <div className="xl:col-span-2">
-              {selectedAutomation === 'email_generation' && (
-                <Card className="bg-gray-900/50 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-blue-400 text-lg">Generar Email</CardTitle>
-                    <CardDescription className="text-gray-400 text-sm">
-                      La IA creará un email profesional basado en tus datos
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Tipo de Email</label>
-                      <select 
-                        className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-                        value={emailForm.type}
-                        onChange={(e) => setEmailForm({...emailForm, type: e.target.value})}
-                      >
-                        <option value="follow_up">Seguimiento</option>
-                        <option value="project_update">Actualización</option>
-                        <option value="meeting_reminder">Recordatorio</option>
-                        <option value="invoice_reminder">Factura</option>
-                        <option value="welcome">Bienvenida</option>
-                        <option value="feedback_request">Solicitar Feedback</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Cliente *</label>
-                      <input 
-                        type="text"
-                        className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-                        value={emailForm.clientName}
-                        onChange={(e) => setEmailForm({...emailForm, clientName: e.target.value})}
-                        placeholder="Nombre del cliente"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Proyecto</label>
-                      <input 
-                        type="text"
-                        className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-                        value={emailForm.projectName}
-                        onChange={(e) => setEmailForm({...emailForm, projectName: e.target.value})}
-                        placeholder="Nombre del proyecto"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Contexto</label>
-                      <textarea 
-                        className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded h-20 text-white text-sm resize-none focus:border-blue-500 focus:outline-none"
-                        value={emailForm.context}
-                        onChange={(e) => setEmailForm({...emailForm, context: e.target.value})}
-                        placeholder="Información adicional..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Tono</label>
-                      <select 
-                        className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-                        value={emailForm.tone}
-                        onChange={(e) => setEmailForm({...emailForm, tone: e.target.value})}
-                      >
-                        <option value="professional">Profesional</option>
-                        <option value="friendly">Amigable</option>
-                        <option value="urgent">Urgente</option>
-                      </select>
-                    </div>
-
-                    <Button 
-                      onClick={generateEmail}
-                      disabled={isGenerating}
-                      className="w-full bg-blue-600 hover:bg-blue-700 h-10"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Clock className="w-4 h-4 mr-2 animate-spin" />
-                          Generando...
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4 mr-2" />
-                          Generar Email
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {selectedAutomation === 'project_analysis' && (
-                <Card className="bg-gray-900/50 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-green-400 text-lg">Analizar Proyecto</CardTitle>
-                    <CardDescription className="text-gray-400">
-                      La IA evaluará el estado y proporcionará recomendaciones
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-300">Nombre del Proyecto *</label>
-                      <input 
-                        type="text"
-                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-                        value={projectForm.projectName}
-                        onChange={(e) => setProjectForm({...projectForm, projectName: e.target.value})}
-                        placeholder="Nombre del proyecto"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-300">Descripción *</label>
-                      <textarea 
-                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded h-20 text-white"
-                        value={projectForm.description}
-                        onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
-                        placeholder="Descripción del proyecto"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-300">Estado Actual *</label>
-                      <textarea 
-                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded h-16 text-white"
-                        value={projectForm.currentStatus}
-                        onChange={(e) => setProjectForm({...projectForm, currentStatus: e.target.value})}
-                        placeholder="Estado actual del proyecto"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-300">Fecha Límite</label>
-                      <input 
-                        type="date"
-                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-                        value={projectForm.deadlineDate}
-                        onChange={(e) => setProjectForm({...projectForm, deadlineDate: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-300">Tareas Completadas</label>
-                        <input 
-                          type="number"
-                          className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-                          value={projectForm.tasksCompleted}
-                          onChange={(e) => setProjectForm({...projectForm, tasksCompleted: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-300">Total Tareas</label>
-                        <input 
-                          type="number"
-                          className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
-                          value={projectForm.totalTasks}
-                          onChange={(e) => setProjectForm({...projectForm, totalTasks: e.target.value})}
-                        />
-                      </div>
-                    </div>
-
-                    <Button 
-                      onClick={analyzeProject}
-                      disabled={isGenerating}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Clock className="w-4 h-4 mr-2 animate-spin" />
-                          Analizando...
-                        </>
-                      ) : (
-                        <>
-                          <BarChart3 className="w-4 h-4 mr-2" />
-                          Analizar Proyecto
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Analizador de Productividad Avanzado - NUEVO */}
-              {selectedAutomation === 'optimize_development_new' && (
-                <Card className="mt-6 bg-gray-900/50 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-orange-400" />
-                      📈 Analizador de Productividad Avanzado
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      IA analiza tu productividad real de los últimos 90 días usando todos tus datos de la base de datos.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-                      <h4 className="text-orange-300 font-medium mb-2">🔍 Análisis que incluye:</h4>
-                      <ul className="text-gray-400 text-sm space-y-1">
-                        <li>• ⏰ Horas trabajadas y tiempo facturable</li>
-                        <li>• 📅 Eventos de calendario con seguimiento de tiempo</li>
-                        <li>• ✅ Tareas completadas por categoría</li>
-                        <li>• 💰 Facturas emitidas y estado de pagos</li>
-                        <li>• 📋 Presupuestos aprobados y conversión</li>
-                        <li>• 💬 Comunicación con clientes</li>
-                        <li>• 📊 Métricas de productividad y eficiencia</li>
-                      </ul>
-                    </div>
-
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                      <p className="text-blue-300 text-sm">
-                        ✨ Este análisis usa OpenAI GPT-4o-mini para generar insights personalizados basados en tus datos reales.
+            {/* Usage Stats Panel */}
+            {showUsageStats && usageStats && (
+              <Card className="mb-6 lg:mb-8 bg-gray-900/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-400 text-lg">
+                    <TrendingUp className="w-5 h-5" />
+                    Estadísticas de Uso - Mes Actual
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-gray-800/50 rounded-lg">
+                      <p className="text-xl lg:text-2xl font-bold text-green-400">
+                        €{usageStats.currentMonth.total_cost_usd.toFixed(4)}
                       </p>
+                      <p className="text-xs lg:text-sm text-gray-400">Gastado este mes</p>
                     </div>
-
-                    <Button 
-                      onClick={optimizeDevelopment}
-                      disabled={isGenerating}
-                      className="w-full bg-orange-600 hover:bg-orange-700"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Clock className="w-4 h-4 mr-2 animate-spin" />
-                          Analizando productividad...
-                        </>
-                      ) : (
-                        <>
-                          <TrendingUp className="w-4 h-4 mr-2" />
-                          🧠 Analizar Productividad con IA
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Optimización de Desarrollo - ORIGINAL */}
-              {selectedAutomation === 'optimize_development' && (
-                <Card className="mt-6 bg-gray-900/50 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-orange-400" />
-                      Optimización de Desarrollo
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      Analiza tu productividad, tiempo trabajado y rendimiento de los últimos 90 días usando datos reales de tu base de datos.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-                      <h4 className="text-orange-300 font-medium mb-2">📊 Datos que se analizarán:</h4>
-                      <ul className="text-gray-400 text-sm space-y-1">
-                        <li>• Eventos de calendario y tiempo trabajado</li>
-                        <li>• Tareas completadas y tiempo invertido</li>
-                        <li>• Facturas emitidas y estado de pagos</li>
-                        <li>• Presupuestos aprobados</li>
-                        <li>• Interacciones con clientes</li>
-                        <li>• Productividad y eficiencia</li>
-                      </ul>
+                    <div className="text-center p-3 bg-gray-800/50 rounded-lg">
+                      <p className="text-xl lg:text-2xl font-bold text-blue-400">
+                        {usageStats.currentMonth.total_requests}
+                      </p>
+                      <p className="text-xs lg:text-sm text-gray-400">Automatizaciones</p>
                     </div>
-
-                    <Button 
-                      onClick={optimizeDevelopment}
-                      disabled={isGenerating}
-                      className="w-full bg-orange-600 hover:bg-orange-700"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Clock className="w-4 h-4 mr-2 animate-spin" />
-                          Analizando datos...
-                        </>
-                      ) : (
-                        <>
-                          <TrendingUp className="w-4 h-4 mr-2" />
-                          Optimizar Desarrollo
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Resultado */}
-              {result && (
-                <Card className="mt-4 lg:mt-6 bg-gray-900/50 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-green-400 flex items-center gap-2 text-lg">
-                      <CheckCircle className="w-5 h-5" />
-                      Resultado
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-800 p-3 lg:p-4 rounded border max-h-96 overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-xs lg:text-sm text-gray-300 leading-relaxed">
-                        {result}
-                      </pre>
+                    <div className="text-center p-3 bg-gray-800/50 rounded-lg">
+                      <p className="text-xl lg:text-2xl font-bold text-purple-400">
+                        €{usageStats.currentMonth.projected_monthly_cost.toFixed(3)}
+                      </p>
+                      <p className="text-xs lg:text-sm text-gray-400">Proyección mensual</p>
                     </div>
-                    <Button
-                      onClick={() => navigator.clipboard.writeText(result)}
-                      className="mt-3 bg-gray-700 hover:bg-gray-600"
-                      size="sm"
+                    <div className="text-center p-3 bg-gray-800/50 rounded-lg">
+                      <p className="text-xl lg:text-2xl font-bold text-cyan-400">
+                        €{(usageStats.currentMonth.total_requests > 0 ? usageStats.currentMonth.total_cost_usd / usageStats.currentMonth.total_requests : 0).toFixed(4)}
+                      </p>
+                      <p className="text-xs lg:text-sm text-gray-400">Costo promedio</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="grid xl:grid-cols-5 gap-6 lg:gap-8">
+              {/* Lista de Automatizaciones */}
+              <div className="xl:col-span-3">
+                <h2 className="text-lg lg:text-xl font-semibold mb-4 flex items-center gap-2 text-white">
+                  <Sparkles className="w-5 h-5 text-yellow-400" />
+                  Automatizaciones Disponibles
+                </h2>
+
+                <div className="grid gap-3 lg:gap-4">
+                  {automations.map((automation) => (
+                    <Card
+                      key={automation.id}
+                      className={`cursor-pointer transition-all duration-200 ai-automations-card ${selectedAutomation === automation.id
+                          ? 'border-blue-500 bg-blue-500/5'
+                          : 'bg-gray-900/50 border-gray-700 hover:border-gray-600'
+                        }`}
+                      onClick={() => automation.status === 'active' ? setSelectedAutomation(automation.id) : null}
                     >
-                      Copiar Resultado
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+                      <CardHeader className="pb-2 lg:pb-3 ai-automations-card-header">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className={`p-2 rounded-lg ${automation.color} flex-shrink-0 mt-0.5`}>
+                              <automation.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-sm lg:text-base text-white line-clamp-2 leading-tight">{automation.title}</CardTitle>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded text-gray-300 whitespace-nowrap">
+                                  {automation.category}
+                                </span>
+                                <span className="text-xs text-green-400 whitespace-nowrap">
+                                  {automation.cost}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex-shrink-0 sm:self-start">
+                            {automation.status === 'coming_soon' ? (
+                              <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded border border-yellow-500/30 whitespace-nowrap">
+                                Próximamente
+                              </span>
+                            ) : (
+                              <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded border border-green-500/30 whitespace-nowrap">
+                                Activo
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <CardDescription className="text-gray-300 text-xs lg:text-sm line-clamp-2 leading-relaxed">
+                          {automation.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Panel de Configuración */}
+              <div className="xl:col-span-2">
+                {selectedAutomation === 'email_generation' && (
+                  <Card className="bg-gray-900/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-blue-400 text-lg">Generar Email</CardTitle>
+                      <CardDescription className="text-gray-400 text-sm">
+                        La IA creará un email profesional basado en tus datos
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Tipo de Email</label>
+                        <select
+                          className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
+                          value={emailForm.type}
+                          onChange={(e) => setEmailForm({ ...emailForm, type: e.target.value })}
+                        >
+                          <option value="follow_up">Seguimiento</option>
+                          <option value="project_update">Actualización</option>
+                          <option value="meeting_reminder">Recordatorio</option>
+                          <option value="invoice_reminder">Factura</option>
+                          <option value="welcome">Bienvenida</option>
+                          <option value="feedback_request">Solicitar Feedback</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Cliente *</label>
+                        <input
+                          type="text"
+                          className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
+                          value={emailForm.clientName}
+                          onChange={(e) => setEmailForm({ ...emailForm, clientName: e.target.value })}
+                          placeholder="Nombre del cliente"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Proyecto</label>
+                        <input
+                          type="text"
+                          className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
+                          value={emailForm.projectName}
+                          onChange={(e) => setEmailForm({ ...emailForm, projectName: e.target.value })}
+                          placeholder="Nombre del proyecto"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Contexto</label>
+                        <textarea
+                          className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded h-20 text-white text-sm resize-none focus:border-blue-500 focus:outline-none"
+                          value={emailForm.context}
+                          onChange={(e) => setEmailForm({ ...emailForm, context: e.target.value })}
+                          placeholder="Información adicional..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Tono</label>
+                        <select
+                          className="w-full p-2.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
+                          value={emailForm.tone}
+                          onChange={(e) => setEmailForm({ ...emailForm, tone: e.target.value })}
+                        >
+                          <option value="professional">Profesional</option>
+                          <option value="friendly">Amigable</option>
+                          <option value="urgent">Urgente</option>
+                        </select>
+                      </div>
+
+                      <Button
+                        onClick={generateEmail}
+                        disabled={isGenerating}
+                        className="w-full bg-blue-600 hover:bg-blue-700 h-10"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Clock className="w-4 h-4 mr-2 animate-spin" />
+                            Generando...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-4 h-4 mr-2" />
+                            Generar Email
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {selectedAutomation === 'project_analysis' && (
+                  <Card className="bg-gray-900/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-green-400 text-lg">Analizar Proyecto</CardTitle>
+                      <CardDescription className="text-gray-400">
+                        La IA evaluará el estado y proporcionará recomendaciones
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-300">Nombre del Proyecto *</label>
+                        <input
+                          type="text"
+                          className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+                          value={projectForm.projectName}
+                          onChange={(e) => setProjectForm({ ...projectForm, projectName: e.target.value })}
+                          placeholder="Nombre del proyecto"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-300">Descripción *</label>
+                        <textarea
+                          className="w-full p-2 bg-gray-800 border border-gray-600 rounded h-20 text-white"
+                          value={projectForm.description}
+                          onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                          placeholder="Descripción del proyecto"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-300">Estado Actual *</label>
+                        <textarea
+                          className="w-full p-2 bg-gray-800 border border-gray-600 rounded h-16 text-white"
+                          value={projectForm.currentStatus}
+                          onChange={(e) => setProjectForm({ ...projectForm, currentStatus: e.target.value })}
+                          placeholder="Estado actual del proyecto"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-300">Fecha Límite</label>
+                        <input
+                          type="date"
+                          className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+                          value={projectForm.deadlineDate}
+                          onChange={(e) => setProjectForm({ ...projectForm, deadlineDate: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-300">Tareas Completadas</label>
+                          <input
+                            type="number"
+                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+                            value={projectForm.tasksCompleted}
+                            onChange={(e) => setProjectForm({ ...projectForm, tasksCompleted: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-300">Total Tareas</label>
+                          <input
+                            type="number"
+                            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+                            value={projectForm.totalTasks}
+                            onChange={(e) => setProjectForm({ ...projectForm, totalTasks: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={analyzeProject}
+                        disabled={isGenerating}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Clock className="w-4 h-4 mr-2 animate-spin" />
+                            Analizando...
+                          </>
+                        ) : (
+                          <>
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            Analizar Proyecto
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Analizador de Productividad Avanzado - NUEVO */}
+                {selectedAutomation === 'optimize_development_new' && (
+                  <Card className="mt-6 bg-gray-900/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-orange-400" />
+                        📈 Analizador de Productividad Avanzado
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        IA analiza tu productividad real de los últimos 90 días usando todos tus datos de la base de datos.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
+                        <h4 className="text-orange-300 font-medium mb-2">🔍 Análisis que incluye:</h4>
+                        <ul className="text-gray-400 text-sm space-y-1">
+                          <li>• ⏰ Horas trabajadas y tiempo facturable</li>
+                          <li>• 📅 Eventos de calendario con seguimiento de tiempo</li>
+                          <li>• ✅ Tareas completadas por categoría</li>
+                          <li>• 💰 Facturas emitidas y estado de pagos</li>
+                          <li>• 📋 Presupuestos aprobados y conversión</li>
+                          <li>• 💬 Comunicación con clientes</li>
+                          <li>• 📊 Métricas de productividad y eficiencia</li>
+                        </ul>
+                      </div>
+
+                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                        <p className="text-blue-300 text-sm">
+                          ✨ Este análisis usa OpenAI GPT-4o-mini para generar insights personalizados basados en tus datos reales.
+                        </p>
+                      </div>
+
+                      <Button
+                        onClick={optimizeDevelopment}
+                        disabled={isGenerating}
+                        className="w-full bg-orange-600 hover:bg-orange-700"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Clock className="w-4 h-4 mr-2 animate-spin" />
+                            Analizando productividad...
+                          </>
+                        ) : (
+                          <>
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            🧠 Analizar Productividad con IA
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Optimización de Desarrollo - ORIGINAL */}
+                {selectedAutomation === 'optimize_development' && (
+                  <Card className="mt-6 bg-gray-900/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-orange-400" />
+                        Optimización de Desarrollo
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Analiza tu productividad, tiempo trabajado y rendimiento de los últimos 90 días usando datos reales de tu base de datos.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
+                        <h4 className="text-orange-300 font-medium mb-2">📊 Datos que se analizarán:</h4>
+                        <ul className="text-gray-400 text-sm space-y-1">
+                          <li>• Eventos de calendario y tiempo trabajado</li>
+                          <li>• Tareas completadas y tiempo invertido</li>
+                          <li>• Facturas emitidas y estado de pagos</li>
+                          <li>• Presupuestos aprobados</li>
+                          <li>• Interacciones con clientes</li>
+                          <li>• Productividad y eficiencia</li>
+                        </ul>
+                      </div>
+
+                      <Button
+                        onClick={optimizeDevelopment}
+                        disabled={isGenerating}
+                        className="w-full bg-orange-600 hover:bg-orange-700"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Clock className="w-4 h-4 mr-2 animate-spin" />
+                            Analizando datos...
+                          </>
+                        ) : (
+                          <>
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            Optimizar Desarrollo
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Resultado */}
+                {result && (
+                  <Card className="mt-4 lg:mt-6 bg-gray-900/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-green-400 flex items-center gap-2 text-lg">
+                        <CheckCircle className="w-5 h-5" />
+                        Resultado
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-gray-800 p-3 lg:p-4 rounded border max-h-96 overflow-y-auto">
+                        <pre className="whitespace-pre-wrap text-xs lg:text-sm text-gray-300 leading-relaxed">
+                          {result}
+                        </pre>
+                      </div>
+                      <Button
+                        onClick={() => navigator.clipboard.writeText(result)}
+                        className="mt-3 bg-gray-700 hover:bg-gray-600"
+                        size="sm"
+                      >
+                        Copiar Resultado
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>

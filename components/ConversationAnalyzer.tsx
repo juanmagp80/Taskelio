@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Brain, MessageSquare, RefreshCw, Lightbulb, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
 import { showToast } from '@/utils/toast';
+import { AlertCircle, Brain, CheckCircle, Lightbulb, MessageSquare, RefreshCw, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface ConversationAnalyzerProps {
   clientId: string;
@@ -34,7 +34,7 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
       });
 
       const data = await response.json();
-      
+
       if (data.error) {
         showToast.error(`Error: ${data.error}`);
         return;
@@ -59,7 +59,7 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
       });
 
       const data = await response.json();
-      
+
       if (data.error) {
         showToast.error(`Error: ${data.error}`);
         return;
@@ -81,7 +81,7 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
     <div className="space-y-4">
       {/* Botones de acción */}
       <div className="flex gap-3">
-        <Button 
+        <Button
           onClick={analyzeConversation}
           disabled={isAnalyzing}
           className="flex items-center gap-2"
@@ -90,8 +90,8 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
           {isAnalyzing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
           Analizar Conversación
         </Button>
-        
-        <Button 
+
+        <Button
           onClick={suggestResponse}
           disabled={isAnalyzing}
           className="flex items-center gap-2"
@@ -187,8 +187,8 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
                       <div className="text-indigo-700 text-sm mt-1 p-3 bg-white rounded border">
                         {analysis.mensaje_propuesto}
                       </div>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="mt-2"
                         onClick={() => onSuggestMessage?.(analysis.mensaje_propuesto || '')}
                       >
@@ -216,7 +216,7 @@ export default function ConversationAnalyzer({ clientId, clientName, onSuggestMe
             <div className="p-4 bg-gray-50 rounded-lg border">
               <p className="text-gray-700 whitespace-pre-wrap">{suggestedMessage}</p>
             </div>
-            <Button 
+            <Button
               className="mt-3"
               onClick={() => onSuggestMessage?.(suggestedMessage)}
             >

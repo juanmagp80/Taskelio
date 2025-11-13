@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Settings, CreditCard, LogOut, ChevronDown } from 'lucide-react';
+import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { ChevronDown, CreditCard, LogOut, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '@/src/lib/supabase-client';
+import { useEffect, useRef, useState } from 'react';
 
 interface UserMenuProps {
   userEmail?: string;
@@ -61,17 +61,16 @@ export default function UserMenu({ userEmail, onLogout }: UserMenuProps) {
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
           {getInitials(userEmail)}
         </div>
-        
+
         {/* Email (oculto en móvil) */}
         <span className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300 max-w-[150px] truncate">
           {userEmail}
         </span>
-        
+
         {/* Icono chevron */}
         <ChevronDown
-          className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+            }`}
         />
       </button>
 

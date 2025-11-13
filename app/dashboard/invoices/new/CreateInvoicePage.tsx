@@ -92,7 +92,7 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
 
     const fetchClientsAndProjects = async () => {
         if (!supabase) return;
-        
+
         try {
             const { data: { user } } = await supabase!.auth.getUser();
             if (!user) return;
@@ -178,7 +178,7 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
     // Función para crear factura
     const createInvoice = async () => {
         if (!supabase) return;
-        
+
         try {
             if (!formData.client_id || !formData.title.trim() || items.some(item => !item.description.trim())) {
                 showToast.warning('Por favor completa todos los campos obligatorios');
@@ -255,7 +255,7 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
 
     const handleLogout = async () => {
         if (!supabase) return;
-        
+
         await supabase!.auth.signOut();
         router.push('/login');
     };
@@ -405,9 +405,9 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
                                             </label>
                                             <CustomDatePicker
                                                 selected={formData.issue_date ? new Date(formData.issue_date) : null}
-                                                onChange={(date) => setFormData({ 
-                                                    ...formData, 
-                                                    issue_date: date ? date.toISOString().split('T')[0] : '' 
+                                                onChange={(date) => setFormData({
+                                                    ...formData,
+                                                    issue_date: date ? date.toISOString().split('T')[0] : ''
                                                 })}
                                                 placeholderText="Seleccionar fecha de emisión"
                                                 className="rounded-xl border-slate-200"
@@ -419,9 +419,9 @@ export default function CreateInvoicePage({ userEmail }: CreateInvoicePageProps)
                                             </label>
                                             <CustomDatePicker
                                                 selected={formData.due_date ? new Date(formData.due_date) : null}
-                                                onChange={(date) => setFormData({ 
-                                                    ...formData, 
-                                                    due_date: date ? date.toISOString().split('T')[0] : '' 
+                                                onChange={(date) => setFormData({
+                                                    ...formData,
+                                                    due_date: date ? date.toISOString().split('T')[0] : ''
                                                 })}
                                                 placeholderText="Seleccionar fecha de vencimiento"
                                                 minDate={formData.issue_date ? new Date(formData.issue_date) : new Date()}

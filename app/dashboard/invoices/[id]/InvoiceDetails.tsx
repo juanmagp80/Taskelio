@@ -88,7 +88,7 @@ export default function InvoiceDetails({ invoiceId, userEmail }: InvoiceDetailsP
             setLoading(false);
             return;
         }
-        
+
         try {
             const { data: { user } } = await supabase!.auth.getUser();
             if (!user) return;
@@ -138,7 +138,7 @@ export default function InvoiceDetails({ invoiceId, userEmail }: InvoiceDetailsP
             console.error('Supabase client not initialized');
             return;
         }
-        
+
         try {
             const updateData: any = { status: newStatus };
 
@@ -178,7 +178,7 @@ export default function InvoiceDetails({ invoiceId, userEmail }: InvoiceDetailsP
             router.push('/login');
             return;
         }
-        
+
         await supabase!.auth.signOut();
         router.push('/login');
     };

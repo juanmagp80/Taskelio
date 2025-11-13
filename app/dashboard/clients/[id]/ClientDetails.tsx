@@ -135,7 +135,7 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
 
     const addNote = async () => {
         if (!newNote.trim()) return;
-        
+
         if (!supabase) {
             console.error('Supabase client not available');
             return;
@@ -153,7 +153,7 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
 
     const addTask = async () => {
         if (!newTask.trim()) return;
-        
+
         if (!supabase) {
             console.error('Supabase client not available');
             return;
@@ -353,7 +353,7 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
                         <div className="group bg-white/40 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-2xl shadow-slate-500/10 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
                             {/* Hover Gradient Overlay */}
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            
+
                             <div className="relative z-10">
                                 <div className="bg-gradient-to-r from-blue-50/80 via-purple-50/80 to-indigo-50/80 backdrop-blur-xl p-6 rounded-t-3xl border-b border-white/40">
                                     <div className="flex items-center gap-4">
@@ -554,22 +554,20 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
                                             <div className="flex items-center gap-2 bg-white/60 backdrop-blur-xl rounded-2xl p-2 shadow-lg border border-white/80">
                                                 <button
                                                     onClick={() => setViewMode('grid')}
-                                                    className={`group flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-300 ${
-                                                        viewMode === 'grid'
+                                                    className={`group flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-300 ${viewMode === 'grid'
                                                             ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-500/30'
                                                             : 'text-slate-600 hover:text-amber-600 hover:bg-amber-50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <Grid3x3 className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                                                     <span className="font-bold">Tarjetas</span>
                                                 </button>
                                                 <button
                                                     onClick={() => setViewMode('list')}
-                                                    className={`group flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-300 ${
-                                                        viewMode === 'list'
+                                                    className={`group flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-300 ${viewMode === 'list'
                                                             ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-500/30'
                                                             : 'text-slate-600 hover:text-amber-600 hover:bg-amber-50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <List className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                                                     <span className="font-bold">Lista</span>
@@ -580,10 +578,10 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
                                             <div className="relative flex-1 lg:flex-none lg:min-w-[500px] group/search">
                                                 {/* Fondo Decorativo con Gradientes Animados */}
                                                 <div className="absolute -inset-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl opacity-0 group-focus-within/search:opacity-30 group-hover/search:opacity-20 blur-lg transition-all duration-700"></div>
-                                                
+
                                                 {/* Contenedor Principal MÁS GRANDE */}
                                                 <div className="relative bg-white/70 backdrop-blur-2xl border-2 border-white/80 rounded-3xl shadow-2xl shadow-slate-500/10 group-focus-within/search:shadow-amber-500/25 group-focus-within/search:border-amber-300 group-focus-within/search:scale-[1.02] group-hover/search:shadow-xl transition-all duration-700">
-                                                    
+
                                                     {/* Icono de Búsqueda con Animaciones MEJORADO */}
                                                     <div className="absolute left-6 top-1/2 transform -translate-y-1/2 z-10">
                                                         <div className="relative">
@@ -609,7 +607,7 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
 
                                                     {/* Botón de Limpiar MEJORADO */}
                                                     {searchTerm && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => setSearchTerm('')}
                                                             className="absolute right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-2xl shadow-2xl hover:shadow-xl hover:scale-110 transition-all duration-300 flex items-center justify-center group"
                                                             title="Limpiar búsqueda (ESC)"
@@ -700,15 +698,14 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
                                                         <div className="space-y-2 text-sm">
                                                             <div className="flex justify-between p-2 rounded-lg bg-slate-50">
                                                                 <span className="text-slate-600">Estado:</span>
-                                                                <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                                                                    project.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                                    project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                                                                    project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-gray-100 text-gray-700'
-                                                                }`}>
+                                                                <span className={`px-2 py-1 rounded-lg text-xs font-bold ${project.status === 'active' ? 'bg-green-100 text-green-700' :
+                                                                        project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                                                                            project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                                                                                'bg-gray-100 text-gray-700'
+                                                                    }`}>
                                                                     {project.status === 'active' ? 'Activo' :
-                                                                     project.status === 'completed' ? 'Completado' :
-                                                                     project.status === 'paused' ? 'Pausado' : 'Cancelado'}
+                                                                        project.status === 'completed' ? 'Completado' :
+                                                                            project.status === 'paused' ? 'Pausado' : 'Cancelado'}
                                                                 </span>
                                                             </div>
                                                             {project.budget && (
@@ -746,15 +743,14 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-3 mb-1">
                                                                         <h4 className="font-bold text-slate-900 truncate">{project.name}</h4>
-                                                                        <span className={`px-2 py-1 rounded-lg text-xs font-bold flex-shrink-0 ${
-                                                                            project.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                                            project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                                                                            project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
-                                                                            'bg-gray-100 text-gray-700'
-                                                                        }`}>
+                                                                        <span className={`px-2 py-1 rounded-lg text-xs font-bold flex-shrink-0 ${project.status === 'active' ? 'bg-green-100 text-green-700' :
+                                                                                project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                                                                                    project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                                                                                        'bg-gray-100 text-gray-700'
+                                                                            }`}>
                                                                             {project.status === 'active' ? 'Activo' :
-                                                                             project.status === 'completed' ? 'Completado' :
-                                                                             project.status === 'paused' ? 'Pausado' : 'Cancelado'}
+                                                                                project.status === 'completed' ? 'Completado' :
+                                                                                    project.status === 'paused' ? 'Pausado' : 'Cancelado'}
                                                                         </span>
                                                                     </div>
                                                                     <p className="text-sm text-slate-600 truncate">{project.description || 'Sin descripción'}</p>
@@ -784,7 +780,7 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
 
             {/* Modal Espectacular de Nuevo Proyecto */}
             {showProjectModal && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/70 backdrop-blur-2xl z-50 flex items-start justify-center pt-8 pb-8 px-4 animate-fadeIn overflow-y-auto"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
@@ -804,10 +800,10 @@ export default function ClientDetails({ client, userEmail }: { client: any; user
                         <div className="bg-white/95 backdrop-blur-3xl rounded-3xl shadow-2xl shadow-black/30 border border-white/60 relative overflow-hidden animate-slideInUp">
                             {/* Gradiente animado de fondo */}
                             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-yellow-500/5 opacity-80 pointer-events-none"></div>
-                            
+
                             {/* Border animado brillante */}
                             <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-amber-500/30 via-orange-500/30 to-yellow-500/30 blur-sm animate-pulse pointer-events-none"></div>
-                            
+
                             <div className="relative z-10 p-8">
                                 {/* Header Espectacular */}
                                 <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/40">

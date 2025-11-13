@@ -1,46 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/Button';
-import { showToast } from '@/utils/toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import CustomDatePicker from '@/components/ui/DatePicker';
+import { Input } from '@/components/ui/Input';
+import { calendarAI, type AIInsight, type CalendarEvent, type DashboardMetrics, type EventType, type SmartSuggestion } from '@/src/lib/calendar-ai-local';
 import { createSupabaseClient } from '@/src/lib/supabase';
-import { calendarAI, type CalendarEvent, type AIInsight, type DashboardMetrics, type SmartSuggestion, type EventType } from '@/src/lib/calendar-ai-local';
+import { showToast } from '@/utils/toast';
 import {
     AlertTriangle,
+    ArrowRight,
+    BarChart3,
+    Brain,
+    Briefcase,
+    Calculator,
     Calendar as CalendarIcon,
+    CheckCircle,
     ChevronLeft,
     ChevronRight,
     Clock,
     DollarSign,
-    Filter,
+    Eye,
+    Lightbulb,
+    MapPin,
     Play,
     Plus,
-    Square,
-    Users,
-    Briefcase,
-    MapPin,
-    Video,
-    Timer,
-    Target,
-    Zap,
-    Brain,
-    TrendingUp,
-    BarChart3,
-    Lightbulb,
-    Star,
-    Eye,
-    CheckCircle,
-    AlertCircle,
-    ArrowRight,
     Sparkles,
-    Calculator
+    Square,
+    Star,
+    Target,
+    Timer,
+    TrendingUp,
+    Users,
+    Video,
+    Zap
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import TrialBanner from '../../../components/TrialBanner';
 import { useTrialStatus } from '../../../src/lib/useTrialStatus';
 
@@ -66,10 +64,10 @@ interface CalendarPageClientProps {
 export default function CalendarPageClient({ userEmail }: CalendarPageClientProps) {
     const supabase = createSupabaseClient();
     const router = useRouter();
-    
+
     // Hook de trial status
     const { trialInfo, loading: trialLoading, hasReachedLimit, canUseFeatures } = useTrialStatus(userEmail);
-    
+
     // States básicos
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentView, setCurrentView] = useState<ViewType>('week');
@@ -78,7 +76,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     const [selectedEvent, setSelectedEvent] = useState<ExtendedCalendarEvent | null>(null);
     const [showEventModal, setShowEventModal] = useState(false);
     const [activeTracking, setActiveTracking] = useState<string | null>(null);
-    
+
     // Estados de IA
     const [aiInsights, setAIInsights] = useState<AIInsight[]>([]);
     const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
@@ -86,12 +84,12 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     const [showAIPanel, setShowAIPanel] = useState(true);
     const [lastInsightsUpdate, setLastInsightsUpdate] = useState<Date | null>(null);
     const [aiLoading, setAILoading] = useState(false);
-    
+
     // Estados CRM
     const [clients, setClients] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
-    
+
     // Estados para nuevo evento
     const [showNewEventForm, setShowNewEventForm] = useState(false);
     const [newEvent, setNewEvent] = useState({
@@ -127,7 +125,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             showToast.warning('Tu periodo de prueba ha expirado. Actualiza tu plan para continuar creando eventos.');
             return;
         }
-        
+
         setShowNewEventForm(true);
     };
 
@@ -179,45 +177,45 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             // Crear eventos de ejemplo
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            
+
             const sampleEvents = [
-                    {
-                        title: '🎯 Reunión de planificación',
-                        description: 'Revisión de objetivos y planificación semanal',
-                        start_time: new Date(today.getTime() + 10 * 60 * 60 * 1000).toISOString(), // 10:00 AM hoy
-                        end_time: new Date(today.getTime() + 11 * 60 * 60 * 1000).toISOString(), // 11:00 AM hoy
-                        type: 'meeting',
-                        is_billable: true,
-                        hourly_rate: 75,
-                        status: 'scheduled',
-                        client_id: clientData.id,
-                        project_id: projectData.id,
-                        user_id: user.id
-                    },
-                    {
-                        title: '💻 Desarrollo web',
-                        description: 'Trabajo en la nueva funcionalidad del dashboard',
-                        start_time: new Date(today.getTime() + 14 * 60 * 60 * 1000).toISOString(), // 2:00 PM hoy
-                        end_time: new Date(today.getTime() + 16 * 60 * 60 * 1000).toISOString(), // 4:00 PM hoy
-                        type: 'work',
-                        is_billable: true,
-                        hourly_rate: 65,
-                        status: 'scheduled',
-                        client_id: clientData.id,
-                        project_id: projectData.id,
-                        user_id: user.id
-                    },
-                    {
-                        title: '☕ Descanso productivo',
-                        description: 'Pausa para recargar energías',
-                        start_time: new Date(today.getTime() + 16 * 60 * 60 * 1000).toISOString(), // 4:00 PM hoy
-                        end_time: new Date(today.getTime() + 16.5 * 60 * 60 * 1000).toISOString(), // 4:30 PM hoy
-                        type: 'break',
-                        is_billable: false,
-                        hourly_rate: 0,
-                        status: 'scheduled',
-                        user_id: user.id
-                    }
+                {
+                    title: '🎯 Reunión de planificación',
+                    description: 'Revisión de objetivos y planificación semanal',
+                    start_time: new Date(today.getTime() + 10 * 60 * 60 * 1000).toISOString(), // 10:00 AM hoy
+                    end_time: new Date(today.getTime() + 11 * 60 * 60 * 1000).toISOString(), // 11:00 AM hoy
+                    type: 'meeting',
+                    is_billable: true,
+                    hourly_rate: 75,
+                    status: 'scheduled',
+                    client_id: clientData.id,
+                    project_id: projectData.id,
+                    user_id: user.id
+                },
+                {
+                    title: '💻 Desarrollo web',
+                    description: 'Trabajo en la nueva funcionalidad del dashboard',
+                    start_time: new Date(today.getTime() + 14 * 60 * 60 * 1000).toISOString(), // 2:00 PM hoy
+                    end_time: new Date(today.getTime() + 16 * 60 * 60 * 1000).toISOString(), // 4:00 PM hoy
+                    type: 'work',
+                    is_billable: true,
+                    hourly_rate: 65,
+                    status: 'scheduled',
+                    client_id: clientData.id,
+                    project_id: projectData.id,
+                    user_id: user.id
+                },
+                {
+                    title: '☕ Descanso productivo',
+                    description: 'Pausa para recargar energías',
+                    start_time: new Date(today.getTime() + 16 * 60 * 60 * 1000).toISOString(), // 4:00 PM hoy
+                    end_time: new Date(today.getTime() + 16.5 * 60 * 60 * 1000).toISOString(), // 4:30 PM hoy
+                    type: 'break',
+                    is_billable: false,
+                    hourly_rate: 0,
+                    status: 'scheduled',
+                    user_id: user.id
+                }
             ];
 
             const { error: eventsError } = await supabase
@@ -281,7 +279,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                 console.warn('Supabase no configurado, no se pueden cargar clientes y proyectos');
                 return;
             }
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 console.warn('Usuario no autenticado');
@@ -360,14 +358,14 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                 setLoading(false);
                 return;
             }
-            
+
             const { data: { user }, error } = await supabase.auth.getUser();
             if (error) {
                 console.error('Error getting user:', error);
                 setLoading(false);
                 return;
             }
-            
+
             if (user) {
                 setUserId(user.id);
                 // Cargar datos en paralelo
@@ -375,10 +373,10 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                     fetchEvents(),
                     loadClientsAndProjects()
                 ]);
-                
+
                 // Verificar si necesitamos crear datos iniciales
                 await checkAndCreateInitialData();
-                
+
                 // Cargar IA después de tener los eventos
                 await loadAIData();
             } else {
@@ -393,14 +391,14 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
 
     const loadAIData = async () => {
         if (!events || events.length === 0) return;
-        
+
         setAILoading(true);
         try {
             // Usar métodos locales de IA que no requieren APIs externas
             const metrics = calendarAI.calculateLocalDashboardMetrics(events, currentDate);
             const suggestions = calendarAI.generateLocalSmartSuggestions(events, currentDate);
             const productivityScore = calendarAI.analyzeLocalProductivity(events);
-            
+
             // Crear insights basados en análisis local
             const insights: AIInsight[] = [
                 {
@@ -496,7 +494,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                 setLoading(false);
                 return;
             }
-            
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 console.warn('Usuario no autenticado');
@@ -523,7 +521,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             } else if (data) {
                 const eventsData = data as ExtendedCalendarEvent[];
                 setEvents(eventsData);
-                
+
                 // Buscar si hay algún evento en progreso y actualizar activeTracking
                 const eventInProgress = eventsData.find(event => event.status === 'in_progress');
                 if (eventInProgress) {
@@ -545,7 +543,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             showToast.warning('Por favor, completa todos los campos obligatorios');
             return;
         }
-        
+
         if (!supabase) {
             showToast.error('Error: Base de datos no configurada');
             return;
@@ -729,23 +727,23 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             if (patterns.length > 0) {
                 const bestPattern = patterns[0];
                 const now = new Date();
-                
+
                 // Encontrar el próximo slot disponible en la franja óptima
                 let suggestedDate = new Date(now);
                 if (now.getHours() >= bestPattern.timeRange.endHour) {
                     // Si ya pasó la hora óptima hoy, programar para mañana
                     suggestedDate.setDate(suggestedDate.getDate() + 1);
                 }
-                
+
                 suggestedDate.setHours(bestPattern.timeRange.startHour, 0, 0, 0);
-                
+
                 // Calcular duración según tipo de evento
                 let duration = 60; // Default 1 hora
                 if (newEvent.type === 'focus') duration = 120; // 2 horas para focus
                 else if (newEvent.type === 'meeting') duration = 60; // 1 hora para reuniones
                 else if (newEvent.type === 'break') duration = 15; // 15 min para breaks
                 else if (newEvent.type === 'client_call') duration = 45; // 45 min para calls
-                
+
                 const suggestedEnd = new Date(suggestedDate.getTime() + duration * 60 * 1000);
 
                 // Verificar si el slot está libre
@@ -773,7 +771,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                 (nextSlot <= eventStart && nextEnd >= eventEnd)
                             );
                         });
-                        
+
                         if (!hasConflict) {
                             suggestedDate = nextSlot;
                             break;
@@ -790,7 +788,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                 });
 
                 // Mostrar feedback al usuario
-                showToast.error(`IA recomienda: ${suggestedDate.toLocaleDateString()} a las ${suggestedDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} (${bestPattern.productivityScore}% productividad en esta franja)`);
+                showToast.error(`IA recomienda: ${suggestedDate.toLocaleDateString()} a las ${suggestedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (${bestPattern.productivityScore}% productividad en esta franja)`);
             } else {
                 // Fallback si no hay patrones
                 const now = new Date();
@@ -819,7 +817,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     // ==================== FUNCIONES DE IA ====================
     const generateAIInsights = async () => {
         if (!userId) return;
-        
+
         setAILoading(true);
         try {
             // Generar insights locales automáticamente
@@ -834,7 +832,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
 
     const suggestOptimalTime = async () => {
         if (!userId || !newEvent.title) return;
-        
+
         try {
             // Usar la IA local para sugerir horario óptimo
             const patterns = calendarAI.analyzeLocalProductivityPatterns(events);
@@ -843,10 +841,10 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                 const now = new Date();
                 const suggestedStart = new Date(now);
                 suggestedStart.setHours(bestPattern.timeRange.startHour, 0, 0, 0);
-                
+
                 const duration = 60; // 1 hora por defecto
                 const suggestedEnd = new Date(suggestedStart.getTime() + duration * 60 * 1000);
-                
+
                 setNewEvent({
                     ...newEvent,
                     start_time: suggestedStart.toISOString().slice(0, 16),
@@ -874,7 +872,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     const markInsightAsViewed = async (insightId: string) => {
         try {
             // Marcar insight como visto localmente
-            setAIInsights(insights => 
+            setAIInsights(insights =>
                 insights.map(i => i.id === insightId ? { ...i, status: 'viewed' } : i)
             );
         } catch (error) {
@@ -890,7 +888,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             // Marcar evento como completed al parar el tracking
             try {
                 if (!supabase) return;
-                
+
                 await supabase
                     .from('calendar_events')
                     .update({ status: 'completed' })
@@ -904,7 +902,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
             if (activeTracking) {
                 try {
                     if (!supabase) return;
-                    
+
                     await supabase
                         .from('calendar_events')
                         .update({ status: 'completed' })
@@ -913,13 +911,13 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                     console.error('Error stopping previous event:', error);
                 }
             }
-            
+
             // Iniciar tracking del nuevo evento
             setActiveTracking(eventId);
             // Marcar evento como in_progress
             try {
                 if (!supabase) return;
-                
+
                 await supabase
                     .from('calendar_events')
                     .update({ status: 'in_progress' })
@@ -936,7 +934,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
         setActiveTracking(eventId);
         try {
             if (!supabase) return;
-            
+
             await supabase
                 .from('calendar_events')
                 .update({ status: 'in_progress' })
@@ -952,7 +950,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
         setActiveTracking(null);
         try {
             if (!supabase) return;
-            
+
             await supabase
                 .from('calendar_events')
                 .update({ status: 'completed' })
@@ -964,7 +962,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     };
 
     // ==================== FUNCIONES HELPER ====================
-    
+
     // Exportar eventos a CSV
     const exportEventsToCSV = () => {
         if (events.length === 0) {
@@ -1019,7 +1017,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     const getCalendarStats = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const todayEvents = events.filter((e: ExtendedCalendarEvent) => {
             const eventDate = new Date(e.start_time);
             eventDate.setHours(0, 0, 0, 0);
@@ -1054,19 +1052,19 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     };
 
     const formatDateForView = (date: Date) => {
-        const options: Intl.DateTimeFormatOptions = 
-            currentView === 'month' 
+        const options: Intl.DateTimeFormatOptions =
+            currentView === 'month'
                 ? { year: 'numeric', month: 'long' }
                 : currentView === 'week'
-                ? { month: 'long', day: 'numeric', year: 'numeric' }
-                : { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
-        
+                    ? { month: 'long', day: 'numeric', year: 'numeric' }
+                    : { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+
         return date.toLocaleDateString('es-ES', options);
     };
 
     const navigateDate = (direction: 'prev' | 'next') => {
         const newDate = new Date(currentDate);
-        
+
         if (currentView === 'day') {
             newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
         } else if (currentView === 'week') {
@@ -1074,7 +1072,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
         } else {
             newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
         }
-        
+
         setCurrentDate(newDate);
     };
 
@@ -1129,26 +1127,26 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
     const getEventsForCurrentView = () => {
         const startOfDay = new Date(currentDate);
         startOfDay.setHours(0, 0, 0, 0);
-        
+
         const endOfDay = new Date(currentDate);
         endOfDay.setHours(23, 59, 59, 999);
-        
+
         if (currentView === 'week') {
             const startOfWeek = new Date(startOfDay);
             const day = startOfWeek.getDay();
             const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
             startOfWeek.setDate(diff);
-            
+
             const endOfWeek = new Date(startOfWeek);
             endOfWeek.setDate(startOfWeek.getDate() + 6);
             endOfWeek.setHours(23, 59, 59, 999);
-            
+
             return events.filter((event: ExtendedCalendarEvent) => {
                 const eventDate = new Date(event.start_time);
                 return eventDate >= startOfWeek && eventDate <= endOfWeek;
             });
         }
-        
+
         return events.filter((event: ExtendedCalendarEvent) => {
             const eventDate = new Date(event.start_time);
             return eventDate >= startOfDay && eventDate <= endOfDay;
@@ -1167,623 +1165,620 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
 
             <div className="relative z-10 flex h-screen">
                 <Sidebar userEmail={userEmail} onLogout={handleLogout} />
-                
+
                 <div className="flex flex-col flex-1 ml-56">
                     <Header userEmail={userEmail} onLogout={handleLogout} />
                     <div className="flex-1 overflow-auto">
-                    <div className="p-4">
-                        {/* Trial Banner */}
-                        <div className="mb-4">
-                            <TrialBanner userEmail={userEmail} />
-                        </div>
-
-                        {/* Header del Calendario */}
-                        <div className={"p-4 shadow-xl mb-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm"}>
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                                        <CalendarIcon className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-2xl font-black bg-gradient-to-r from-slate-900 via-indigo-900 to-violet-900 dark:from-slate-100 dark:via-indigo-200 dark:to-violet-200 bg-clip-text text-transparent">
-                                            Calendario Inteligente
-                                        </h1>
-                                        <p className={"text-sm text-slate-500 dark:text-slate-500"}>Gestiona tu tiempo como un pro</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    {/* Exportar eventos */}
-                                    <Button
-                                        onClick={exportEventsToCSV}
-                                        variant="outline"
-                                        className="border-emerald-200 hover:bg-emerald-50 text-emerald-700 h-9 px-3"
-                                        disabled={events.length === 0}
-                                        title="Exportar eventos a CSV"
-                                    >
-                                        <Calculator className="w-4 h-4 mr-2" />
-                                        Exportar
-                                    </Button>
-
-                                    {/* Panel de IA Toggle */}
-                                    <Button
-                                        onClick={() => setShowAIPanel(!showAIPanel)}
-                                        variant="outline"
-                                        className="border-slate-200 hover:bg-indigo-50 text-slate-700 h-9 px-3"
-                                    >
-                                        <Brain className="w-4 h-4 mr-2" />
-                                        {showAIPanel ? 'Ocultar IA' : 'Mostrar IA'}
-                                    </Button>
-                                    
-                                    {/* Generar Insights */}
-                                    <Button
-                                        onClick={generateAIInsights}
-                                        disabled={aiLoading}
-                                        variant="outline"
-                                        className="border-purple-200 hover:bg-purple-50 text-purple-700 h-9 px-3"
-                                        title={lastInsightsUpdate ? `Última actualización: ${lastInsightsUpdate.toLocaleTimeString()}` : 'Generar insights actualizados'}
-                                    >
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                        {aiLoading ? 'Actualizando...' : 'Actualizar Insights'}
-                                    </Button>
-                                    
-                                    <Button
-                                        onClick={handleNewEventClick}
-                                        disabled={trialLoading || !canUseFeatures}
-                                        className={`bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white border-0 h-9 px-4 text-sm font-semibold rounded-lg shadow-lg shadow-indigo-500/25 ${
-                                            trialLoading
-                                                ? 'opacity-75 cursor-wait'
-                                                : !canUseFeatures 
-                                                ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400 !shadow-gray-400/25' 
-                                                : ''
-                                        }`}
-                                    >
-                                        {trialLoading ? (
-                                            <>
-                                                <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                Cargando...
-                                            </>
-                                        ) : !canUseFeatures ? (
-                                            <>
-                                                <AlertTriangle className="w-4 h-4 mr-2" />
-                                                Trial Expirado
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Plus className="w-4 h-4 mr-2" />
-                                                Nuevo Evento
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
+                        <div className="p-4">
+                            {/* Trial Banner */}
+                            <div className="mb-4">
+                                <TrialBanner userEmail={userEmail} />
                             </div>
 
-                            {/* Controles de Navegación */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => navigateDate('prev')}
-                                        className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
-                                    >
-                                        <ChevronLeft className="w-4 h-4" />
-                                    </Button>
-                                    
-                                    <h2 className="text-lg font-bold text-slate-900 min-w-[200px]">
-                                        {formatDateForView(currentDate)}
-                                    </h2>
-                                    
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => navigateDate('next')}
-                                        className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
-                                    >
-                                        <ChevronRight className="w-4 h-4" />
-                                    </Button>
-                                    
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setCurrentDate(new Date())}
-                                        className="h-8 px-3 text-xs font-semibold hover:bg-slate-100 rounded-lg"
-                                    >
-                                        Hoy
-                                    </Button>
+                            {/* Header del Calendario */}
+                            <div className={"p-4 shadow-xl mb-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm"}>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                                            <CalendarIcon className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h1 className="text-2xl font-black bg-gradient-to-r from-slate-900 via-indigo-900 to-violet-900 dark:from-slate-100 dark:via-indigo-200 dark:to-violet-200 bg-clip-text text-transparent">
+                                                Calendario Inteligente
+                                            </h1>
+                                            <p className={"text-sm text-slate-500 dark:text-slate-500"}>Gestiona tu tiempo como un pro</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        {/* Exportar eventos */}
+                                        <Button
+                                            onClick={exportEventsToCSV}
+                                            variant="outline"
+                                            className="border-emerald-200 hover:bg-emerald-50 text-emerald-700 h-9 px-3"
+                                            disabled={events.length === 0}
+                                            title="Exportar eventos a CSV"
+                                        >
+                                            <Calculator className="w-4 h-4 mr-2" />
+                                            Exportar
+                                        </Button>
+
+                                        {/* Panel de IA Toggle */}
+                                        <Button
+                                            onClick={() => setShowAIPanel(!showAIPanel)}
+                                            variant="outline"
+                                            className="border-slate-200 hover:bg-indigo-50 text-slate-700 h-9 px-3"
+                                        >
+                                            <Brain className="w-4 h-4 mr-2" />
+                                            {showAIPanel ? 'Ocultar IA' : 'Mostrar IA'}
+                                        </Button>
+
+                                        {/* Generar Insights */}
+                                        <Button
+                                            onClick={generateAIInsights}
+                                            disabled={aiLoading}
+                                            variant="outline"
+                                            className="border-purple-200 hover:bg-purple-50 text-purple-700 h-9 px-3"
+                                            title={lastInsightsUpdate ? `Última actualización: ${lastInsightsUpdate.toLocaleTimeString()}` : 'Generar insights actualizados'}
+                                        >
+                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            {aiLoading ? 'Actualizando...' : 'Actualizar Insights'}
+                                        </Button>
+
+                                        <Button
+                                            onClick={handleNewEventClick}
+                                            disabled={trialLoading || !canUseFeatures}
+                                            className={`bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white border-0 h-9 px-4 text-sm font-semibold rounded-lg shadow-lg shadow-indigo-500/25 ${trialLoading
+                                                    ? 'opacity-75 cursor-wait'
+                                                    : !canUseFeatures
+                                                        ? 'opacity-50 cursor-not-allowed !bg-gray-400 hover:!bg-gray-400 !shadow-gray-400/25'
+                                                        : ''
+                                                }`}
+                                        >
+                                            {trialLoading ? (
+                                                <>
+                                                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    Cargando...
+                                                </>
+                                            ) : !canUseFeatures ? (
+                                                <>
+                                                    <AlertTriangle className="w-4 h-4 mr-2" />
+                                                    Trial Expirado
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Plus className="w-4 h-4 mr-2" />
+                                                    Nuevo Evento
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
                                 </div>
 
-                                {/* View Switcher */}
-                                <div className="flex bg-slate-100 rounded-lg p-1">
-                                    {(['day', 'week', 'month'] as ViewType[]).map((view) => (
+                                {/* Controles de Navegación */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
                                         <Button
-                                            key={view}
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setCurrentView(view)}
-                                            className={`h-7 px-3 text-xs font-semibold rounded-md transition-all duration-200 ${
-                                                currentView === view
-                                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                                    : 'text-slate-600 hover:text-slate-900'
-                                            }`}
+                                            onClick={() => navigateDate('prev')}
+                                            className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
                                         >
-                                            {view === 'day' ? 'Día' : view === 'week' ? 'Semana' : 'Mes'}
+                                            <ChevronLeft className="w-4 h-4" />
                                         </Button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Vista del Calendario */}
-                        {currentView === 'week' && (
-                            <div className="bg-white/95 backdrop-blur-2xl border border-slate-200/60 rounded-xl shadow-xl shadow-slate-900/5 overflow-hidden">
-                                {/* Header de la semana */}
-                                <div className="grid grid-cols-8 border-b border-slate-200">
-                                    <div className="p-3 bg-slate-50 text-xs font-semibold text-slate-600">
-                                        Hora
+                                        <h2 className="text-lg font-bold text-slate-900 min-w-[200px]">
+                                            {formatDateForView(currentDate)}
+                                        </h2>
+
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => navigateDate('next')}
+                                            className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
+                                        >
+                                            <ChevronRight className="w-4 h-4" />
+                                        </Button>
+
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setCurrentDate(new Date())}
+                                            className="h-8 px-3 text-xs font-semibold hover:bg-slate-100 rounded-lg"
+                                        >
+                                            Hoy
+                                        </Button>
                                     </div>
-                                    {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, index) => (
-                                        <div key={day} className="p-3 bg-slate-50 text-center">
-                                            <div className="text-xs font-semibold text-slate-600">{day}</div>
-                                            <div className="text-sm font-bold text-slate-900 mt-1">
-                                                {new Date(currentDate.getFullYear(), currentDate.getMonth(), 
-                                                    currentDate.getDate() - currentDate.getDay() + 1 + index).getDate()}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
 
-                                {/* Time slots */}
-                                <div className="max-h-96 overflow-y-auto">
-                                    {generateTimeSlots().map((slot) => (
-                                        <div key={slot.time} className="grid grid-cols-8 border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                                            <div className="p-2 text-xs text-slate-500 font-medium border-r border-slate-200">
-                                                {slot.time}
-                                            </div>
-                                            {[0, 1, 2, 3, 4, 5, 6].map((dayOffset) => (
-                                                <div key={dayOffset} className="p-2 min-h-[50px] border-r border-slate-100 relative">
-                                                    {/* Aquí irían los eventos para cada día */}
-                                                    {getEventsForCurrentView()
-                                                        .filter(event => {
-                                                            const eventDate = new Date(event.start_time);
-                                                            const slotDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 
-                                                                currentDate.getDate() - currentDate.getDay() + 1 + dayOffset);
-                                                            return eventDate.toDateString() === slotDate.toDateString() &&
-                                                                   eventDate.getHours() === slot.hour;
-                                                        })
-                                                        .map(event => {
-                                                            const EventIcon = getEventIcon(event.type);
-                                                            return (
-                                                                <div
-                                                                    key={event.id}
-                                                                    className={`${getEventColor(event.type)} text-white text-xs p-1 rounded mb-1 cursor-pointer hover:opacity-80 transition-opacity`}
-                                                                    onClick={() => setSelectedEvent(event)}
-                                                                >
-                                                                    <div className="flex items-center gap-1">
-                                                                        <EventIcon className="w-3 h-3" />
-                                                                        <span className="truncate font-medium">{event.title}</span>
-                                                                        {event.status === 'in_progress' && (
-                                                                            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse ml-auto"></div>
-                                                                        )}
-                                                                        {event.status === 'completed' && (
-                                                                            <CheckCircle className="w-3 h-3 ml-auto" />
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))}
+                                    {/* View Switcher */}
+                                    <div className="flex bg-slate-100 rounded-lg p-1">
+                                        {(['day', 'week', 'month'] as ViewType[]).map((view) => (
+                                            <Button
+                                                key={view}
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setCurrentView(view)}
+                                                className={`h-7 px-3 text-xs font-semibold rounded-md transition-all duration-200 ${currentView === view
+                                                        ? 'bg-white text-indigo-600 shadow-sm'
+                                                        : 'text-slate-600 hover:text-slate-900'
+                                                    }`}
+                                            >
+                                                {view === 'day' ? 'Día' : view === 'week' ? 'Semana' : 'Mes'}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        )}
 
-                        {/* Quick Stats - Datos Reales */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                            {(() => {
-                                const stats = getCalendarStats();
-                                const todayHours = getEventsForCurrentView().reduce((sum, event) => {
-                                    const duration = (new Date(event.end_time).getTime() - new Date(event.start_time).getTime()) / (1000 * 60 * 60);
-                                    return sum + duration;
-                                }, 0);
-                                
-                                const todayRevenue = getEventsForCurrentView()
-                                    .filter(e => e.is_billable)
-                                    .reduce((sum, event) => {
+                            {/* Vista del Calendario */}
+                            {currentView === 'week' && (
+                                <div className="bg-white/95 backdrop-blur-2xl border border-slate-200/60 rounded-xl shadow-xl shadow-slate-900/5 overflow-hidden">
+                                    {/* Header de la semana */}
+                                    <div className="grid grid-cols-8 border-b border-slate-200">
+                                        <div className="p-3 bg-slate-50 text-xs font-semibold text-slate-600">
+                                            Hora
+                                        </div>
+                                        {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, index) => (
+                                            <div key={day} className="p-3 bg-slate-50 text-center">
+                                                <div className="text-xs font-semibold text-slate-600">{day}</div>
+                                                <div className="text-sm font-bold text-slate-900 mt-1">
+                                                    {new Date(currentDate.getFullYear(), currentDate.getMonth(),
+                                                        currentDate.getDate() - currentDate.getDay() + 1 + index).getDate()}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Time slots */}
+                                    <div className="max-h-96 overflow-y-auto">
+                                        {generateTimeSlots().map((slot) => (
+                                            <div key={slot.time} className="grid grid-cols-8 border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                                <div className="p-2 text-xs text-slate-500 font-medium border-r border-slate-200">
+                                                    {slot.time}
+                                                </div>
+                                                {[0, 1, 2, 3, 4, 5, 6].map((dayOffset) => (
+                                                    <div key={dayOffset} className="p-2 min-h-[50px] border-r border-slate-100 relative">
+                                                        {/* Aquí irían los eventos para cada día */}
+                                                        {getEventsForCurrentView()
+                                                            .filter(event => {
+                                                                const eventDate = new Date(event.start_time);
+                                                                const slotDate = new Date(currentDate.getFullYear(), currentDate.getMonth(),
+                                                                    currentDate.getDate() - currentDate.getDay() + 1 + dayOffset);
+                                                                return eventDate.toDateString() === slotDate.toDateString() &&
+                                                                    eventDate.getHours() === slot.hour;
+                                                            })
+                                                            .map(event => {
+                                                                const EventIcon = getEventIcon(event.type);
+                                                                return (
+                                                                    <div
+                                                                        key={event.id}
+                                                                        className={`${getEventColor(event.type)} text-white text-xs p-1 rounded mb-1 cursor-pointer hover:opacity-80 transition-opacity`}
+                                                                        onClick={() => setSelectedEvent(event)}
+                                                                    >
+                                                                        <div className="flex items-center gap-1">
+                                                                            <EventIcon className="w-3 h-3" />
+                                                                            <span className="truncate font-medium">{event.title}</span>
+                                                                            {event.status === 'in_progress' && (
+                                                                                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse ml-auto"></div>
+                                                                            )}
+                                                                            {event.status === 'completed' && (
+                                                                                <CheckCircle className="w-3 h-3 ml-auto" />
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Quick Stats - Datos Reales */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                                {(() => {
+                                    const stats = getCalendarStats();
+                                    const todayHours = getEventsForCurrentView().reduce((sum, event) => {
                                         const duration = (new Date(event.end_time).getTime() - new Date(event.start_time).getTime()) / (1000 * 60 * 60);
-                                        return sum + (duration * (event.hourly_rate || 0));
+                                        return sum + duration;
                                     }, 0);
 
-                                const todayMeetings = getEventsForCurrentView().filter(e => 
-                                    e.type === 'meeting' || e.type === 'client_call'
-                                ).length;
+                                    const todayRevenue = getEventsForCurrentView()
+                                        .filter(e => e.is_billable)
+                                        .reduce((sum, event) => {
+                                            const duration = (new Date(event.end_time).getTime() - new Date(event.start_time).getTime()) / (1000 * 60 * 60);
+                                            return sum + (duration * (event.hourly_rate || 0));
+                                        }, 0);
 
-                                const completionRate = stats.totalEvents > 0 
-                                    ? Math.round((stats.completedEvents / stats.totalEvents) * 100)
-                                    : 0;
+                                    const todayMeetings = getEventsForCurrentView().filter(e =>
+                                        e.type === 'meeting' || e.type === 'client_call'
+                                    ).length;
 
-                                return (
-                                    <>
-                                        <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                                                        <Clock className="w-4 h-4 text-white" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-2xl font-black text-emerald-700">
-                                                            {todayHours.toFixed(1)}h
-                                                        </p>
-                                                        <p className="text-xs text-slate-600 font-medium">Hoy planificadas</p>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                    const completionRate = stats.totalEvents > 0
+                                        ? Math.round((stats.completedEvents / stats.totalEvents) * 100)
+                                        : 0;
 
-                                        <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                                                        <DollarSign className="w-4 h-4 text-white" />
+                                    return (
+                                        <>
+                                            <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                                                            <Clock className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-2xl font-black text-emerald-700">
+                                                                {todayHours.toFixed(1)}h
+                                                            </p>
+                                                            <p className="text-xs text-slate-600 font-medium">Hoy planificadas</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-2xl font-black text-blue-700">
-                                                            €{todayRevenue.toFixed(0)}
-                                                        </p>
-                                                        <p className="text-xs text-slate-600 font-medium">Ingresos hoy</p>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                                </CardContent>
+                                            </Card>
 
-                                        <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                                        <Users className="w-4 h-4 text-white" />
+                                            <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                                            <DollarSign className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-2xl font-black text-blue-700">
+                                                                €{todayRevenue.toFixed(0)}
+                                                            </p>
+                                                            <p className="text-xs text-slate-600 font-medium">Ingresos hoy</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-2xl font-black text-purple-700">{todayMeetings}</p>
-                                                        <p className="text-xs text-slate-600 font-medium">Reuniones</p>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                                </CardContent>
+                                            </Card>
 
-                                        <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
-                                                        <Timer className="w-4 h-4 text-white" />
+                                            <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                                            <Users className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-2xl font-black text-purple-700">{todayMeetings}</p>
+                                                            <p className="text-xs text-slate-600 font-medium">Reuniones</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-2xl font-black text-amber-700">{completionRate}%</p>
-                                                        <p className="text-xs text-slate-600 font-medium">Completado</p>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </>
-                                );
-                            })()}
-                        </div>
+                                                </CardContent>
+                                            </Card>
 
-                        {/* Lista de Eventos de Hoy */}
-                        <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-xl shadow-slate-900/5 mt-4">
-                            <CardHeader className="p-4 border-b border-slate-100">
-                                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                    <Target className="w-5 h-5 text-indigo-600" />
-                                    Eventos de Hoy
-                                </CardTitle>
-                                <CardDescription className="text-sm text-slate-600">
-                                    Gestiona tu agenda y tiempo de manera inteligente
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-4">
-                                {loading ? (
-                                    <div className="flex justify-center py-8">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
-                                            <span className="text-slate-700 font-medium">Cargando eventos...</span>
+                                            <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-lg">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
+                                                            <Timer className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-2xl font-black text-amber-700">{completionRate}%</p>
+                                                            <p className="text-xs text-slate-600 font-medium">Completado</p>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+
+                            {/* Lista de Eventos de Hoy */}
+                            <Card className="bg-white/95 backdrop-blur-2xl border-slate-200/60 shadow-xl shadow-slate-900/5 mt-4">
+                                <CardHeader className="p-4 border-b border-slate-100">
+                                    <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                        <Target className="w-5 h-5 text-indigo-600" />
+                                        Eventos de Hoy
+                                    </CardTitle>
+                                    <CardDescription className="text-sm text-slate-600">
+                                        Gestiona tu agenda y tiempo de manera inteligente
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-4">
+                                    {loading ? (
+                                        <div className="flex justify-center py-8">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
+                                                <span className="text-slate-700 font-medium">Cargando eventos...</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                ) : getEventsForCurrentView().length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                            <CalendarIcon className="w-6 h-6 text-slate-400" />
+                                    ) : getEventsForCurrentView().length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                                <CalendarIcon className="w-6 h-6 text-slate-400" />
+                                            </div>
+                                            <p className="text-slate-500 font-medium">No hay eventos programados</p>
+                                            <p className="text-slate-400 text-sm">Crea tu primer evento para comenzar</p>
                                         </div>
-                                        <p className="text-slate-500 font-medium">No hay eventos programados</p>
-                                        <p className="text-slate-400 text-sm">Crea tu primer evento para comenzar</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {getEventsForCurrentView().map((event) => {
-                                            const EventIcon = getEventIcon(event.type);
-                                            const startTime = new Date(event.start_time);
-                                            const endTime = new Date(event.end_time);
-                                            
-                                            return (
-                                                <div
-                                                    key={event.id}
-                                                    className="flex items-center gap-4 p-4 rounded-xl border border-slate-200/60 bg-white/80 hover:bg-white hover:shadow-lg hover:shadow-slate-900/5 transition-all duration-200 group backdrop-blur-sm cursor-pointer"
-                                                    onClick={() => setSelectedEvent(event)}
-                                                >
-                                                    <div className={`w-12 h-12 ${getEventColor(event.type)} rounded-xl flex items-center justify-center shadow-lg`}>
-                                                        <EventIcon className="w-6 h-6 text-white" />
-                                                    </div>
-                                                    
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h3 className="font-bold text-slate-900 truncate text-lg">{event.title}</h3>
-                                                            {false && ( // Placeholder for AI suggested events
-                                                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium flex items-center gap-1">
-                                                                    <Sparkles className="w-3 h-3" />
-                                                                    IA
-                                                                </span>
-                                                            )}
-                                                            {event.is_billable && (
-                                                                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">
-                                                                    €{event.hourly_rate}/h
-                                                                </span>
-                                                            )}
-                                                            {event.status === 'in_progress' && (
-                                                                <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium flex items-center gap-1">
-                                                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                                                    En progreso
-                                                                </span>
-                                                            )}
-                                                            {event.status === 'completed' && (
-                                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium flex items-center gap-1">
-                                                                    <CheckCircle className="w-3 h-3" />
-                                                                    Completado
-                                                                </span>
-                                                            )}
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {getEventsForCurrentView().map((event) => {
+                                                const EventIcon = getEventIcon(event.type);
+                                                const startTime = new Date(event.start_time);
+                                                const endTime = new Date(event.end_time);
+
+                                                return (
+                                                    <div
+                                                        key={event.id}
+                                                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-200/60 bg-white/80 hover:bg-white hover:shadow-lg hover:shadow-slate-900/5 transition-all duration-200 group backdrop-blur-sm cursor-pointer"
+                                                        onClick={() => setSelectedEvent(event)}
+                                                    >
+                                                        <div className={`w-12 h-12 ${getEventColor(event.type)} rounded-xl flex items-center justify-center shadow-lg`}>
+                                                            <EventIcon className="w-6 h-6 text-white" />
                                                         </div>
 
-                                                        {/* Información de CRM */}
-                                                        <div className="flex items-center gap-4 text-sm text-slate-600 mb-2">
-                                                            <span className="font-semibold text-slate-900">
-                                                                {startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} - 
-                                                                {endTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                                                            </span>
-                                                            
-                                                            {/* Cliente asociado */}
-                                                            {event.clients && (
-                                                                <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-xs font-medium">
-                                                                    <Users className="w-3 h-3" />
-                                                                    {event.clients.name} {event.clients.company && `(${event.clients.company})`}
-                                                                </span>
-                                                            )}
-                                                            
-                                                            {/* Proyecto asociado */}
-                                                            {event.projects && (
-                                                                <span className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-xs font-medium">
-                                                                    <Briefcase className="w-3 h-3" />
-                                                                    {event.projects.name}
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="flex items-center gap-4 text-sm text-slate-600">
-                                                            {event.location && (
-                                                                <span className="flex items-center gap-1">
-                                                                    <MapPin className="w-3 h-3" />
-                                                                    {event.location}
-                                                                </span>
-                                                            )}
-                                                            {event.meeting_url && (
-                                                                <span className="flex items-center gap-1">
-                                                                    <Video className="w-3 h-3" />
-                                                                    Online
-                                                                </span>
-                                                            )}
-                                                            {event.is_billable && event.hourly_rate && (
-                                                                <span className="flex items-center gap-1 text-green-600 font-medium">
-                                                                    <DollarSign className="w-3 h-3" />
-                                                                    €{event.hourly_rate}/h
-                                                                </span>
-                                                            )}
-                                                            {event.productivity_score && (
-                                                                <span className="flex items-center gap-1 text-purple-600 font-medium">
-                                                                    <BarChart3 className="w-3 h-3" />
-                                                                    {event.productivity_score}/10
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="flex items-center gap-2">
-                                                        {/* Time Tracking */}
-                                                        {event.status === 'completed' ? (
-                                                            <div className="h-9 w-9 p-0 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
-                                                                <CheckCircle className="w-4 h-4" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <h3 className="font-bold text-slate-900 truncate text-lg">{event.title}</h3>
+                                                                {false && ( // Placeholder for AI suggested events
+                                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                                                                        <Sparkles className="w-3 h-3" />
+                                                                        IA
+                                                                    </span>
+                                                                )}
+                                                                {event.is_billable && (
+                                                                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">
+                                                                        €{event.hourly_rate}/h
+                                                                    </span>
+                                                                )}
+                                                                {event.status === 'in_progress' && (
+                                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                                                                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                                                        En progreso
+                                                                    </span>
+                                                                )}
+                                                                {event.status === 'completed' && (
+                                                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                                                                        <CheckCircle className="w-3 h-3" />
+                                                                        Completado
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                        ) : (
+
+                                                            {/* Información de CRM */}
+                                                            <div className="flex items-center gap-4 text-sm text-slate-600 mb-2">
+                                                                <span className="font-semibold text-slate-900">
+                                                                    {startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} -
+                                                                    {endTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                                                </span>
+
+                                                                {/* Cliente asociado */}
+                                                                {event.clients && (
+                                                                    <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-xs font-medium">
+                                                                        <Users className="w-3 h-3" />
+                                                                        {event.clients.name} {event.clients.company && `(${event.clients.company})`}
+                                                                    </span>
+                                                                )}
+
+                                                                {/* Proyecto asociado */}
+                                                                {event.projects && (
+                                                                    <span className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-xs font-medium">
+                                                                        <Briefcase className="w-3 h-3" />
+                                                                        {event.projects.name}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            <div className="flex items-center gap-4 text-sm text-slate-600">
+                                                                {event.location && (
+                                                                    <span className="flex items-center gap-1">
+                                                                        <MapPin className="w-3 h-3" />
+                                                                        {event.location}
+                                                                    </span>
+                                                                )}
+                                                                {event.meeting_url && (
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Video className="w-3 h-3" />
+                                                                        Online
+                                                                    </span>
+                                                                )}
+                                                                {event.is_billable && event.hourly_rate && (
+                                                                    <span className="flex items-center gap-1 text-green-600 font-medium">
+                                                                        <DollarSign className="w-3 h-3" />
+                                                                        €{event.hourly_rate}/h
+                                                                    </span>
+                                                                )}
+                                                                {event.productivity_score && (
+                                                                    <span className="flex items-center gap-1 text-purple-600 font-medium">
+                                                                        <BarChart3 className="w-3 h-3" />
+                                                                        {event.productivity_score}/10
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Time Tracking */}
+                                                            {event.status === 'completed' ? (
+                                                                <div className="h-9 w-9 p-0 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
+                                                                    <CheckCircle className="w-4 h-4" />
+                                                                </div>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    title={activeTracking === event.id ? 'Parar time tracking' : 'Iniciar time tracking'}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation(); // Evitar que se active el click del div padre
+                                                                        toggleTimeTracking(event.id);
+                                                                    }}
+                                                                    className={`h-9 w-9 p-0 rounded-lg transition-all duration-200 ${activeTracking === event.id
+                                                                            ? 'bg-red-100 text-red-600 hover:bg-red-200 shadow-lg shadow-red-100'
+                                                                            : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+                                                                        }`}
+                                                                >
+                                                                    {activeTracking === event.id ? (
+                                                                        <Square className="w-4 h-4" />
+                                                                    ) : (
+                                                                        <Play className="w-4 h-4" />
+                                                                    )}
+                                                                </Button>
+                                                            )}
+
+                                                            {/* Ver detalles */}
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                title={activeTracking === event.id ? 'Parar time tracking' : 'Iniciar time tracking'}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation(); // Evitar que se active el click del div padre
-                                                                    toggleTimeTracking(event.id);
+                                                                    setSelectedEvent(event);
                                                                 }}
-                                                                className={`h-9 w-9 p-0 rounded-lg transition-all duration-200 ${
-                                                                    activeTracking === event.id
-                                                                        ? 'bg-red-100 text-red-600 hover:bg-red-200 shadow-lg shadow-red-100'
-                                                                        : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
-                                                                }`}
+                                                                className="h-9 w-9 p-0 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-700"
                                                             >
-                                                                {activeTracking === event.id ? (
-                                                                    <Square className="w-4 h-4" />
-                                                                ) : (
-                                                                    <Play className="w-4 h-4" />
-                                                                )}
+                                                                <Eye className="w-4 h-4" />
                                                             </Button>
-                                                        )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
 
-                                                        {/* Ver detalles */}
+                            {/* Panel de IA Dashboard */}
+                            {showAIPanel && (
+                                <div className="grid lg:grid-cols-3 gap-4 mb-6">
+                                    {/* Métricas de Productividad */}
+                                    <Card className="bg-gradient-to-br from-white/95 to-indigo-50/30 backdrop-blur-2xl border border-indigo-200/60 shadow-xl shadow-indigo-500/10">
+                                        <CardHeader className="pb-2">
+                                            <div className="flex items-center gap-2">
+                                                <TrendingUp className="w-5 h-5 text-indigo-600" />
+                                                <CardTitle className="text-lg font-bold text-slate-900">Productividad Hoy</CardTitle>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {dashboardMetrics && (
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-slate-600">Eventos completados</span>
+                                                        <span className="font-bold text-indigo-600">{dashboardMetrics.completed_today}/{dashboardMetrics.events_today}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-slate-600">Horas facturables</span>
+                                                        <span className="font-bold text-emerald-600">{dashboardMetrics.billable_hours_today}h</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm text-slate-600">Ingresos hoy</span>
+                                                        <span className="font-bold text-green-600">€{dashboardMetrics.revenue_today}</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
+                                                        <div
+                                                            className="bg-gradient-to-r from-indigo-500 to-violet-500 h-2 rounded-full transition-all duration-500"
+                                                            style={{
+                                                                width: `${Math.min(100, (dashboardMetrics.completed_today / Math.max(dashboardMetrics.events_today, 1)) * 100)}%`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Insights de IA */}
+                                    <Card className="bg-gradient-to-br from-white/95 to-purple-50/30 backdrop-blur-2xl border border-purple-200/60 shadow-xl shadow-purple-500/10">
+                                        <CardHeader className="pb-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Brain className="w-5 h-5 text-purple-600" />
+                                                    <CardTitle className="text-lg font-bold text-slate-900">Insights IA</CardTitle>
+                                                </div>
+                                                {lastInsightsUpdate && (
+                                                    <span className="text-xs text-slate-500">
+                                                        Actualizado: {lastInsightsUpdate.toLocaleTimeString()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-3 max-h-32 overflow-y-auto">
+                                                {aiInsights.length > 0 ? (
+                                                    aiInsights.slice(0, 3).map((insight) => (
+                                                        <div key={insight.id} className="border-l-4 border-purple-500 pl-3 py-2">
+                                                            <div className="flex items-start justify-between">
+                                                                <div className="flex-1">
+                                                                    <h4 className="text-sm font-semibold text-slate-900">{insight.title}</h4>
+                                                                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">{insight.description}</p>
+                                                                    <div className="flex items-center gap-2 mt-2">
+                                                                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                                                            {Math.round(insight.confidence_score * 100)}% confianza
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => markInsightAsViewed(insight.id)}
+                                                                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                                                                >
+                                                                    <Eye className="w-3 h-3" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-center py-4">
+                                                        <Lightbulb className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                        <p className="text-sm text-slate-500">No hay insights nuevos</p>
                                                         <Button
+                                                            onClick={generateAIInsights}
                                                             variant="ghost"
                                                             size="sm"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation(); // Evitar que se active el click del div padre
-                                                                setSelectedEvent(event);
-                                                            }}
-                                                            className="h-9 w-9 p-0 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-700"
+                                                            className="mt-2 text-purple-600 hover:text-purple-700"
                                                         >
-                                                            <Eye className="w-4 h-4" />
+                                                            Generar insights
                                                         </Button>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Panel de IA Dashboard */}
-                        {showAIPanel && (
-                            <div className="grid lg:grid-cols-3 gap-4 mb-6">
-                                {/* Métricas de Productividad */}
-                                <Card className="bg-gradient-to-br from-white/95 to-indigo-50/30 backdrop-blur-2xl border border-indigo-200/60 shadow-xl shadow-indigo-500/10">
-                                    <CardHeader className="pb-2">
-                                        <div className="flex items-center gap-2">
-                                            <TrendingUp className="w-5 h-5 text-indigo-600" />
-                                            <CardTitle className="text-lg font-bold text-slate-900">Productividad Hoy</CardTitle>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {dashboardMetrics && (
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-slate-600">Eventos completados</span>
-                                                    <span className="font-bold text-indigo-600">{dashboardMetrics.completed_today}/{dashboardMetrics.events_today}</span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-slate-600">Horas facturables</span>
-                                                    <span className="font-bold text-emerald-600">{dashboardMetrics.billable_hours_today}h</span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-slate-600">Ingresos hoy</span>
-                                                    <span className="font-bold text-green-600">€{dashboardMetrics.revenue_today}</span>
-                                                </div>
-                                                <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
-                                                    <div 
-                                                        className="bg-gradient-to-r from-indigo-500 to-violet-500 h-2 rounded-full transition-all duration-500"
-                                                        style={{ 
-                                                            width: `${Math.min(100, (dashboardMetrics.completed_today / Math.max(dashboardMetrics.events_today, 1)) * 100)}%` 
-                                                        }}
-                                                    />
-                                                </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
+                                        </CardContent>
+                                    </Card>
 
-                                {/* Insights de IA */}
-                                <Card className="bg-gradient-to-br from-white/95 to-purple-50/30 backdrop-blur-2xl border border-purple-200/60 shadow-xl shadow-purple-500/10">
-                                    <CardHeader className="pb-2">
-                                        <div className="flex items-center justify-between">
+                                    {/* Sugerencias Inteligentes */}
+                                    <Card className="bg-gradient-to-br from-white/95 to-emerald-50/30 backdrop-blur-2xl border border-emerald-200/60 shadow-xl shadow-emerald-500/10">
+                                        <CardHeader className="pb-2">
                                             <div className="flex items-center gap-2">
-                                                <Brain className="w-5 h-5 text-purple-600" />
-                                                <CardTitle className="text-lg font-bold text-slate-900">Insights IA</CardTitle>
+                                                <Lightbulb className="w-5 h-5 text-emerald-600" />
+                                                <CardTitle className="text-lg font-bold text-slate-900">Sugerencias</CardTitle>
                                             </div>
-                                            {lastInsightsUpdate && (
-                                                <span className="text-xs text-slate-500">
-                                                    Actualizado: {lastInsightsUpdate.toLocaleTimeString()}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-3 max-h-32 overflow-y-auto">
-                                            {aiInsights.length > 0 ? (
-                                                aiInsights.slice(0, 3).map((insight) => (
-                                                    <div key={insight.id} className="border-l-4 border-purple-500 pl-3 py-2">
-                                                        <div className="flex items-start justify-between">
-                                                            <div className="flex-1">
-                                                                <h4 className="text-sm font-semibold text-slate-900">{insight.title}</h4>
-                                                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">{insight.description}</p>
-                                                                <div className="flex items-center gap-2 mt-2">
-                                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                                                                        {Math.round(insight.confidence_score * 100)}% confianza
-                                                                    </span>
-                                                                </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-3 max-h-32 overflow-y-auto">
+                                                {smartSuggestions.length > 0 ? (
+                                                    smartSuggestions.slice(0, 2).map((suggestion, index) => (
+                                                        <div key={index} className="border-l-4 border-emerald-500 pl-3 py-2">
+                                                            <h4 className="text-sm font-semibold text-slate-900">{suggestion.title}</h4>
+                                                            <p className="text-xs text-slate-600 mt-1">{suggestion.description}</p>
+                                                            <div className="flex items-center justify-between mt-2">
+                                                                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                                                                    {Math.round(suggestion.confidence * 100)}% confianza
+                                                                </span>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 px-2 text-xs text-emerald-600 hover:text-emerald-700"
+                                                                >
+                                                                    Aplicar
+                                                                    <ArrowRight className="w-3 h-3 ml-1" />
+                                                                </Button>
                                                             </div>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => markInsightAsViewed(insight.id)}
-                                                                className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
-                                                            >
-                                                                <Eye className="w-3 h-3" />
-                                                            </Button>
                                                         </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-center py-4">
+                                                        <Target className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                        <p className="text-sm text-slate-500">No hay sugerencias</p>
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <div className="text-center py-4">
-                                                    <Lightbulb className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                                    <p className="text-sm text-slate-500">No hay insights nuevos</p>
-                                                    <Button
-                                                        onClick={generateAIInsights}
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="mt-2 text-purple-600 hover:text-purple-700"
-                                                    >
-                                                        Generar insights
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Sugerencias Inteligentes */}
-                                <Card className="bg-gradient-to-br from-white/95 to-emerald-50/30 backdrop-blur-2xl border border-emerald-200/60 shadow-xl shadow-emerald-500/10">
-                                    <CardHeader className="pb-2">
-                                        <div className="flex items-center gap-2">
-                                            <Lightbulb className="w-5 h-5 text-emerald-600" />
-                                            <CardTitle className="text-lg font-bold text-slate-900">Sugerencias</CardTitle>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-3 max-h-32 overflow-y-auto">
-                                            {smartSuggestions.length > 0 ? (
-                                                smartSuggestions.slice(0, 2).map((suggestion, index) => (
-                                                    <div key={index} className="border-l-4 border-emerald-500 pl-3 py-2">
-                                                        <h4 className="text-sm font-semibold text-slate-900">{suggestion.title}</h4>
-                                                        <p className="text-xs text-slate-600 mt-1">{suggestion.description}</p>
-                                                        <div className="flex items-center justify-between mt-2">
-                                                            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
-                                                                {Math.round(suggestion.confidence * 100)}% confianza
-                                                            </span>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="h-6 px-2 text-xs text-emerald-600 hover:text-emerald-700"
-                                                            >
-                                                                Aplicar
-                                                                <ArrowRight className="w-3 h-3 ml-1" />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="text-center py-4">
-                                                    <Target className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                                    <p className="text-sm text-slate-500">No hay sugerencias</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        )}
-                    </div>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1827,7 +1822,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             <label className="text-sm font-semibold text-slate-700 mb-2 block">Título del Evento</label>
                                             <Input
                                                 value={newEvent.title}
-                                                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                                                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                                                 placeholder="ej. Reunión con cliente, Desarrollo de feature..."
                                                 className="w-full"
                                             />
@@ -1837,7 +1832,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             <label className="text-sm font-semibold text-slate-700 mb-2 block">Descripción</label>
                                             <textarea
                                                 value={newEvent.description}
-                                                onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                                                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                                                 placeholder="Detalles del evento, agenda, objetivos..."
                                                 className="w-full p-3 border border-slate-200 rounded-lg text-sm resize-none h-20"
                                             />
@@ -1857,7 +1852,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                             const hours = date.getHours().toString().padStart(2, '0');
                                                             const minutes = date.getMinutes().toString().padStart(2, '0');
                                                             const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                                                            
+
                                                             setNewEvent({
                                                                 ...newEvent,
                                                                 start_time: localDateTime
@@ -1889,7 +1884,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                             const hours = date.getHours().toString().padStart(2, '0');
                                                             const minutes = date.getMinutes().toString().padStart(2, '0');
                                                             const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                                                            
+
                                                             setNewEvent({
                                                                 ...newEvent,
                                                                 end_time: localDateTime
@@ -1915,7 +1910,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                 <label className="text-sm font-semibold text-slate-700 mb-2 block">Tipo de Evento</label>
                                                 <select
                                                     value={newEvent.type}
-                                                    onChange={(e) => setNewEvent({...newEvent, type: e.target.value as EventType})}
+                                                    onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as EventType })}
                                                     className="w-full p-3 border border-slate-200 rounded-lg text-sm"
                                                 >
                                                     <option value="work">💼 Trabajo</option>
@@ -1935,7 +1930,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                     <Input
                                                         value={newEvent.location}
-                                                        onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
+                                                        onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                                                         placeholder="Oficina, Casa, Remoto..."
                                                         className="pl-10"
                                                     />
@@ -1949,7 +1944,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                 <Video className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <Input
                                                     value={newEvent.meeting_url}
-                                                    onChange={(e) => setNewEvent({...newEvent, meeting_url: e.target.value})}
+                                                    onChange={(e) => setNewEvent({ ...newEvent, meeting_url: e.target.value })}
                                                     placeholder="https://meet.google.com/..."
                                                     className="pl-10"
                                                 />
@@ -1972,7 +1967,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                 <label className="text-sm font-semibold text-slate-700 mb-2 block">Cliente</label>
                                                 <select
                                                     value={newEvent.client_id}
-                                                    onChange={(e) => setNewEvent({...newEvent, client_id: e.target.value, project_id: ''})}
+                                                    onChange={(e) => setNewEvent({ ...newEvent, client_id: e.target.value, project_id: '' })}
                                                     className="w-full p-3 border border-slate-200 rounded-lg text-sm"
                                                 >
                                                     <option value="">Seleccionar cliente...</option>
@@ -1987,7 +1982,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                 <label className="text-sm font-semibold text-slate-700 mb-2 block">Proyecto</label>
                                                 <select
                                                     value={newEvent.project_id}
-                                                    onChange={(e) => setNewEvent({...newEvent, project_id: e.target.value})}
+                                                    onChange={(e) => setNewEvent({ ...newEvent, project_id: e.target.value })}
                                                     className="w-full p-3 border border-slate-200 rounded-lg text-sm"
                                                     disabled={!newEvent.client_id}
                                                 >
@@ -2011,7 +2006,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                     const selectedClient = clients.find(c => c.id === newEvent.client_id);
                                                     const clientProjects = projects.filter(p => p.client_id === newEvent.client_id);
                                                     const totalBudget = clientProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
-                                                    
+
                                                     return selectedClient ? (
                                                         <div className="text-xs text-blue-700 space-y-1">
                                                             <div>� {selectedClient.name}</div>
@@ -2042,7 +2037,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                     <input
                                                         type="checkbox"
                                                         checked={newEvent.is_billable}
-                                                        onChange={(e) => setNewEvent({...newEvent, is_billable: e.target.checked})}
+                                                        onChange={(e) => setNewEvent({ ...newEvent, is_billable: e.target.checked })}
                                                         className="rounded w-4 h-4"
                                                     />
                                                     <span className="text-sm font-medium text-slate-700">Tiempo Facturable</span>
@@ -2053,7 +2048,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                         <Input
                                                             type="number"
                                                             value={newEvent.hourly_rate}
-                                                            onChange={(e) => setNewEvent({...newEvent, hourly_rate: Number(e.target.value)})}
+                                                            onChange={(e) => setNewEvent({ ...newEvent, hourly_rate: Number(e.target.value) })}
                                                             className="w-16"
                                                         />
                                                         <span className="text-sm text-slate-600">€/hora</span>
@@ -2304,10 +2299,10 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
 
                                         <div className="w-full bg-slate-200 rounded-full h-2">
                                             {dashboardMetrics ? (
-                                                <div 
+                                                <div
                                                     className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-                                                    style={{ 
-                                                        width: `${Math.min(100, (dashboardMetrics.completed_today / Math.max(dashboardMetrics.events_today, 1)) * 100)}%` 
+                                                    style={{
+                                                        width: `${Math.min(100, (dashboardMetrics.completed_today / Math.max(dashboardMetrics.events_today, 1)) * 100)}%`
                                                     }}
                                                 />
                                             ) : (
@@ -2654,9 +2649,9 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             {selectedEvent.meeting_url && (
                                                 <div className="flex items-center gap-2">
                                                     <Video className="w-3 h-3" />
-                                                    <a 
-                                                        href={selectedEvent.meeting_url} 
-                                                        target="_blank" 
+                                                    <a
+                                                        href={selectedEvent.meeting_url}
+                                                        target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="text-blue-600 hover:underline"
                                                     >
@@ -2765,7 +2760,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Título</label>
                                         <Input
                                             value={editingEvent.title}
-                                            onChange={(e) => setEditingEvent({...editingEvent, title: e.target.value})}
+                                            onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
                                             placeholder="Título del evento"
                                         />
                                     </div>
@@ -2774,7 +2769,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
                                         <textarea
                                             value={editingEvent.description || ''}
-                                            onChange={(e) => setEditingEvent({...editingEvent, description: e.target.value})}
+                                            onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
                                             placeholder="Descripción del evento"
                                             className="w-full p-2 border border-slate-300 rounded-lg resize-none"
                                             rows={3}
@@ -2795,7 +2790,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                         const hours = date.getHours().toString().padStart(2, '0');
                                                         const minutes = date.getMinutes().toString().padStart(2, '0');
                                                         const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                                                        
+
                                                         setEditingEvent({
                                                             ...editingEvent,
                                                             start_time: localDateTime
@@ -2827,7 +2822,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                         const hours = date.getHours().toString().padStart(2, '0');
                                                         const minutes = date.getMinutes().toString().padStart(2, '0');
                                                         const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                                                        
+
                                                         setEditingEvent({
                                                             ...editingEvent,
                                                             end_time: localDateTime
@@ -2852,7 +2847,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
                                         <select
                                             value={editingEvent.type}
-                                            onChange={(e) => setEditingEvent({...editingEvent, type: e.target.value as EventType})}
+                                            onChange={(e) => setEditingEvent({ ...editingEvent, type: e.target.value as EventType })}
                                             className="w-full p-2 border border-slate-300 rounded-lg"
                                         >
                                             <option value="work">💼 Trabajo</option>
@@ -2867,7 +2862,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             <input
                                                 type="checkbox"
                                                 checked={editingEvent.is_billable || false}
-                                                onChange={(e) => setEditingEvent({...editingEvent, is_billable: e.target.checked})}
+                                                onChange={(e) => setEditingEvent({ ...editingEvent, is_billable: e.target.checked })}
                                                 className="rounded border-slate-300"
                                             />
                                             <span className="text-sm text-slate-700">Facturable</span>
@@ -2878,7 +2873,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                                 <Input
                                                     type="number"
                                                     value={editingEvent.hourly_rate || 0}
-                                                    onChange={(e) => setEditingEvent({...editingEvent, hourly_rate: Number(e.target.value)})}
+                                                    onChange={(e) => setEditingEvent({ ...editingEvent, hourly_rate: Number(e.target.value) })}
                                                     className="w-20"
                                                 />
                                                 <span className="text-sm text-slate-600">€/hora</span>
@@ -2891,7 +2886,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Ubicación</label>
                                             <Input
                                                 value={editingEvent.location || ''}
-                                                onChange={(e) => setEditingEvent({...editingEvent, location: e.target.value})}
+                                                onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
                                                 placeholder="Ubicación física"
                                             />
                                         </div>
@@ -2899,7 +2894,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             <label className="block text-sm font-medium text-slate-700 mb-1">URL de reunión</label>
                                             <Input
                                                 value={editingEvent.meeting_url || ''}
-                                                onChange={(e) => setEditingEvent({...editingEvent, meeting_url: e.target.value})}
+                                                onChange={(e) => setEditingEvent({ ...editingEvent, meeting_url: e.target.value })}
                                                 placeholder="https://..."
                                             />
                                         </div>
@@ -2911,7 +2906,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             <select
                                                 value={editingEvent.client_id || ''}
                                                 onChange={(e) => {
-                                                    setEditingEvent({...editingEvent, client_id: e.target.value || undefined});
+                                                    setEditingEvent({ ...editingEvent, client_id: e.target.value || undefined });
                                                     // Filter projects when client changes
                                                     if (e.target.value) {
                                                         const clientProjects = projects.filter(p => p.client_id === e.target.value);
@@ -2934,7 +2929,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Proyecto</label>
                                             <select
                                                 value={editingEvent.project_id || ''}
-                                                onChange={(e) => setEditingEvent({...editingEvent, project_id: e.target.value || undefined})}
+                                                onChange={(e) => setEditingEvent({ ...editingEvent, project_id: e.target.value || undefined })}
                                                 className="w-full p-2 border border-slate-300 rounded-lg"
                                             >
                                                 <option value="">Sin proyecto</option>
@@ -2973,7 +2968,7 @@ export default function CalendarPageClient({ userEmail }: CalendarPageClientProp
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="mt-4 pt-4 border-t">
                                         <Button
                                             variant="ghost"

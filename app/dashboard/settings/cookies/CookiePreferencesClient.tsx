@@ -236,8 +236,8 @@ export default function CookiePreferencesClient({ userEmail }: CookiePreferences
                                 <button
                                   onClick={() => handlePreferenceChange(type.key, !isEnabled)}
                                   className={`w-12 h-6 rounded-full flex items-center transition-all duration-200 ${isEnabled
-                                      ? `bg-${type.color}-500 justify-end`
-                                      : 'bg-gray-300 dark:bg-gray-600 justify-start'
+                                    ? `bg-${type.color}-500 justify-end`
+                                    : 'bg-gray-300 dark:bg-gray-600 justify-start'
                                     } px-1`}
                                 >
                                   <div className="w-4 h-4 bg-white rounded-full shadow"></div>

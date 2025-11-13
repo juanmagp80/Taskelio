@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/src/lib/supabase-server';
+import { redirect } from 'next/navigation';
 import BillingPageClient from './BillingPageClient';
 
 export default async function BillingPage() {

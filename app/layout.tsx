@@ -1,6 +1,6 @@
 import CookieBanner from '@/components/CookieBanner';
-import CookieSettings from '@/components/CookieSettings';
 import { CookieCleanupProvider } from '@/components/CookieCleanupProvider';
+import CookieSettings from '@/components/CookieSettings';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -46,14 +46,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             forcedTheme="light"
           >
             {children}
-          <CookieBanner />
-          <CookieSettings />
-          <Toaster
-            position="top-center"
-            expand={true}
-            richColors={false}
-            closeButton={true}
-          />
+            <CookieBanner />
+            <CookieSettings />
+            <Toaster
+              position="top-center"
+              expand={true}
+              richColors={false}
+              closeButton={true}
+            />
           </ThemeProvider>
         </CookieCleanupProvider>
       </body>

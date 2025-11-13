@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import CustomDatePicker from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/Input';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
-import { showToast } from '@/utils/toast';
 import {
     ArrowLeft,
     Calculator,
@@ -99,7 +98,7 @@ export default function EditInvoicePage({ invoiceId, userEmail }: EditInvoicePag
     // Cargar datos de la factura
     const fetchInvoiceData = useCallback(async () => {
         if (!supabase) return;
-        
+
         try {
             const { data: { user } } = await supabase!.auth.getUser();
             if (!user) return;
@@ -173,7 +172,7 @@ export default function EditInvoicePage({ invoiceId, userEmail }: EditInvoicePag
     // Cargar clientes y proyectos
     const fetchClientsAndProjects = useCallback(async () => {
         if (!supabase) return;
-        
+
         try {
             const { data: { user } } = await supabase!.auth.getUser();
             if (!user) return;
@@ -290,7 +289,7 @@ export default function EditInvoicePage({ invoiceId, userEmail }: EditInvoicePag
 
     const updateInvoice = async () => {
         if (!supabase) return;
-        
+
         try {
             if (!formData.client_id || !formData.title.trim()) {
                 alert('Por favor completa todos los campos obligatorios');
@@ -586,9 +585,9 @@ export default function EditInvoicePage({ invoiceId, userEmail }: EditInvoicePag
                                             </label>
                                             <CustomDatePicker
                                                 selected={formData.issue_date ? new Date(formData.issue_date) : null}
-                                                onChange={(date) => setFormData({ 
-                                                    ...formData, 
-                                                    issue_date: date ? date.toISOString().split('T')[0] : '' 
+                                                onChange={(date) => setFormData({
+                                                    ...formData,
+                                                    issue_date: date ? date.toISOString().split('T')[0] : ''
                                                 })}
                                                 placeholderText="Seleccionar fecha de emisión"
                                                 className="rounded-xl border-slate-200"
@@ -600,9 +599,9 @@ export default function EditInvoicePage({ invoiceId, userEmail }: EditInvoicePag
                                             </label>
                                             <CustomDatePicker
                                                 selected={formData.due_date ? new Date(formData.due_date) : null}
-                                                onChange={(date) => setFormData({ 
-                                                    ...formData, 
-                                                    due_date: date ? date.toISOString().split('T')[0] : '' 
+                                                onChange={(date) => setFormData({
+                                                    ...formData,
+                                                    due_date: date ? date.toISOString().split('T')[0] : ''
                                                 })}
                                                 placeholderText="Seleccionar fecha de vencimiento"
                                                 minDate={formData.issue_date ? new Date(formData.issue_date) : new Date()}

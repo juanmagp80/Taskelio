@@ -1,7 +1,7 @@
 'use client';
 
-import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 import TrialBanner from '@/components/TrialBanner';
 import { Button } from '@/components/ui/Button';
 import { createSupabaseClient } from '@/src/lib/supabase-client';

@@ -2,7 +2,6 @@
 
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { createSupabaseClient } from '@/src/lib/supabase-client';
 import { showToast } from '@/utils/toast';
@@ -19,10 +18,8 @@ import {
     MapPin,
     Phone,
     Plus,
-    Save,
     Search,
     Tag,
-    User,
     X
 } from 'lucide-react';
 import Link from 'next/link';
@@ -133,7 +130,7 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
 
     const addNote = async () => {
         if (!newNote.trim()) return;
-        
+
         if (!supabase) {
             console.error('Supabase client not available');
             return;
@@ -151,7 +148,7 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
 
     const addTask = async () => {
         if (!newTask.trim()) return;
-        
+
         if (!supabase) {
             console.error('Supabase client not available');
             return;
@@ -468,21 +465,19 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
                                             <div className="ml-4 flex items-center space-x-2">
                                                 <button
                                                     onClick={() => setViewMode('grid')}
-                                                    className={`p-2 rounded-lg ${
-                                                        viewMode === 'grid'
+                                                    className={`p-2 rounded-lg ${viewMode === 'grid'
                                                             ? 'bg-blue-100 text-blue-600'
                                                             : 'text-gray-400 hover:text-gray-600'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <Grid3X3 className="w-5 h-5" />
                                                 </button>
                                                 <button
                                                     onClick={() => setViewMode('list')}
-                                                    className={`p-2 rounded-lg ${
-                                                        viewMode === 'list'
+                                                    className={`p-2 rounded-lg ${viewMode === 'list'
                                                             ? 'bg-blue-100 text-blue-600'
                                                             : 'text-gray-400 hover:text-gray-600'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <List className="w-5 h-5" />
                                                 </button>
@@ -545,15 +540,14 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
                                                         <div className="space-y-2">
                                                             <div className="flex justify-between text-xs">
                                                                 <span className="text-gray-600">Estado:</span>
-                                                                <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-                                                                    project.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                                    project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                                                                    project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-gray-100 text-gray-700'
-                                                                }`}>
+                                                                <span className={`px-2 py-1 rounded-md text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-700' :
+                                                                        project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                                                                            project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                                                                                'bg-gray-100 text-gray-700'
+                                                                    }`}>
                                                                     {project.status === 'active' ? 'Activo' :
-                                                                     project.status === 'completed' ? 'Completado' :
-                                                                     project.status === 'paused' ? 'Pausado' : 'Planificación'}
+                                                                        project.status === 'completed' ? 'Completado' :
+                                                                            project.status === 'paused' ? 'Pausado' : 'Planificación'}
                                                                 </span>
                                                             </div>
                                                             {project.budget && (
@@ -584,15 +578,14 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-3 mb-1">
                                                                         <h4 className="text-sm font-medium text-gray-900 truncate">{project.name}</h4>
-                                                                        <span className={`px-2 py-1 rounded-md text-xs font-medium flex-shrink-0 ${
-                                                                            project.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                                            project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                                                                            project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
-                                                                            'bg-gray-100 text-gray-700'
-                                                                        }`}>
+                                                                        <span className={`px-2 py-1 rounded-md text-xs font-medium flex-shrink-0 ${project.status === 'active' ? 'bg-green-100 text-green-700' :
+                                                                                project.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                                                                                    project.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                                                                                        'bg-gray-100 text-gray-700'
+                                                                            }`}>
                                                                             {project.status === 'active' ? 'Activo' :
-                                                                             project.status === 'completed' ? 'Completado' :
-                                                                             project.status === 'paused' ? 'Pausado' : 'Planificación'}
+                                                                                project.status === 'completed' ? 'Completado' :
+                                                                                    project.status === 'paused' ? 'Pausado' : 'Planificación'}
                                                                         </span>
                                                                     </div>
                                                                     <p className="text-xs text-gray-600 truncate">{project.description || 'Sin descripción'}</p>
@@ -622,7 +615,7 @@ export default function ClientDetailsBonsai({ client, userEmail }: { client: any
 
             {/* Modal de Nuevo Proyecto - Estilo Bonsai */}
             {showProjectModal && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
