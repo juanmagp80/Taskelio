@@ -9,11 +9,6 @@ export default async function AutomationsPage() {
         
         const { data: { user }, error } = await supabase.auth.getUser();
         
-            hasUser: !!user,
-            hasEmail: !!user?.email,
-            error: error?.message,
-        });
-        
         if (!user) {
             redirect('/login');
         }

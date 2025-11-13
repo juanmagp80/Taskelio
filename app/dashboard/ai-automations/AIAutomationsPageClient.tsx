@@ -1484,15 +1484,7 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
                     const proposalResult = await proposalResponse.json();
 
-                    ok: proposalResponse.ok,
-                        status: proposalResponse.status,
-                            hasResult: !!proposalResult,
-                                resultKeys: proposalResult ? Object.keys(proposalResult) : [],
-                                    hasAnalysis: !!proposalResult.analysis,
-                                        error: proposalResult.error
-            });
-
-            if (!proposalResponse.ok) {
+                    if (!proposalResponse.ok) {
                 throw new Error(proposalResult.error || 'Error analizando propuesta');
             }
 
@@ -1694,12 +1686,7 @@ export default function AIAutomationsPageClient({ userEmail }: AIAutomationsPage
 
     const performanceResult = await performanceResponse.json();
 
-    ok: performanceResponse.ok,
-        status: performanceResponse.status,
-            result: performanceResult
-});
-
-if (!performanceResponse.ok) {
+    if (!performanceResponse.ok) {
     throw new Error(performanceResult.error || 'Error analizando rendimiento');
 }
 
@@ -1900,17 +1887,9 @@ showExecutionResult(result, currentAutomation);
 }
     };
 
-// Función para mostrar resultado de manera profesional
-const showExecutionResult = (result: any, automation: AIAutomation) => {
-    automationType: automation.type,
-        automationName: automation.name,
-            resultStructure: Object.keys(result),
-                hasAnalysis: !!result.analysis,
-                    hasData: !!result.data,
-                        resultPreview: JSON.stringify(result).substring(0, 200) + '...'
-});
-
-let resultMessage = `✅ ${automation.name} ejecutada correctamente!\n\n`;
+    // Función para mostrar resultado de manera profesional
+    const showExecutionResult = (result: any, automation: AIAutomation) => {
+        let resultMessage = `✅ ${automation.name} ejecutada correctamente!\n\n`;
 
 // Manejar resultados específicos de performance analysis
 if (automation.type === 'performance_analysis' && result.analysis) {
@@ -2066,32 +2045,11 @@ const fetchRecentInsights = async () => {
             return;
         }
 
-
-        id: string;
-        insight_type: string;
-        created_at: string;
-        title: string;
-        description ?: string;
-    }) => ({
-        id: i.id,
-        type: i.insight_type,
-        created: i.created_at,
-        title: i.title,
-        description: i.description?.substring(0, 50) + '...',
-        timeAgo: getTimeAgo(i.created_at)
-    })));
-
-created: insights[0].created_at,
-    timeAgo: getTimeAgo(insights[0].created_at),
-        type: insights[0].insight_type,
-            title: insights[0].title
-            } : 'No hay insights');
-
-setRecentInsights(insights || []);
+        setRecentInsights(insights || []);
 
         } catch (error) {
-    console.error('❌ Error in fetchRecentInsights:', error);
-}
+            console.error('❌ Error in fetchRecentInsights:', error);
+        }
     };
 
 // Función auxiliar para actualizar insights con retraso

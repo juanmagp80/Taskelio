@@ -40,16 +40,6 @@ export async function POST(request: NextRequest) {
     const trialDuration = Math.floor((expiredTrialEndDate.getTime() - expiredTrialStartDate.getTime()) / (1000 * 60 * 60 * 24));
     const isExpired = daysAfterTrialEnd > 0;
     
-      email: 'amazonjgp80@gmail.com',
-      trialStartDate: expiredTrialStartDate.toISOString(),
-      trialEndDate: expiredTrialEndDate.toISOString(),
-      trialDuration,
-      daysAfterTrialEnd,
-      isExpired,
-      subscriptionStatus: 'cancelled',
-      subscriptionPlan: 'free'
-    });
-    
     return NextResponse.json({
       success: true,
       message: 'Trial configurado como expirado',

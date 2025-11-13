@@ -13,11 +13,6 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
-    hasSignature: !!signature,
-    bodyLength: body.length,
-    signature: signature?.substring(0, 20) + '...'
-  });
-
   if (!signature) {
     console.error('❌ Missing stripe-signature header');
     return NextResponse.json(
@@ -41,10 +36,6 @@ export async function POST(request: NextRequest) {
   const supabase = createSupabaseAdmin();
 
   try {
-      type: event.type,
-      id: event.id
-    });
-
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
@@ -85,20 +76,9 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSubscriptionChange(subscription: Stripe.Subscription, supabase: any) {
-    subscriptionId: subscription.id,
-    metadata: subscription.metadata,
-    status: subscription.status,
-    customerId: subscription.customer
-  });
-
   // Buscar usuario por customer_id o email en metadata
   let targetEmail = subscription.metadata?.customer_email;
   const userId = subscription.metadata?.user_id;
-  
-    targetEmail,
-    userId,
-    customerId: subscription.customer
-  });
 
   // Si no tenemos email en metadata, intentar obtenerlo del customer de Stripe
   if (!targetEmail && subscription.customer) {
@@ -139,12 +119,6 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
   if (error) {
     console.error('❌ Error actualizando perfil del usuario:', error);
     throw error;
-  } else {
-      email: targetEmail,
-      status: subscription.status,
-      plan: 'pro',
-      subscriptionId: subscription.id
-    });
   }
 }
 
